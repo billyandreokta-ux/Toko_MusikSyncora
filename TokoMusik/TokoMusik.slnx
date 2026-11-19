@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../TokoMusik.Web/TokoMusik.Web.csproj" />
+  <Project Path="TokoMusik.csproj" />
+</Solution>

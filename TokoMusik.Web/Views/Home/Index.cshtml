@@ -1,0 +1,147 @@
+﻿@{
+    ViewData["Title"] = "Beranda";
+}
+
+<section class="hero">
+    <div class="container hero-content">
+
+        <div>
+            <span class="eyebrow">MUSIC STORE</span>
+
+            <h1>
+                Temukan Instrumen Musik
+                <span>Favoritmu.</span>
+            </h1>
+
+            <p>
+                Temukan berbagai alat musik berkualitas
+                untuk menemani perjalanan bermusikmu.
+            </p>
+
+            <a href="#produk" class="btn-primary">
+                Lihat Produk
+            </a>
+        </div>
+
+        <div class="hero-decoration">
+            <span>♫</span>
+        </div>
+
+    </div>
+</section>
+
+<section class="products-section" id="produk">
+    <div class="container">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">KOLEKSI KAMI</span>
+                <h2>Produk Pilihan</h2>
+            </div>
+
+            <span class="product-count" id="jumlahProduk">
+                Memuat produk...
+            </span>
+        </div>
+
+        <div id="produkList" class="product-grid">
+            <p>Memuat data produk...</p>
+        </div>
+
+        <p id="pesanError" class="error-message"></p>
+
+    </div>
+</section>
+
+@section Scripts {
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+
+            const produkList = document.getElementById("produkList");
+            const jumlahProduk = document.getElementById("jumlahProduk");
+            const pesanError = document.getElementById("pesanError");
+
+            try {
+
+                const response = await fetch("/api/produk");
+
+                if (!response.ok) {
+                    throw new Error("Gagal mengambil data produk.");
+                }
+
+                const data = await response.json();
+
+                const produkAktif = data.filter(
+                    p => p.status === "aktif"
+                );
+
+                jumlahProduk.textContent =
+                    produkAktif.length + " produk tersedia";
+
+                produkList.replaceChildren();
+
+                if (produkAktif.length === 0) {
+                    produkList.textContent =
+                        "Belum ada produk tersedia.";
+                    return;
+                }
+
+                produkAktif.forEach(function (produk) {
+
+                    const card = document.createElement("article");
+                    card.className = "product-card";
+
+                    const image = document.createElement("div");
+                    image.className = "product-image";
+
+                    if (produk.foto) {
+                        const img = document.createElement("img");
+                        img.src = "/images/" + encodeURIComponent(
+                            produk.foto
+                        );
+                        img.alt = produk.namaProduk;
+                        image.appendChild(img);
+                    } else {
+                        image.textContent = "♫";
+                    }
+
+                    const info = document.createElement("div");
+                    info.className = "product-info";
+
+                    const code = document.createElement("span");
+                    code.className = "product-code";
+                    code.textContent = produk.kodeProduk;
+
+                    const name = document.createElement("h3");
+                    name.textContent = produk.namaProduk;
+
+                    const price = document.createElement("p");
+                    price.className = "product-price";
+                    price.textContent = new Intl.NumberFormat(
+                        "id-ID",
+                        {
+                            style: "currency",
+                            currency: "IDR",
+                            maximumFractionDigits: 0
+                        }
+                    ).format(produk.hargaJual);
+
+                    info.append(code, name, price);
+                    card.append(image, info);
+                    produkList.appendChild(card);
+                });
+
+            } catch (error) {
+
+                produkList.textContent =
+                    "Produk belum dapat ditampilkan.";
+
+                pesanError.textContent = error.message;
+
+            }
+
+        });
+    </script>
+
+}
