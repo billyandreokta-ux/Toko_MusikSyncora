@@ -1,0 +1,219 @@
+﻿
+@model TokoMusik.Web.Models.PesananSayaDetailViewModel
+
+@{
+    ViewData["Title"] = "Detail Pesanan";
+
+    bool dapatUpload =
+        Model.StatusPesanan == "menunggu_bayar" &&
+        (Model.StatusPembayaran == "pending" ||
+         Model.StatusPembayaran == "gagal");
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Detail Pesanan #@Model.IdPemesanan</h2>
+            <p class="text-secondary">
+                Informasi lengkap transaksi dan pembayaran Anda.
+            </p>
+        </div>
+
+        <a asp-controller="PesananSaya"
+           asp-action="Index"
+           class="btn btn-outline-custom">
+            Kembali
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="dashboard-section">
+                <h4>Produk yang Dipesan</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>Harga</th>
+                                <th>Jumlah</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrWhiteSpace(item.Foto))
+                                            {
+                                                <img src="@item.Foto"
+                                                     alt="@item.NamaProduk"
+                                                     style="width:55px;height:55px;object-fit:cover;border-radius:8px;" />
+                                            }
+                                            <div>
+                                                <strong>@item.NamaProduk</strong>
+                                                <div class="text-secondary small">
+                                                    @item.KodeProduk
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Rp @item.HargaSatuan.ToString("N0")</td>
+                                    <td>@item.Jumlah</td>
+                                    <td>Rp @item.Subtotal.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal</span>
+                    <strong>Rp @Model.Subtotal.ToString("N0")</strong>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Diskon</span>
+                    <strong>Rp @Model.Diskon.ToString("N0")</strong>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ongkir</span>
+                    <strong>Rp @Model.Ongkir.ToString("N0")</strong>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between">
+                    <strong>Total Pembayaran</strong>
+                    <strong class="text-success">
+                        Rp @Model.TotalBayar.ToString("N0")
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="dashboard-section mb-4">
+                <h4>Informasi Pesanan</h4>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Tanggal Pesanan</small>
+                    <div>@Model.TglPesan.ToString("dd MMMM yyyy HH:mm")</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Status Pesanan</small>
+                    <div><strong>@Model.StatusPesanan</strong></div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Status Pembayaran</small>
+                    <div><strong>@Model.StatusPembayaran</strong></div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Metode Pembayaran</small>
+                    <div><strong>@Model.NamaMetode</strong></div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Nama Penerima</small>
+                    <div>@Model.NamaPenerima</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Nomor Telepon</small>
+                    <div>@Model.Telepon</div>
+                </div>
+
+                <div>
+                    <small class="text-secondary">Alamat Pengiriman</small>
+                    <div>
+                        @Model.AlamatLengkap,
+                        @Model.Kota,
+                        @Model.Provinsi,
+                        @Model.KodePos
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h4>Bukti Pembayaran</h4>
+
+                @if (!string.IsNullOrWhiteSpace(Model.BuktiBayar))
+                {
+                    <div class="mb-3">
+                        <img src="@Model.BuktiBayar"
+                             alt="Bukti pembayaran"
+                             class="img-fluid rounded"
+                             style="max-height:300px;object-fit:contain;" />
+                    </div>
+                }
+                else
+                {
+                    <p class="text-secondary">
+                        Belum ada bukti pembayaran yang diunggah.
+                    </p>
+                }
+
+                @if (dapatUpload)
+                {
+                    <hr />
+
+                    <form asp-controller="PesananSaya"
+                          asp-action="UploadBukti"
+                          asp-route-id="@Model.IdPemesanan"
+                          method="post"
+                          enctype="multipart/form-data">
+
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Unggah Bukti Pembayaran</label>
+                            <input type="file"
+                                   name="file"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png,.webp"
+                                   required />
+                            <small class="text-secondary">
+                                Format JPG, JPEG, PNG, atau WEBP. Maksimal 5 MB.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary-custom w-100">
+                            Kirim Bukti Pembayaran
+                        </button>
+                    </form>
+                }
+                else if (Model.StatusPembayaran == "berhasil")
+                {
+                    <div class="alert alert-success mb-0">
+                        Pembayaran telah diverifikasi oleh admin.
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary mb-0">
+                        Upload bukti pembayaran tidak tersedia untuk status pesanan ini.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,262 @@
+﻿@model TokoMusik.Web.Models.InventoryDetailViewModel
+
+@{
+    ViewData["Title"] = "Detail Inventaris";
+    var fotoUrl = string.IsNullOrWhiteSpace(Model.Foto)
+        ? null
+        : Url.Content("~/uploads/produk/" + Model.Foto);
+}
+
+<style>
+    .inventory-detail-page {
+        padding: 30px 0 55px;
+        color: #26372e;
+    }
+
+    .inventory-detail-header {
+        margin-bottom: 23px;
+    }
+
+    .inventory-detail-header h1 {
+        font-size: 26px;
+        font-weight: 750;
+        margin: 15px 0 5px;
+    }
+
+    .inventory-back {
+        color: #176b45;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .inventory-detail-card {
+        background: #fff;
+        border: 1px solid #e6ece8;
+        border-radius: 16px;
+        padding: 25px;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 30px;
+        box-shadow: 0 5px 22px rgba(25, 55, 39, .04);
+    }
+
+    .inventory-detail-image {
+        width: 100%;
+        height: 260px;
+        object-fit: contain;
+        background: #f5f8f6;
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .inventory-detail-placeholder {
+        height: 260px;
+        border-radius: 12px;
+        background: #f2f6f3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #8a998f;
+        font-size: 14px;
+    }
+
+    .inventory-detail-info h2 {
+        font-size: 23px;
+        font-weight: 750;
+        margin: 0 0 5px;
+    }
+
+    .inventory-detail-code {
+        color: #839087;
+        margin-bottom: 20px;
+    }
+
+    .inventory-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+    }
+
+    .inventory-detail-field {
+        background: #f7f9f7;
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+    .inventory-detail-field span {
+        display: block;
+        font-size: 12px;
+        color: #829087;
+        margin-bottom: 6px;
+    }
+
+    .inventory-detail-field strong {
+        font-size: 15px;
+    }
+
+    .inventory-detail-description {
+        margin-top: 20px;
+        line-height: 1.7;
+        color: #65736a;
+    }
+
+    .inventory-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .inventory-detail-button {
+        display: inline-block;
+        padding: 11px 17px;
+        border-radius: 9px;
+        background: #176b45;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 650;
+    }
+
+    .inventory-detail-button.secondary {
+        background: #edf3ef;
+        color: #315640;
+    }
+
+    @@media (max-width: 700px) {
+        .inventory-detail-card {
+            grid-template-columns: 1fr;
+            padding: 17px;
+        }
+
+        .inventory-detail-image,
+        .inventory-detail-placeholder {
+            height: 220px;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .inventory-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container inventory-detail-page">
+
+    <div class="inventory-detail-header">
+
+        <a asp-controller="AdminInventory"
+           asp-action="Index"
+           class="inventory-back">
+            ← Kembali ke Inventaris
+        </a>
+
+        <h1>Detail Persediaan Produk</h1>
+        <p style="color:#829087;margin:0;">
+            Informasi produk dan kondisi persediaan saat ini.
+        </p>
+
+    </div>
+
+    <div class="inventory-detail-card">
+
+        <div>
+            @if (!string.IsNullOrWhiteSpace(fotoUrl))
+            {
+                <img src="@fotoUrl"
+                     alt="@Model.NamaProduk"
+                     class="inventory-detail-image" />
+            }
+            else
+            {
+                <div class="inventory-detail-placeholder">
+                    Foto produk belum tersedia
+                </div>
+            }
+        </div>
+
+        <div class="inventory-detail-info">
+
+            <h2>@Model.NamaProduk</h2>
+
+            <div class="inventory-detail-code">
+                Kode produk: @Model.KodeProduk
+            </div>
+
+            <div class="inventory-detail-grid">
+
+                <div class="inventory-detail-field">
+                    <span>Kategori</span>
+                    <strong>@Model.NamaCategory</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Merek</span>
+                    <strong>@Model.NamaMerk</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Harga jual</span>
+                    <strong>Rp @Model.HargaJual.ToString("N0")</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Status produk</span>
+                    <strong>@Model.StatusProduk</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Jumlah stok tersedia</span>
+                    <strong>@Model.JumlahStok unit</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Batas stok minimum</span>
+                    <strong>@Model.StokMinimum unit</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Kondisi persediaan</span>
+                    <strong>@Model.StatusStok</strong>
+                </div>
+
+                <div class="inventory-detail-field">
+                    <span>Pembaruan stok terakhir</span>
+                    <strong>
+                        @(Model.UpdatedAt?.ToString("dd MMM yyyy HH:mm") ?? "Belum tersedia")
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="inventory-detail-description">
+                <strong>Deskripsi produk</strong>
+                <p>
+                    @(string.IsNullOrWhiteSpace(Model.Deskripsi)
+                        ? "Belum ada deskripsi produk."
+                        : Model.Deskripsi)
+                </p>
+            </div>
+
+            <div class="inventory-detail-actions">
+
+                <a asp-controller="AdminProduk"
+                   asp-action="Edit"
+                   asp-route-id="@Model.IdProduk"
+                   class="inventory-detail-button">
+                    Edit Produk
+                </a>
+
+                <a asp-controller="AdminInventory"
+                   asp-action="Index"
+                   class="inventory-detail-button secondary">
+                    Kembali
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

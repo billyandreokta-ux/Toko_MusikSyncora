@@ -1,0 +1,206 @@
+﻿
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <meta name="theme-color" content="#173f32" />
+
+    <title>@ViewData["Title"] - Syncora</title>
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-content">
+
+            <a class="brand"
+               asp-controller="Home"
+               asp-action="Index">
+
+                <span class="brand-icon">♫</span>
+                <span>Syncora</span>
+            </a>
+
+            <nav>
+
+                <a asp-controller="Home"
+                   asp-action="Index">
+                    Beranda
+                </a>
+
+                <a asp-controller="Produk"
+                   asp-action="Index">
+                    Produk
+                </a>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("user"))
+                    {
+                        <a asp-controller="Keranjang"
+                           asp-action="Index">
+                            Keranjang
+                        </a>
+
+                        <a asp-controller="Alamat"
+                           asp-action="Index">
+                            Alamat Saya
+                        </a>
+
+                        <a asp-controller="PesananSaya"
+                           asp-action="Index">
+                            Pesanan Saya
+                        </a>
+
+                        <a asp-controller="Profil"
+                           asp-action="Index">
+                            Profil Saya
+                        </a>
+                    }
+
+                    @if (User.IsInRole("admin"))
+                    {
+                        <a asp-controller="Admin"
+                           asp-action="Index">
+                            Dashboard Admin
+                        </a>
+                    }
+
+                    <form asp-controller="Auth"
+                          asp-action="Logout"
+                          method="post"
+                          style="display:inline;">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="nav-logout">
+                            Logout
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Auth"
+                       asp-action="Login">
+                        Login
+                    </a>
+
+                    <a asp-controller="Auth"
+                       asp-action="Register">
+                        Daftar
+                    </a>
+                }
+
+            </nav>
+
+        </div>
+    </header>
+
+
+    <!-- KONTEN UTAMA -->
+    <main>
+        @RenderBody()
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+
+            <div class="footer-content">
+
+                <div>
+                    <a class="brand"
+                       asp-controller="Home"
+                       asp-action="Index">
+
+                        <span class="brand-icon">♫</span>
+                        <span>Syncora</span>
+                    </a>
+
+                    <p>
+                        Temukan alat musik pilihanmu
+                        dan mulai perjalanan bermusik
+                        bersama Syncora.
+                    </p>
+                </div>
+
+                <div class="footer-links">
+                    <h4>Navigasi</h4>
+
+                    <a asp-controller="Home"
+                       asp-action="Index">
+                        Beranda
+                    </a>
+
+                    <a asp-controller="Produk"
+                       asp-action="Index">
+                        Katalog Produk
+                    </a>
+
+                    @if (User.Identity?.IsAuthenticated == true
+                         && User.IsInRole("user"))
+                    {
+                        <a asp-controller="Keranjang"
+                           asp-action="Index">
+                            Keranjang
+                        </a>
+
+                        <a asp-controller="PesananSaya"
+                           asp-action="Index">
+                            Pesanan Saya
+                        </a>
+
+                        <a asp-controller="Profil"
+                           asp-action="Index">
+                            Profil Saya
+                        </a>
+                    }
+                    else if (User.Identity?.IsAuthenticated != true)
+                    {
+                        <a asp-controller="Auth"
+                           asp-action="Login">
+                            Login
+                        </a>
+
+                        <a asp-controller="Auth"
+                           asp-action="Register">
+                            Daftar
+                        </a>
+                    }
+                    else if (User.IsInRole("admin"))
+                    {
+                        <a asp-controller="Admin"
+                           asp-action="Index">
+                            Dashboard Admin
+                        </a>
+                    }
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                <p>
+                    © @DateTime.Now.Year Syncora.
+                    Sistem Penjualan Alat Musik.
+                </p>
+            </div>
+
+        </div>
+    </footer>
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

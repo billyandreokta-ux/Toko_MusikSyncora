@@ -1,0 +1,349 @@
+﻿
+@model TokoMusik.Web.Models.SupplierIndexViewModel
+
+@{
+    ViewData["Title"] = "Manajemen Supplier";
+}
+
+<style>
+    .supplier-page {
+        padding: 28px 0 50px;
+        color: #26352e;
+    }
+
+    .supplier-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .supplier-heading h1 {
+        font-size: 27px;
+        font-weight: 750;
+        margin-bottom: 6px;
+    }
+
+    .supplier-heading p {
+        color: #78847d;
+        margin: 0;
+    }
+
+    .supplier-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border-radius: 9px;
+        background: #176b45;
+        color: white;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 650;
+        border: 0;
+        cursor: pointer;
+    }
+
+    .supplier-btn:hover {
+        background: #105638;
+        color: white;
+    }
+
+    .supplier-btn-light {
+        background: #edf5f0;
+        color: #176b45;
+        border: 1px solid #dcebe1;
+    }
+
+    .supplier-btn-light:hover {
+        background: #dceee2;
+        color: #105638;
+    }
+
+    .supplier-btn-danger {
+        background: #fff0ef;
+        color: #b33b36;
+        border: 1px solid #f5d7d5;
+    }
+
+    .supplier-btn-danger:hover {
+        background: #fde1df;
+        color: #922d29;
+    }
+
+    .supplier-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .supplier-stat {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(25, 55, 39, .035);
+    }
+
+    .supplier-stat span {
+        color: #78847d;
+        font-size: 13px;
+    }
+
+    .supplier-stat h2 {
+        font-size: 25px;
+        font-weight: 750;
+        margin: 9px 0 0;
+    }
+
+    .supplier-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 17px;
+    }
+
+    .supplier-toolbar form {
+        display: flex;
+        flex: 1;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .supplier-input {
+        min-height: 43px;
+        border: 1px solid #dce5df;
+        border-radius: 9px;
+        padding: 8px 13px;
+        background: white;
+    }
+
+    .supplier-search {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .supplier-table-wrap {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 14px;
+        overflow-x: auto;
+    }
+
+    .supplier-table {
+        width: 100%;
+        min-width: 850px;
+        border-collapse: collapse;
+    }
+
+    .supplier-table th {
+        padding: 15px;
+        background: #f6f9f7;
+        color: #718078;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: .04em;
+        text-align: left;
+    }
+
+    .supplier-table td {
+        padding: 15px;
+        border-top: 1px solid #edf1ee;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .supplier-name {
+        font-weight: 700;
+        color: #263d31;
+    }
+
+    .supplier-muted {
+        color: #839087;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .supplier-empty {
+        padding: 40px !important;
+        text-align: center;
+        color: #849087;
+    }
+
+    .supplier-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .supplier-action-link {
+        color: #176b45;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 12px;
+    }
+
+    .supplier-action-link:hover {
+        text-decoration: underline;
+    }
+
+    @@media (max-width: 700px) {
+        .supplier-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container supplier-page">
+
+    <div class="supplier-heading">
+        <div>
+            <h1>Manajemen Supplier</h1>
+            <p>Kelola pemasok dan pantau riwayat pembelian produk Syncora.</p>
+        </div>
+
+        <a asp-controller="AdminSupplier"
+           asp-action="Tambah"
+           class="supplier-btn">
+            + Tambah Supplier
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="supplier-stats">
+        <div class="supplier-stat">
+            <span>Total Supplier</span>
+            <h2>@Model.TotalSupplier</h2>
+        </div>
+
+        <div class="supplier-stat">
+            <span>Total Transaksi Pembelian</span>
+            <h2>@Model.TotalTransaksiPembelian</h2>
+        </div>
+
+        <div class="supplier-stat">
+            <span>Total Nilai Pembelian</span>
+            <h2>Rp @Model.TotalNilaiPembelian.ToString("N0")</h2>
+        </div>
+    </div>
+
+    <div class="supplier-toolbar">
+        <form method="get" asp-controller="AdminSupplier" asp-action="Index">
+            <input type="text"
+                   name="cari"
+                   value="@Model.KataKunci"
+                   class="supplier-input supplier-search"
+                   placeholder="Cari nama, telepon, atau email supplier..." />
+
+            <button type="submit" class="supplier-btn">
+                Cari
+            </button>
+
+            <a asp-controller="AdminSupplier"
+               asp-action="Index"
+               class="supplier-btn supplier-btn-light">
+                Reset
+            </a>
+        </form>
+    </div>
+
+    <div class="supplier-table-wrap">
+        <table class="supplier-table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Telepon</th>
+                    <th>Email</th>
+                    <th>Alamat</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.DaftarSupplier != null && Model.DaftarSupplier.Any())
+                {
+                    foreach (var item in Model.DaftarSupplier)
+                    {
+                        <tr>
+                            <td>
+                                <div class="supplier-name">@item.NamaSupplier</div>
+                                <div class="supplier-muted">ID: @item.IdSupplier</div>
+                            </td>
+
+                            <td>@(string.IsNullOrWhiteSpace(item.Telepon) ? "-" : item.Telepon)</td>
+
+                            <td>@(string.IsNullOrWhiteSpace(item.Email) ? "-" : item.Email)</td>
+
+                            <td>
+                                @{
+                                    var alamat = item.Alamat ?? "-";
+                                    var alamatSingkat = alamat.Length > 55
+                                        ? alamat.Substring(0, 55) + "..."
+                                        : alamat;
+                                }
+                                @alamatSingkat
+                            </td>
+
+                            <td>
+                                <div class="supplier-actions">
+                                    <a asp-controller="AdminSupplier"
+                                       asp-action="Detail"
+                                       asp-route-id="@item.IdSupplier"
+                                       class="supplier-action-link">
+                                        Detail
+                                    </a>
+
+                                    <a asp-controller="AdminSupplier"
+                                       asp-action="Edit"
+                                       asp-route-id="@item.IdSupplier"
+                                       class="supplier-action-link">
+                                        Edit
+                                    </a>
+
+                                    <form asp-controller="AdminSupplier"
+                                          asp-action="Hapus"
+                                          asp-route-id="@item.IdSupplier"
+                                          method="post"
+                                          onsubmit="return confirm('Yakin ingin menghapus supplier ini?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="supplier-action-link"
+                                                style="background:none;border:0;padding:0;color:#b33b36;">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="supplier-empty">
+                            Belum ada data supplier atau pencarian tidak ditemukan.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

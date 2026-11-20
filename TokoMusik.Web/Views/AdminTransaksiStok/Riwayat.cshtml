@@ -1,0 +1,565 @@
+﻿
+@model TokoMusik.Web.Models.RiwayatStokViewModel
+
+@{
+    ViewData["Title"] = "Riwayat Stok";
+
+    var daftarTransaksi = Model.Transaksi ?? new List<TokoMusik.Web.Models.RiwayatStokItemViewModel>();
+
+    var transaksiMasuk = daftarTransaksi
+        .Where(x => x.JenisTransaksi == "Masuk")
+        .ToList();
+
+    var transaksiKeluar = daftarTransaksi
+        .Where(x => x.JenisTransaksi == "Keluar")
+        .ToList();
+
+    var totalUnitMasuk = transaksiMasuk.Sum(x => x.Jumlah);
+    var totalUnitKeluar = transaksiKeluar.Sum(x => x.Jumlah);
+    var totalPembelian = transaksiMasuk.Sum(x => x.Total);
+}
+
+<style>
+    .stock-history-page {
+        padding: 30px 0 55px;
+        color: #293b30;
+    }
+
+    .stock-history-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .stock-history-heading h1 {
+        font-size: 27px;
+        font-weight: 750;
+        margin-bottom: 5px;
+    }
+
+    .stock-history-heading p {
+        color: #829087;
+        margin: 0;
+    }
+
+    .stock-history-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .stock-history-button {
+        display: inline-block;
+        background: #176b45;
+        color: white;
+        text-decoration: none;
+        padding: 11px 16px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 650;
+        border: none;
+        cursor: pointer;
+    }
+
+    .stock-history-button:hover {
+        color: white;
+        background: #105638;
+    }
+
+    .stock-history-button.danger {
+        background: #b33b36;
+    }
+
+    .stock-history-button.danger:hover {
+        background: #922d29;
+    }
+
+    .stock-history-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .stock-history-summary-card {
+        background: white;
+        border: 1px solid #e5ece7;
+        border-radius: 13px;
+        padding: 19px;
+        box-shadow: 0 4px 16px rgba(25, 55, 39, .035);
+    }
+
+    .stock-history-summary-label {
+        font-size: 12px;
+        color: #829087;
+        margin-bottom: 9px;
+    }
+
+    .stock-history-summary-value {
+        font-size: 25px;
+        font-weight: 750;
+        color: #293b30;
+        overflow-wrap: anywhere;
+    }
+
+    .stock-history-summary-description {
+        color: #87928b;
+        font-size: 11px;
+        margin-top: 5px;
+    }
+
+    .stock-history-toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .stock-history-toolbar input {
+        flex: 1;
+        min-width: 150px;
+        border: 1px solid #dce5df;
+        border-radius: 9px;
+        padding: 10px 13px;
+    }
+
+    .stock-history-toolbar input:focus {
+        outline: none;
+        border-color: #24764f;
+        box-shadow: 0 0 0 3px rgba(36, 118, 79, .1);
+    }
+
+    .stock-history-table-wrap {
+        background: white;
+        border: 1px solid #e5ece7;
+        border-radius: 14px;
+        overflow-x: auto;
+    }
+
+    .stock-history-table {
+        width: 100%;
+        min-width: 1250px;
+        border-collapse: collapse;
+    }
+
+    .stock-history-table th {
+        background: #f6f9f7;
+        color: #718078;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: 15px;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .stock-history-table td {
+        padding: 15px;
+        border-top: 1px solid #edf1ee;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .stock-history-table tbody tr:hover {
+        background: #fafcfb;
+    }
+
+    .stock-history-product {
+        font-weight: 700;
+        color: #293e32;
+    }
+
+    .stock-history-muted {
+        color: #87928b;
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    .stock-history-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .stock-history-in {
+        background: #e6f5eb;
+        color: #207747;
+    }
+
+    .stock-history-out {
+        background: #fde8e7;
+        color: #b33b36;
+    }
+
+    .stock-history-empty {
+        text-align: center;
+        color: #87928b;
+        padding: 40px !important;
+    }
+
+    .stock-history-alert {
+        padding: 13px 16px;
+        border-radius: 9px;
+        margin-bottom: 18px;
+    }
+
+    .stock-history-success {
+        background: #e8f6ed;
+        color: #207747;
+    }
+
+    .stock-history-error {
+        background: #fff0ef;
+        color: #a83434;
+    }
+
+    .stock-history-amount {
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .stock-history-amount.in {
+        color: #207747;
+    }
+
+    .stock-history-amount.out {
+        color: #b33b36;
+    }
+
+    .stock-history-supplier {
+        font-weight: 600;
+        color: #315640;
+    }
+
+    .stock-history-note {
+        font-size: 12px;
+        color: #87928b;
+        margin-top: 18px;
+    }
+
+    @@media(max-width: 900px) {
+        .stock-history-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media(max-width: 600px) {
+        .stock-history-heading h1 {
+            font-size: 23px;
+        }
+
+        .stock-history-actions {
+            width: 100%;
+        }
+
+        .stock-history-actions a {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stock-history-summary {
+            gap: 10px;
+        }
+
+        .stock-history-summary-card {
+            padding: 14px;
+        }
+
+        .stock-history-summary-value {
+            font-size: 21px;
+        }
+
+        .stock-history-toolbar {
+            flex-direction: column;
+        }
+
+        .stock-history-toolbar button {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="container stock-history-page">
+
+    <div class="stock-history-heading">
+
+        <div>
+            <h1>Riwayat Inventaris</h1>
+            <p>Catatan barang masuk dan barang keluar Syncora.</p>
+        </div>
+
+        <div class="stock-history-actions">
+
+            <a asp-action="Restock"
+               class="stock-history-button">
+                + Restock
+            </a>
+
+            <a asp-action="Keluar"
+               class="stock-history-button danger">
+                - Stok Keluar
+            </a>
+
+            <a asp-controller="AdminInventory"
+               asp-action="Index"
+               class="stock-history-button"
+               style="background:#edf3ef;color:#315640;">
+                Inventaris
+            </a>
+
+        </div>
+
+    </div>
+
+    @if (TempData["Sukses"] != null)
+    {
+        <div class="stock-history-alert stock-history-success">
+            @TempData["Sukses"]
+        </div>
+    }
+
+    @if (TempData["Gagal"] != null)
+    {
+        <div class="stock-history-alert stock-history-error">
+            @TempData["Gagal"]
+        </div>
+    }
+
+    <!-- RINGKASAN TRANSAKSI -->
+
+    <div class="stock-history-summary">
+
+        <div class="stock-history-summary-card">
+            <div class="stock-history-summary-label">
+                Transaksi Stok Masuk
+            </div>
+
+            <div class="stock-history-summary-value">
+                @transaksiMasuk.Count
+            </div>
+
+            <div class="stock-history-summary-description">
+                Jumlah catatan pembelian
+            </div>
+        </div>
+
+        <div class="stock-history-summary-card">
+            <div class="stock-history-summary-label">
+                Total Unit Masuk
+            </div>
+
+            <div class="stock-history-summary-value">
+                @totalUnitMasuk.ToString("N0")
+            </div>
+
+            <div class="stock-history-summary-description">
+                Unit barang yang diterima
+            </div>
+        </div>
+
+        <div class="stock-history-summary-card">
+            <div class="stock-history-summary-label">
+                Total Unit Keluar
+            </div>
+
+            <div class="stock-history-summary-value">
+                @totalUnitKeluar.ToString("N0")
+            </div>
+
+            <div class="stock-history-summary-description">
+                Unit barang yang dikeluarkan
+            </div>
+        </div>
+
+        <div class="stock-history-summary-card">
+            <div class="stock-history-summary-label">
+                Nilai Pembelian
+            </div>
+
+            <div class="stock-history-summary-value">
+                Rp @totalPembelian.ToString("N0")
+            </div>
+
+            <div class="stock-history-summary-description">
+                Nilai transaksi stok masuk
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PENCARIAN -->
+
+    <form method="get"
+          asp-action="Riwayat"
+          class="stock-history-toolbar">
+
+        <input type="text"
+               name="cari"
+               value="@ViewBag.KataKunci"
+               placeholder="Cari produk, kode, supplier, atau keterangan..." />
+
+        <button type="submit"
+                class="stock-history-button">
+            Cari Transaksi
+        </button>
+
+    </form>
+
+    <!-- TABEL RIWAYAT -->
+
+    <div class="stock-history-table-wrap">
+
+        <table class="stock-history-table">
+
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Jenis</th>
+                    <th>Produk</th>
+                    <th>Supplier</th>
+                    <th>Jumlah</th>
+                    <th>Harga Beli / Unit</th>
+                    <th>Total Pembelian</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (daftarTransaksi.Any())
+                {
+                    foreach (var item in daftarTransaksi)
+                    {
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    @item.Tanggal.ToString("dd MMM yyyy")
+                                </strong>
+
+                                <div class="stock-history-muted">
+                                    @item.Tanggal.ToString("HH:mm")
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (item.JenisTransaksi == "Masuk")
+                                {
+                                    <span class="stock-history-badge stock-history-in">
+                                        Stok Masuk
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="stock-history-badge stock-history-out">
+                                        Stok Keluar
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <div class="stock-history-product">
+                                    @item.NamaProduk
+                                </div>
+
+                                <div class="stock-history-muted">
+                                    @item.KodeProduk
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (item.JenisTransaksi == "Masuk")
+                                {
+                                    <span class="stock-history-supplier">
+                                        @(string.IsNullOrWhiteSpace(item.NamaSupplier)
+                                            ? "Tidak tersedia"
+                                            : item.NamaSupplier)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="stock-history-muted">-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.JenisTransaksi == "Masuk")
+                                {
+                                    <strong class="stock-history-amount in">
+                                        +@item.Jumlah.ToString("N0")
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <strong class="stock-history-amount out">
+                                        -@item.Jumlah.ToString("N0")
+                                    </strong>
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.JenisTransaksi == "Masuk")
+                                {
+                                    <span>
+                                        Rp @item.HargaBeli.ToString("N0")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="stock-history-muted">-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.JenisTransaksi == "Masuk")
+                                {
+                                    <strong>
+                                        Rp @item.Total.ToString("N0")
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <span class="stock-history-muted">-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @item.Keterangan
+                            </td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8"
+                            class="stock-history-empty">
+
+                            <strong>Belum ada riwayat transaksi.</strong>
+
+                            <div class="stock-history-muted">
+                                Transaksi stok masuk dan keluar akan ditampilkan di sini.
+                            </div>
+
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p class="stock-history-note">
+        Ringkasan dihitung dari transaksi yang sedang ditampilkan.
+        Riwayat menampilkan maksimal 300 transaksi terbaru.
+    </p>
+
+</div>

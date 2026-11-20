@@ -1,0 +1,141 @@
+﻿
+@model TokoMusik.Web.Models.UlasanHalamanViewModel
+
+@{
+    ViewData["Title"] = "Ulasan Produk";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Ulasan Produk</h2>
+            <p class="text-secondary">
+                Berikan penilaian terhadap produk yang sudah kamu terima.
+            </p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="dashboard-section mb-4">
+        <h4>Produk yang Bisa Diulas</h4>
+
+        @if (Model.ProdukBelumDiulas == null ||
+             !Model.ProdukBelumDiulas.Any())
+        {
+            <p class="text-secondary mb-0">
+                Belum ada produk yang dapat diulas. Produk akan muncul setelah pesanan selesai.
+            </p>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var produk in Model.ProdukBelumDiulas)
+                {
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <div class="d-flex gap-3 align-items-center mb-3">
+                                @if (!string.IsNullOrWhiteSpace(produk.Foto))
+                                {
+                                    <img src="@produk.Foto"
+                                         alt="@produk.NamaProduk"
+                                         style="width:75px;height:75px;object-fit:cover;border-radius:10px;" />
+                                }
+
+                                <div>
+                                    <strong>@produk.NamaProduk</strong>
+                                    <div class="small text-secondary">@produk.KodeProduk</div>
+                                </div>
+                            </div>
+
+                            <form asp-action="Kirim" method="post">
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="IdProduk"
+                                       value="@produk.IdProduk" />
+
+                                <div class="mb-3">
+                                    <label class="form-label">Rating</label>
+                                    <select name="Rating" class="form-select" required>
+                                        <option value="5">5 - Sangat Baik</option>
+                                        <option value="4">4 - Baik</option>
+                                        <option value="3">3 - Cukup</option>
+                                        <option value="2">2 - Kurang</option>
+                                        <option value="1">1 - Sangat Kurang</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Komentar</label>
+                                    <textarea name="Komentar"
+                                              class="form-control"
+                                              rows="3"
+                                              maxlength="1000"
+                                              placeholder="Bagaimana pengalaman kamu menggunakan produk ini?"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary-custom w-100">
+                                    Kirim Ulasan
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="dashboard-section">
+        <h4>Riwayat Ulasan Saya</h4>
+
+        @if (Model.RiwayatUlasan == null ||
+             !Model.RiwayatUlasan.Any())
+        {
+            <p class="text-secondary mb-0">
+                Kamu belum pernah memberikan ulasan.
+            </p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>Rating</th>
+                            <th>Komentar</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ulasan in Model.RiwayatUlasan)
+                        {
+                            <tr>
+                                <td><strong>@ulasan.NamaProduk</strong></td>
+                                <td>
+                                    <span class="text-warning">
+                                        @string.Concat(Enumerable.Repeat("★", ulasan.Rating))
+                                    </span>
+                                    <span class="text-secondary">
+                                        (@ulasan.Rating/5)
+                                    </span>
+                                </td>
+                                <td>@(string.IsNullOrWhiteSpace(ulasan.Komentar) ? "-" : ulasan.Komentar)</td>
+                                <td>@ulasan.TglUlasan.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

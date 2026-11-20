@@ -1,0 +1,465 @@
+﻿
+@model TokoMusik.Web.Models.InventoryViewModel
+
+@{
+    ViewData["Title"] = "Manajemen Inventaris";
+}
+
+<style>
+    .inventory-page {
+        padding: 28px 0 50px;
+        color: #26352e;
+    }
+
+    .inventory-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .inventory-heading h1 {
+        font-size: 27px;
+        font-weight: 750;
+        margin-bottom: 6px;
+    }
+
+    .inventory-heading p {
+        color: #78847d;
+        margin: 0;
+    }
+
+    .inventory-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .inventory-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 25px;
+    }
+
+    .inventory-stat {
+        background: #fff;
+        border: 1px solid #e7ece8;
+        border-radius: 15px;
+        padding: 21px;
+        box-shadow: 0 5px 20px rgba(25, 55, 39, .035);
+    }
+
+    .inventory-stat span {
+        color: #77847b;
+        font-size: 13px;
+    }
+
+    .inventory-stat h2 {
+        font-size: 27px;
+        font-weight: 750;
+        margin: 10px 0 0;
+    }
+
+    .inventory-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .inventory-toolbar form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        flex: 1;
+    }
+
+    .inventory-input {
+        min-height: 43px;
+        border: 1px solid #dce5df;
+        border-radius: 9px;
+        padding: 8px 13px;
+        background: white;
+    }
+
+    .inventory-search {
+        min-width: 220px;
+        flex: 1;
+    }
+
+    .inventory-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 43px;
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 17px;
+        background: #176b45;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+        white-space: nowrap;
+        transition: .2s ease;
+    }
+
+    .inventory-button:hover {
+        background: #105638;
+        color: white;
+    }
+
+    .inventory-button-secondary {
+        background: #edf5f0;
+        color: #176b45;
+        border: 1px solid #dcebe1;
+    }
+
+    .inventory-button-secondary:hover {
+        background: #dceee2;
+        color: #105638;
+    }
+
+    .inventory-button-dark {
+        background: #263d31;
+        color: white;
+    }
+
+    .inventory-button-dark:hover {
+        background: #182b21;
+        color: white;
+    }
+
+    .inventory-button-danger {
+        background: #fff0ef;
+        color: #b33b36;
+        border: 1px solid #f5d7d5;
+    }
+
+    .inventory-button-danger:hover {
+        background: #fde1df;
+        color: #922d29;
+    }
+
+    .inventory-table-wrap {
+        background: #fff;
+        border: 1px solid #e7ece8;
+        border-radius: 14px;
+        overflow-x: auto;
+    }
+
+    .inventory-table {
+        width: 100%;
+        min-width: 850px;
+        border-collapse: collapse;
+    }
+
+    .inventory-table th {
+        background: #f6f9f7;
+        color: #718078;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: 15px;
+        text-align: left;
+    }
+
+    .inventory-table td {
+        padding: 15px;
+        border-top: 1px solid #edf1ee;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+
+    .inventory-product {
+        font-weight: 700;
+        color: #263d31;
+    }
+
+    .inventory-muted {
+        color: #839087;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .inventory-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .inventory-safe {
+        background: #e6f5eb;
+        color: #207747;
+    }
+
+    .inventory-low {
+        background: #fff3d9;
+        color: #956000;
+    }
+
+    .inventory-empty {
+        background: #fde8e7;
+        color: #b33b36;
+    }
+
+    .inventory-link {
+        color: #176b45;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .inventory-link:hover {
+        text-decoration: underline;
+    }
+
+    .inventory-empty-row {
+        padding: 40px !important;
+        text-align: center;
+        color: #849087;
+    }
+
+    @@media (max-width: 850px) {
+        .inventory-stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .inventory-heading {
+            align-items: flex-start;
+        }
+
+        .inventory-actions {
+            width: 100%;
+        }
+
+        .inventory-actions .inventory-button {
+            flex: 1;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .inventory-stat {
+            padding: 15px;
+        }
+
+        .inventory-stat h2 {
+            font-size: 22px;
+        }
+
+        .inventory-heading h1 {
+            font-size: 23px;
+        }
+    }
+</style>
+
+<div class="container inventory-page">
+
+    <div class="inventory-heading">
+        <div>
+            <h1>Manajemen Inventaris</h1>
+            <p>Pantau persediaan produk dan kondisi stok Syncora.</p>
+        </div>
+
+        <div class="inventory-actions">
+
+            <a asp-controller="AdminTransaksiStok"
+               asp-action="Restock"
+               class="inventory-button">
+                + Restock
+            </a>
+
+            <a asp-controller="AdminTransaksiStok"
+               asp-action="Keluar"
+               class="inventory-button inventory-button-danger">
+                - Stok Keluar
+            </a>
+
+            <a asp-controller="AdminTransaksiStok"
+               asp-action="Riwayat"
+               class="inventory-button inventory-button-dark">
+                Riwayat Stok
+            </a>
+
+            <a asp-controller="AdminProduk"
+               asp-action="Index"
+               class="inventory-button inventory-button-secondary">
+                Kelola Produk
+            </a>
+
+        </div>
+    </div>
+
+    <div class="inventory-stat-grid">
+
+        <div class="inventory-stat">
+            <span>Produk Aktif</span>
+            <h2>@Model.TotalProduk</h2>
+        </div>
+
+        <div class="inventory-stat">
+            <span>Total Unit Stok</span>
+            <h2>@Model.TotalStok.ToString("N0")</h2>
+        </div>
+
+        <div class="inventory-stat">
+            <span>Stok Menipis</span>
+            <h2 style="color:#b77a12">@Model.StokMenipis</h2>
+        </div>
+
+        <div class="inventory-stat">
+            <span>Stok Habis</span>
+            <h2 style="color:#c43d38">@Model.StokHabis</h2>
+        </div>
+
+    </div>
+
+    <div class="inventory-toolbar">
+
+        <form method="get"
+              asp-controller="AdminInventory"
+              asp-action="Index">
+
+            <input type="text"
+                   name="cari"
+                   value="@Model.KataKunci"
+                   class="inventory-input inventory-search"
+                   placeholder="Cari nama, kode, merek produk..." />
+
+            <select name="status" class="inventory-input">
+                <option value="semua" selected="@(Model.StatusFilter == "semua")">
+                    Semua kondisi
+                </option>
+
+                <option value="aman" selected="@(Model.StatusFilter == "aman")">
+                    Stok aman
+                </option>
+
+                <option value="menipis" selected="@(Model.StatusFilter == "menipis")">
+                    Stok menipis
+                </option>
+
+                <option value="habis" selected="@(Model.StatusFilter == "habis")">
+                    Stok habis
+                </option>
+            </select>
+
+            <button type="submit" class="inventory-button">
+                Cari
+            </button>
+
+            <a asp-controller="AdminInventory"
+               asp-action="Index"
+               class="inventory-input"
+               style="display:flex;align-items:center;text-decoration:none;color:#46574c;">
+                Reset
+            </a>
+
+        </form>
+
+    </div>
+
+    <div class="inventory-table-wrap">
+
+        <table class="inventory-table">
+
+            <thead>
+                <tr>
+                    <th>Produk</th>
+                    <th>Kategori</th>
+                    <th>Merek</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Minimum</th>
+                    <th>Kondisi</th>
+                    <th>Detail</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (Model.Produk != null && Model.Produk.Any())
+                {
+                    foreach (var item in Model.Produk)
+                    {
+                        <tr>
+                            <td>
+                                <div class="inventory-product">
+                                    @item.NamaProduk
+                                </div>
+
+                                <div class="inventory-muted">
+                                    @item.KodeProduk
+                                </div>
+                            </td>
+
+                            <td>@item.NamaCategory</td>
+
+                            <td>@item.NamaMerk</td>
+
+                            <td>
+                                Rp @item.HargaJual.ToString("N0")
+                            </td>
+
+                            <td>
+                                <strong>@item.JumlahStok</strong>
+                            </td>
+
+                            <td>@item.StokMinimum</td>
+
+                            <td>
+                                @if (item.StatusStok == "Habis")
+                                {
+                                    <span class="inventory-badge inventory-empty">
+                                        Habis
+                                    </span>
+                                }
+                                else if (item.StatusStok == "Menipis")
+                                {
+                                    <span class="inventory-badge inventory-low">
+                                        Menipis
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inventory-badge inventory-safe">
+                                        Aman
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-controller="AdminInventory"
+                                   asp-action="Detail"
+                                   asp-route-id="@item.IdProduk"
+                                   class="inventory-link">
+                                    Lihat
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="inventory-empty-row">
+                            Tidak ada produk yang sesuai dengan pencarian.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

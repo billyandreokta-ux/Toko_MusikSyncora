@@ -1,0 +1,301 @@
+﻿
+@model TokoMusik.Web.Models.AdminMasterDataViewModel
+
+@{
+    ViewData["Title"] = "Kategori Produk";
+    Layout = "_Layout";
+}
+
+<style>
+    .master-page {
+        min-height: 100vh;
+        padding: 38px 0 65px;
+        background: #f5f7f3;
+        color: #263b2d;
+    }
+
+    .master-container {
+        width: min(1050px, calc(100% - 36px));
+        margin: auto;
+    }
+
+    .master-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .master-heading small {
+        color: #789078;
+        font-size: 10px;
+        letter-spacing: 2px;
+        font-weight: 800;
+    }
+
+    .master-heading h1 {
+        font-size: 29px;
+        margin: 8px 0;
+        font-weight: 800;
+    }
+
+    .master-heading p {
+        color: #89918a;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .master-button {
+        display: inline-flex;
+        padding: 12px 17px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 4px;
+        background: #174c35;
+        color: white;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .master-button:hover {
+        background: #245f43;
+        color: white;
+    }
+
+    .master-alert {
+        padding: 13px 16px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        font-size: 12px;
+        background: #e8f5e9;
+        color: #28633c;
+    }
+
+    .master-alert.error {
+        background: #fcebea;
+        color: #a64e48;
+    }
+
+    .master-summary {
+        background: white;
+        border: 1px solid #e7ece5;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .master-summary span {
+        display: block;
+        color: #89918a;
+        font-size: 11px;
+        margin-bottom: 7px;
+    }
+
+    .master-summary strong {
+        color: #21432e;
+        font-size: 25px;
+    }
+
+    .master-panel {
+        background: white;
+        border: 1px solid #e7ece5;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .master-panel-heading {
+        padding: 19px 21px;
+        border-bottom: 1px solid #edf0eb;
+    }
+
+    .master-panel-heading h2 {
+        font-size: 15px;
+        margin: 0;
+    }
+
+    .master-panel-heading p {
+        color: #929b92;
+        font-size: 11px;
+        margin: 5px 0 0;
+    }
+
+    .master-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .master-table th {
+        background: #fafbf8;
+        padding: 13px 18px;
+        color: #89938a;
+        text-align: left;
+        font-size: 10px;
+        text-transform: uppercase;
+    }
+
+    .master-table td {
+        padding: 15px 18px;
+        border-top: 1px solid #f0f2ed;
+        font-size: 12px;
+    }
+
+    .master-table td strong {
+        color: #293b2e;
+    }
+
+    .master-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .master-action {
+        padding: 7px 11px;
+        border: 1px solid #dfe8dd;
+        border-radius: 4px;
+        background: white;
+        color: #315c3d;
+        text-decoration: none;
+        font-size: 10px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .master-action:hover {
+        background: #edf4ed;
+    }
+
+    .master-action.delete {
+        color: #a64e48;
+        border-color: #f0d9d6;
+    }
+
+    .master-action.delete:hover {
+        background: #fcebea;
+    }
+
+    .master-empty {
+        padding: 40px 15px;
+        text-align: center;
+        color: #929b92;
+        font-size: 12px;
+    }
+
+    @@media(max-width: 600px) {
+        .master-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .master-table {
+            min-width: 560px;
+        }
+
+        .master-table-wrap {
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<div class="master-page">
+    <div class="master-container">
+
+        <div class="master-heading">
+            <div>
+                <small>SYNCORA MANAGEMENT / MASTER DATA</small>
+                <h1>Kategori Produk</h1>
+                <p>Atur pengelompokan produk yang ditampilkan di katalog Syncora.</p>
+            </div>
+
+            <a href="/AdminMasterData/TambahKategori" class="master-button">
+                + Tambah Kategori
+            </a>
+        </div>
+
+        @if (TempData["Sukses"] != null)
+        {
+            <div class="master-alert">@TempData["Sukses"]</div>
+        }
+
+        @if (TempData["Gagal"] != null)
+        {
+            <div class="master-alert error">@TempData["Gagal"]</div>
+        }
+
+        <div class="master-summary">
+            <span>Total kategori terdaftar</span>
+            <strong>@Model.Total</strong>
+        </div>
+
+        <section class="master-panel">
+            <div class="master-panel-heading">
+                <h2>Daftar Kategori</h2>
+                <p>Kategori yang terhubung dengan produk akan dilindungi dari penghapusan.</p>
+            </div>
+
+            <div class="master-table-wrap">
+                <table class="master-table">
+                    <thead>
+                        <tr>
+                            <th style="width:90px;">ID</th>
+                            <th>Nama Kategori</th>
+                            <th>Jumlah Produk</th>
+                            <th style="width:200px;">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (Model.Items.Any())
+                        {
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.Id</td>
+                                    <td><strong>@item.Nama</strong></td>
+                                    <td>@item.JumlahProduk produk</td>
+                                    <td>
+                                        <div class="master-actions">
+                                            <a
+                                                href="/AdminMasterData/EditKategori/@item.Id"
+                                                class="master-action">
+                                                Edit
+                                            </a>
+
+                                            <form
+                                                method="post"
+                                                action="/AdminMasterData/HapusKategori"
+                                                onsubmit="return confirm('Hapus kategori ini?')">
+
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+
+                                                <button type="submit" class="master-action delete">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4">
+                                    <div class="master-empty">
+                                        Belum ada kategori yang terdaftar.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+</div>

@@ -1,0 +1,160 @@
+﻿
+@model TokoMusik.Web.Models.MasterDataFormViewModel
+
+@{
+    var sedangEdit = Model.Id > 0;
+    ViewData["Title"] = sedangEdit ? "Edit Kategori" : "Tambah Kategori";
+    Layout = "_Layout";
+}
+
+<style>
+    .master-form-page {
+        min-height: 100vh;
+        background: #f5f7f3;
+        padding: 45px 0;
+        color: #263b2d;
+    }
+
+    .master-form-container {
+        width: min(650px, calc(100% - 35px));
+        margin: auto;
+    }
+
+    .master-form-card {
+        background: white;
+        border: 1px solid #e7ece5;
+        border-radius: 7px;
+        padding: 30px;
+    }
+
+    .master-form-kicker {
+        color: #789078;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+
+    .master-form-card h1 {
+        font-size: 28px;
+        margin: 10px 0;
+        font-weight: 800;
+    }
+
+    .master-form-description {
+        color: #89918a;
+        font-size: 12px;
+        margin-bottom: 28px;
+    }
+
+    .master-form-card label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 9px;
+        color: #536056;
+    }
+
+    .master-form-card input {
+        width: 100%;
+        padding: 13px;
+        border: 1px solid #e0e7de;
+        border-radius: 4px;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .master-form-card input:focus {
+        border-color: #739578;
+    }
+
+    .master-form-error {
+        color: #b34d43;
+        font-size: 11px;
+        margin-top: 7px;
+        display: block;
+    }
+
+    .master-form-summary {
+        color: #a64e48;
+        background: #fcebea;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 18px;
+        font-size: 12px;
+    }
+
+    .master-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid #edf0eb;
+    }
+
+    .master-form-button {
+        display: inline-flex;
+        padding: 12px 18px;
+        border: 0;
+        border-radius: 4px;
+        background: #174c35;
+        color: white;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .master-form-button:hover {
+        background: #245f43;
+        color: white;
+    }
+
+    .master-form-button.cancel {
+        background: #edf1eb;
+        color: #536056;
+    }
+</style>
+
+<div class="master-form-page">
+    <div class="master-form-container">
+        <div class="master-form-card">
+
+            <span class="master-form-kicker">SYNCORA / MASTER DATA</span>
+
+            <h1>@(sedangEdit ? "Edit Kategori" : "Tambah Kategori")</h1>
+
+            <p class="master-form-description">
+                @(sedangEdit
+                    ? "Perbarui nama kategori produk."
+                    : "Tambahkan kategori baru untuk katalog Syncora.")
+            </p>
+
+            <form
+                asp-controller="AdminMasterData"
+                asp-action="@(sedangEdit ? "EditKategori" : "TambahKategori")"
+                method="post">
+
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div asp-validation-summary="ModelOnly" class="master-form-summary"></div>
+
+                <label asp-for="Nama">Nama Kategori</label>
+                <input asp-for="Nama" placeholder="Contoh: Gitar, Keyboard, Drum" />
+                <span asp-validation-for="Nama" class="master-form-error"></span>
+
+                <div class="master-form-actions">
+                    <a href="/AdminMasterData/Kategori" class="master-form-button cancel">
+                        Batal
+                    </a>
+
+                    <button type="submit" class="master-form-button">
+                        @(sedangEdit ? "Simpan Perubahan" : "Simpan Kategori")
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

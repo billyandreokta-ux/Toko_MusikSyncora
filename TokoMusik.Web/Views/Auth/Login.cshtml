@@ -1,0 +1,63 @@
+﻿@model TokoMusik.Web.DTOs.LoginRequest
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <div class="auth-logo">TM</div>
+            <h2>TokoMusik</h2>
+            <p>Temukan alat musik favoritmu.</p>
+        </div>
+
+        <h3>Selamat Datang!</h3>
+        <p class="auth-subtitle">Masuk ke akun TokoMusik kamu.</p>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger mb-3"></div>
+
+        <form asp-controller="Auth" asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label asp-for="Username">Username</label>
+                <input asp-for="Username"
+                       class="form-control"
+                       placeholder="Masukkan username" />
+                <span asp-validation-for="Username"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password"
+                       type="password"
+                       class="form-control"
+                       placeholder="Masukkan password" />
+                <span asp-validation-for="Password"
+                      class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn-primary-custom">
+                Masuk
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Belum punya akun?
+            <a asp-controller="Auth" asp-action="Register">Daftar sekarang</a>
+        </div>
+
+        <a asp-controller="Home" asp-action="Index"
+           class="back-home">Kembali ke Beranda</a>
+    </div>
+</div>

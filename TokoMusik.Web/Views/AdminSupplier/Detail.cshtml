@@ -1,0 +1,280 @@
+﻿
+@model TokoMusik.Web.Models.SupplierDetailViewModel
+
+@{
+    ViewData["Title"] = "Detail Supplier";
+}
+
+<style>
+    .supplier-detail-page {
+        padding: 28px 0 50px;
+        color: #26352e;
+    }
+
+    .supplier-detail-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .supplier-detail-heading h1 {
+        font-size: 27px;
+        font-weight: 750;
+        margin-bottom: 5px;
+    }
+
+    .supplier-detail-heading p {
+        color: #78847d;
+        margin: 0;
+    }
+
+    .supplier-detail-card {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 15px;
+        padding: 23px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(25, 55, 39, .035);
+    }
+
+    .supplier-detail-card h5 {
+        font-weight: 750;
+        margin-bottom: 18px;
+    }
+
+    .supplier-info-label {
+        color: #839087;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .supplier-info-value {
+        color: #263d31;
+        font-size: 14px;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .supplier-detail-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .supplier-stat-card {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 14px;
+        padding: 20px;
+    }
+
+    .supplier-stat-card span {
+        color: #78847d;
+        font-size: 13px;
+    }
+
+    .supplier-stat-card h2 {
+        font-size: 23px;
+        font-weight: 750;
+        margin: 9px 0 0;
+    }
+
+    .supplier-history-wrap {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 14px;
+        overflow-x: auto;
+    }
+
+    .supplier-history-table {
+        width: 100%;
+        min-width: 750px;
+        border-collapse: collapse;
+    }
+
+    .supplier-history-table th {
+        background: #f6f9f7;
+        color: #718078;
+        padding: 14px;
+        font-size: 11px;
+        text-transform: uppercase;
+        text-align: left;
+    }
+
+    .supplier-history-table td {
+        padding: 14px;
+        border-top: 1px solid #edf1ee;
+        font-size: 13px;
+    }
+
+    .supplier-history-empty {
+        padding: 35px !important;
+        text-align: center;
+        color: #849087;
+    }
+
+    .supplier-detail-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border-radius: 9px;
+        background: #176b45;
+        color: white;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 650;
+    }
+
+    .supplier-detail-btn:hover {
+        background: #105638;
+        color: white;
+    }
+
+    @@media (max-width: 700px) {
+        .supplier-detail-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container supplier-detail-page">
+
+    <div class="supplier-detail-heading">
+        <div>
+            <h1>Detail Supplier</h1>
+            <p>Informasi supplier dan catatan pengadaan produk.</p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Edit"
+               asp-route-id="@Model.Supplier.IdSupplier"
+               class="supplier-detail-btn">
+                Edit Supplier
+            </a>
+
+            <a asp-action="Index"
+               class="btn btn-light border"
+               style="border-radius:9px;padding:10px 16px;">
+                Kembali
+            </a>
+        </div>
+    </div>
+
+    <div class="supplier-detail-card">
+        <h5>Informasi Supplier</h5>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="supplier-info-label">Nama Supplier</div>
+                <div class="supplier-info-value">@Model.Supplier.NamaSupplier</div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="supplier-info-label">ID Supplier</div>
+                <div class="supplier-info-value">#@Model.Supplier.IdSupplier</div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="supplier-info-label">Nomor Telepon</div>
+                <div class="supplier-info-value">
+                    @(string.IsNullOrWhiteSpace(Model.Supplier.Telepon)
+                        ? "Belum diisi"
+                        : Model.Supplier.Telepon)
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="supplier-info-label">Email</div>
+                <div class="supplier-info-value">
+                    @(string.IsNullOrWhiteSpace(Model.Supplier.Email)
+                        ? "Belum diisi"
+                        : Model.Supplier.Email)
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="supplier-info-label">Alamat</div>
+                <div class="supplier-info-value" style="white-space:pre-line;">
+                    @(string.IsNullOrWhiteSpace(Model.Supplier.Alamat)
+                        ? "Belum diisi"
+                        : Model.Supplier.Alamat)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="supplier-detail-stats">
+        <div class="supplier-stat-card">
+            <span>Total Transaksi Pembelian</span>
+            <h2>@Model.TotalTransaksi</h2>
+        </div>
+
+        <div class="supplier-stat-card">
+            <span>Total Unit Produk Dibeli</span>
+            <h2>@Model.TotalProdukDibeli.ToString("N0")</h2>
+        </div>
+
+        <div class="supplier-stat-card">
+            <span>Total Nilai Pembelian</span>
+            <h2>Rp @Model.TotalPembelian.ToString("N0")</h2>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <h5 class="fw-bold mb-1">Riwayat Pembelian</h5>
+        <p class="text-muted small mb-0">
+            Daftar transaksi restock yang tercatat menggunakan supplier ini.
+        </p>
+    </div>
+
+    <div class="supplier-history-wrap">
+        <table class="supplier-history-table">
+            <thead>
+                <tr>
+                    <th>ID Transaksi</th>
+                    <th>Tanggal</th>
+                    <th>Produk</th>
+                    <th>Jumlah</th>
+                    <th>Harga Beli</th>
+                    <th>Total</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.RiwayatPembelian != null && Model.RiwayatPembelian.Any())
+                {
+                    foreach (var item in Model.RiwayatPembelian)
+                    {
+                        <tr>
+                            <td>#@item.IdPurchase</td>
+                            <td>@item.Tanggal.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <strong>@item.NamaProduk</strong>
+                                <div class="text-muted small">@item.KodeProduk</div>
+                            </td>
+                            <td>@item.Jumlah</td>
+                            <td>Rp @item.HargaBeli.ToString("N0")</td>
+                            <td class="fw-bold">Rp @item.Total.ToString("N0")</td>
+                            <td>@(string.IsNullOrWhiteSpace(item.Keterangan) ? "-" : item.Keterangan)</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="supplier-history-empty">
+                            Belum ada riwayat pembelian dari supplier ini.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

@@ -1,5 +1,6 @@
 ﻿
 using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using TokoMusik.Web.Data;
@@ -32,32 +33,45 @@ namespace TokoMusik.Web.Controllers.Api
             FROM produk";
 
         // GET: api/produk
+        // Pelanggan hanya mendapatkan produk aktif.
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetSemua()
         {
             using var db = _koneksi.GetConnection();
+            await db.OpenAsync();
 
-            var data = await db.QueryAsync<Produk>(QueryProduk);
+            var data = await db.QueryAsync<Produk>(
+                QueryProduk + " WHERE status = 'aktif' ORDER BY nama_produk ASC;"
+            );
 
             return Ok(data);
         }
 
         // GET: api/produk/1
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
+            if (id <= 0)
+                return BadRequest(new { message = "ID produk tidak valid." });
+
             using var db = _koneksi.GetConnection();
+            await db.OpenAsync();
 
             var data = await db.QueryFirstOrDefaultAsync<Produk>(
-                QueryProduk + " WHERE id_produk = @id",
-                new { id }
+                QueryProduk + @"
+                    WHERE id_produk = @Id
+                      AND status = 'aktif'
+                    LIMIT 1;",
+                new { Id = id }
             );
 
             if (data == null)
             {
                 return NotFound(new
                 {
-                    message = "Produk tidak ditemukan."
+                    message = "Produk tidak ditemukan atau sudah tidak aktif."
                 });
             }
 
@@ -65,11 +79,46 @@ namespace TokoMusik.Web.Controllers.Api
         }
 
         // POST: api/produk
+        // Hanya Admin yang boleh menambahkan produk.
+        [Authorize(Roles = "admin")]
         [HttpPost]
-        public async Task<IActionResult> Tambah(
-            [FromBody] Produk produk)
+        public async Task<IActionResult> Tambah([FromBody] Produk produk)
         {
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            if (produk.IdCategory <= 0 || produk.IdMerk <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Kategori dan merek wajib dipilih."
+                });
+            }
+
+            if (produk.HargaJual <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Harga produk harus lebih dari nol."
+                });
+            }
+
+            produk.KodeProduk = produk.KodeProduk.Trim();
+            produk.NamaProduk = produk.NamaProduk.Trim();
+            produk.Status = string.IsNullOrWhiteSpace(produk.Status)
+                ? "aktif"
+                : produk.Status.Trim().ToLowerInvariant();
+
+            if (produk.Status != "aktif" && produk.Status != "nonaktif")
+            {
+                return BadRequest(new
+                {
+                    message = "Status produk harus aktif atau nonaktif."
+                });
+            }
+
             using var db = _koneksi.GetConnection();
+            await db.OpenAsync();
 
             try
             {
@@ -99,14 +148,13 @@ namespace TokoMusik.Web.Controllers.Api
 
                     SELECT LAST_INSERT_ID();";
 
-                var id = await db.ExecuteScalarAsync<long>(
-                    sql, produk
-                );
+                var id = await db.ExecuteScalarAsync<long>(sql, produk);
 
                 produk.IdProduk = (int)id;
 
-                return Created(
-                    $"/api/produk/{id}",
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = produk.IdProduk },
                     new
                     {
                         message = "Produk berhasil ditambahkan.",
@@ -125,18 +173,59 @@ namespace TokoMusik.Web.Controllers.Api
             {
                 return BadRequest(new
                 {
-                    message = "Kategori atau merk tidak ditemukan."
+                    message = "Kategori atau merek tidak ditemukan."
                 });
             }
         }
 
         // PUT: api/produk/1
+        // Hanya Admin yang boleh mengubah produk.
+        [Authorize(Roles = "admin")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Ubah(
             int id,
             [FromBody] Produk produk)
         {
+            if (id <= 0)
+                return BadRequest(new { message = "ID produk tidak valid." });
+
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            if (produk.IdCategory <= 0 || produk.IdMerk <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Kategori dan merek wajib dipilih."
+                });
+            }
+
+            if (produk.HargaJual <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Harga produk harus lebih dari nol."
+                });
+            }
+
+            produk.KodeProduk = produk.KodeProduk.Trim();
+            produk.NamaProduk = produk.NamaProduk.Trim();
+            produk.Status = string.IsNullOrWhiteSpace(produk.Status)
+                ? "aktif"
+                : produk.Status.Trim().ToLowerInvariant();
+
+            if (produk.Status != "aktif" && produk.Status != "nonaktif")
+            {
+                return BadRequest(new
+                {
+                    message = "Status produk harus aktif atau nonaktif."
+                });
+            }
+
+            produk.IdProduk = id;
+
             using var db = _koneksi.GetConnection();
+            await db.OpenAsync();
 
             try
             {
@@ -150,20 +239,24 @@ namespace TokoMusik.Web.Controllers.Api
                         deskripsi = @Deskripsi,
                         foto = @Foto,
                         status = @Status
-                    WHERE id_produk = @IdProduk";
+                    WHERE id_produk = @IdProduk;";
 
-                produk.IdProduk = id;
-
-                var jumlah = await db.ExecuteAsync(
-                    sql, produk
-                );
+                var jumlah = await db.ExecuteAsync(sql, produk);
 
                 if (jumlah == 0)
                 {
-                    return NotFound(new
+                    var ada = await db.ExecuteScalarAsync<int>(
+                        "SELECT COUNT(*) FROM produk WHERE id_produk = @Id;",
+                        new { Id = id }
+                    );
+
+                    if (ada == 0)
                     {
-                        message = "Produk tidak ditemukan."
-                    });
+                        return NotFound(new
+                        {
+                            message = "Produk tidak ditemukan."
+                        });
+                    }
                 }
 
                 return Ok(new
@@ -182,25 +275,39 @@ namespace TokoMusik.Web.Controllers.Api
             {
                 return BadRequest(new
                 {
-                    message = "Kategori atau merk tidak ditemukan."
+                    message = "Kategori atau merek tidak ditemukan."
                 });
             }
         }
 
         // DELETE: api/produk/1
+        // Menggunakan soft delete agar riwayat transaksi tetap aman.
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Hapus(int id)
         {
-            using var db = _koneksi.GetConnection();
+            if (id <= 0)
+                return BadRequest(new { message = "ID produk tidak valid." });
 
-            try
+            using var db = _koneksi.GetConnection();
+            await db.OpenAsync();
+
+            const string sql = @"
+                UPDATE produk
+                SET status = 'nonaktif'
+                WHERE id_produk = @Id
+                  AND status <> 'nonaktif';";
+
+            var jumlah = await db.ExecuteAsync(sql, new { Id = id });
+
+            if (jumlah == 0)
             {
-                var jumlah = await db.ExecuteAsync(
-                    "DELETE FROM produk WHERE id_produk = @id",
-                    new { id }
+                var ada = await db.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM produk WHERE id_produk = @Id;",
+                    new { Id = id }
                 );
 
-                if (jumlah == 0)
+                if (ada == 0)
                 {
                     return NotFound(new
                     {
@@ -210,16 +317,14 @@ namespace TokoMusik.Web.Controllers.Api
 
                 return Ok(new
                 {
-                    message = "Produk berhasil dihapus."
+                    message = "Produk sudah berstatus nonaktif."
                 });
             }
-            catch (MySqlException ex) when (ex.Number == 1451)
+
+            return Ok(new
             {
-                return Conflict(new
-                {
-                    message = "Produk sudah digunakan dalam transaksi. Ubah status menjadi nonaktif."
-                });
-            }
+                message = "Produk berhasil dinonaktifkan."
+            });
         }
     }
 }

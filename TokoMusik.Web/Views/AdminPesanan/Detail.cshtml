@@ -1,0 +1,194 @@
+﻿
+@model TokoMusik.Web.Models.AdminPesananDetailViewModel
+
+@{
+    ViewData["Title"] = "Detail Pesanan";
+
+    string? statusBerikutnya = Model.Status switch
+    {
+        "dibayar" => "diproses",
+        "diproses" => "dikirim",
+        "dikirim" => "selesai",
+        _ => null
+    };
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Pesanan #@Model.IdPemesanan</h2>
+            <p class="text-secondary">Detail transaksi, pelanggan, dan pengiriman.</p>
+        </div>
+
+        <a asp-action="Index" class="btn btn-outline-custom">Kembali</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="dashboard-section mb-4">
+                <h4>Produk Pesanan</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-custom">
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>Harga</th>
+                                <th>Jumlah</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.NamaProduk</strong>
+                                        <div class="small text-secondary">@item.KodeProduk</div>
+                                    </td>
+                                    <td>Rp @item.HargaSatuan.ToString("N0")</td>
+                                    <td>@item.Jumlah</td>
+                                    <td>Rp @item.Subtotal.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal</span>
+                    <strong>Rp @Model.Subtotal.ToString("N0")</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Diskon</span>
+                    <strong>Rp @Model.Diskon.ToString("N0")</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ongkir</span>
+                    <strong>Rp @Model.Ongkir.ToString("N0")</strong>
+                </div>
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <strong>Total</strong>
+                    <strong class="text-success">Rp @Model.TotalBayar.ToString("N0")</strong>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h4>Alamat Pengiriman</h4>
+                <p class="mb-1"><strong>@Model.NamaPenerima</strong></p>
+                <p class="mb-1">@Model.TeleponPenerima</p>
+                <p class="mb-0">
+                    @Model.AlamatLengkap, @Model.Kota, @Model.Provinsi, @Model.KodePos
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="dashboard-section mb-4">
+                <h4>Informasi Pelanggan</h4>
+                <p class="mb-1"><strong>@Model.NamaCustomer</strong></p>
+                <p class="mb-1">Username: @Model.Username</p>
+                <p class="mb-0">Telepon: @Model.Telepon</p>
+
+                <hr />
+
+                <p class="mb-1">
+                    <small class="text-secondary">Tanggal Pesanan</small>
+                </p>
+                <p>@Model.TglPesan.ToString("dd MMMM yyyy HH:mm")</p>
+
+                <p class="mb-1">
+                    <small class="text-secondary">Status Pembayaran</small>
+                </p>
+                <p><strong>@Model.StatusPembayaran</strong></p>
+
+                <p class="mb-1">
+                    <small class="text-secondary">Status Pesanan</small>
+                </p>
+                <p><strong>@Model.Status</strong></p>
+            </div>
+
+            <div class="dashboard-section">
+                <h4>Informasi Pengiriman</h4>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Kurir))
+                {
+                    <p class="mb-1">Kurir: <strong>@Model.Kurir</strong></p>
+                    <p class="mb-1">Nomor Resi: <strong>@Model.NoResi</strong></p>
+                    <p>Status Pengiriman: @Model.StatusPengiriman</p>
+                }
+                else
+                {
+                    <p class="text-secondary">Belum ada data pengiriman.</p>
+                }
+
+                @if (statusBerikutnya != null)
+                {
+                    <hr />
+
+                    <h5>Perbarui Status</h5>
+
+                    <form asp-controller="AdminPesanan"
+                          asp-action="UbahStatus"
+                          asp-route-id="@Model.IdPemesanan"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="statusBaru"
+                               value="@statusBerikutnya" />
+
+                        @if (statusBerikutnya == "dikirim")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Nama Kurir</label>
+                                <input type="text"
+                                       name="kurir"
+                                       class="form-control"
+                                       placeholder="Contoh: JNE, J&T, SiCepat"
+                                       maxlength="100"
+                                       required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Nomor Resi</label>
+                                <input type="text"
+                                       name="noResi"
+                                       class="form-control"
+                                       placeholder="Masukkan nomor resi"
+                                       maxlength="100"
+                                       required />
+                            </div>
+                        }
+
+                        <button type="submit"
+                                class="btn btn-primary-custom w-100"
+                                onclick="return confirm('Ubah status pesanan menjadi @statusBerikutnya?')">
+                            Ubah Menjadi @statusBerikutnya
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-success mb-0">
+                        Pesanan sudah mencapai status akhir atau belum memenuhi syarat untuk diproses.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

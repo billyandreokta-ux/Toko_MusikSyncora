@@ -1,0 +1,252 @@
+﻿
+@model TokoMusik.Web.Models.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+
+    var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+}
+
+<div class="dashboard-container">
+
+    <div class="dashboard-heading">
+        <div>
+            <span class="eyebrow">ORDER CHECKOUT</span>
+            <h1>Checkout</h1>
+            <p>Periksa pesanan dan tentukan tujuan pengiriman.</p>
+        </div>
+
+        <a asp-controller="Keranjang"
+           asp-action="Index"
+           class="btn-outline-custom">
+            Kembali ke Keranjang
+        </a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <form asp-controller="Checkout"
+          asp-action="Proses"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div class="checkout-layout">
+
+            <div class="checkout-main">
+
+                <!-- ALAMAT PENGIRIMAN -->
+                <section class="dashboard-section">
+
+                    <h2>Alamat Pengiriman</h2>
+
+                    <p class="text-secondary">
+                        Pilih alamat tujuan pengiriman pesananmu.
+                    </p>
+
+                    <div class="checkout-address-list">
+
+                        @foreach (var alamat in Model.Alamat)
+                        {
+                            <label class="checkout-option">
+
+                                <input type="radio"
+                                       name="idAlamat"
+                                       value="@alamat.IdAlamat"
+                                       checked="@(Model.IdAlamat == alamat.IdAlamat)"
+                                       required />
+
+                                <div>
+                                    <strong>
+                                        @alamat.LabelAlamat
+
+                                        @if (alamat.IsUtama)
+                                        {
+                                            <span class="status-badge">
+                                                Utama
+                                            </span>
+                                        }
+                                    </strong>
+
+                                    <p>@alamat.Penerima</p>
+
+                                    <p>@alamat.Telepon</p>
+
+                                    <p>
+                                        @alamat.AlamatLengkap,
+                                        @alamat.Kota,
+                                        @alamat.Provinsi,
+                                        @alamat.KodePos
+                                    </p>
+                                </div>
+
+                            </label>
+                        }
+
+                    </div>
+
+                    <a asp-controller="Alamat"
+                       asp-action="Tambah"
+                       class="btn-outline-custom"
+                       style="margin-top:15px;">
+                        + Tambah Alamat Baru
+                    </a>
+
+                </section>
+
+
+                <!-- METODE PEMBAYARAN -->
+                <section class="dashboard-section">
+
+                    <h2>Metode Pembayaran</h2>
+
+                    <p class="text-secondary">
+                        Pilih metode pembayaran yang tersedia.
+                    </p>
+
+                    <div class="checkout-payment-list">
+
+                        @foreach (var metode in Model.MetodePembayaran)
+                        {
+                            <label class="checkout-option">
+
+                                <input type="radio"
+                                       name="idMetode"
+                                       value="@metode.IdMetode"
+                                       checked="@(Model.IdMetode == metode.IdMetode)"
+                                       required />
+
+                                <div>
+                                    <strong>@metode.NamaMetode</strong>
+
+                                    @if (!string.IsNullOrWhiteSpace(metode.Keterangan))
+                                    {
+                                        <p>@metode.Keterangan</p>
+                                    }
+                                </div>
+
+                            </label>
+                        }
+
+                    </div>
+
+                </section>
+
+
+                <!-- RINCIAN PRODUK -->
+                <section class="dashboard-section">
+
+                    <h2>Rincian Produk</h2>
+
+                    <div class="table-responsive">
+
+                        <table class="table-custom">
+
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Harga</th>
+                                    <th>Jumlah</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.NamaProduk</strong>
+                                            <br />
+                                            <small>@item.KodeProduk</small>
+                                        </td>
+
+                                        <td>
+                                            @item.HargaJual.ToString("C0", rupiah)
+                                        </td>
+
+                                        <td>
+                                            @item.Jumlah
+                                        </td>
+
+                                        <td>
+                                            <strong>
+                                                @item.Subtotal.ToString("C0", rupiah)
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- RINGKASAN PEMBAYARAN -->
+            <aside class="checkout-summary">
+
+                <h2>Ringkasan Pesanan</h2>
+
+                <div class="checkout-summary-row">
+                    <span>Total Produk</span>
+
+                    <strong>
+                        @Model.Subtotal.ToString("C0", rupiah)
+                    </strong>
+                </div>
+
+                <div class="checkout-summary-row">
+                    <span>Ongkos Kirim</span>
+
+                    <strong>
+                        @Model.Ongkir.ToString("C0", rupiah)
+                    </strong>
+                </div>
+
+                <div class="checkout-summary-row">
+                    <span>Diskon</span>
+
+                    <strong>
+                        @Model.Diskon.ToString("C0", rupiah)
+                    </strong>
+                </div>
+
+                <hr />
+
+                <div class="checkout-total">
+                    <span>Total Pembayaran</span>
+
+                    <h2>
+                        @Model.TotalBayar.ToString("C0", rupiah)
+                    </h2>
+                </div>
+
+                <p class="text-secondary">
+                    Pastikan alamat dan metode pembayaran sudah benar
+                    sebelum membuat pesanan.
+                </p>
+
+                <button type="submit"
+                        class="btn-primary-custom">
+                    Buat Pesanan
+                </button>
+
+            </aside>
+
+        </div>
+
+    </form>
+
+</div>

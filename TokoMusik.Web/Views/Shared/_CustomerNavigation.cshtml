@@ -1,0 +1,105 @@
+﻿
+@if (User.Identity?.IsAuthenticated == true && User.IsInRole("user"))
+{
+    <style>
+        .syncora-customer-nav {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            border-top: 1px solid #e8eee9;
+            border-bottom: 1px solid #e8eee9;
+        }
+
+        .syncora-customer-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 13px;
+            border-radius: 9px;
+            color: #42574b;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: .2s ease;
+        }
+
+        .syncora-customer-nav a:hover {
+            color: #176b45;
+            background: #eaf4ed;
+        }
+
+        .syncora-customer-nav a.active {
+            color: #176b45;
+            background: #e4f2e8;
+        }
+
+        .syncora-customer-nav .customer-nav-account {
+            margin-left: auto;
+            color: #176b45;
+        }
+
+        @@media (max-width: 650px) {
+            .syncora-customer-nav {
+                gap: 3px;
+            }
+
+            .syncora-customer-nav a {
+                padding: 8px 9px;
+                font-size: 12px;
+            }
+
+            .syncora-customer-nav .customer-nav-account {
+                margin-left: 0;
+            }
+        }
+    </style>
+
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    bool IsActive(string controller, string? action = null)
+    {
+        return string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+            && (action == null || string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase));
+    }
+
+    <nav class="syncora-customer-nav" aria-label="Navigasi pelanggan">
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="@(IsActive("Home") ? "active" : "")">
+            <span>⌂</span> Beranda
+        </a>
+
+        <a asp-controller="Produk"
+           asp-action="Index"
+           class="@(IsActive("Produk") ? "active" : "")">
+            <span>♫</span> Produk
+        </a>
+
+        <a asp-controller="Keranjang"
+           asp-action="Index"
+           class="@(IsActive("Keranjang") ? "active" : "")">
+            <span>🛒</span> Keranjang
+        </a>
+
+        <a asp-controller="Alamat"
+           asp-action="Index"
+           class="@(IsActive("Alamat") ? "active" : "")">
+            <span>⌖</span> Alamat
+        </a>
+
+        <a asp-controller="PesananSaya"
+           asp-action="Index"
+           class="@(IsActive("PesananSaya") ? "active" : "")">
+            <span>▤</span> Pesanan Saya
+        </a>
+
+        <a asp-controller="Profil"
+           asp-action="Index"
+           class="customer-nav-account @(IsActive("Profil") ? "active" : "")">
+            <span>●</span> Profil Saya
+        </a>
+    </nav>
+}

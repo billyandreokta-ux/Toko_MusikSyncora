@@ -1,0 +1,83 @@
+﻿
+@model List<TokoMusik.Web.Models.PesananViewModel>
+
+@{
+    ViewData["Title"] = "Riwayat Pesanan";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Riwayat Pesanan</h2>
+            <p class="text-secondary">Lihat semua transaksi dan status pesanan Anda.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="dashboard-section">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <h4>Belum Ada Pesanan</h4>
+                <p class="text-secondary">Pesanan yang Anda buat akan muncul di sini.</p>
+                <a asp-controller="Produk" asp-action="Index" class="btn btn-primary-custom">
+                    Mulai Belanja
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>No. Pesanan</th>
+                            <th>Tanggal</th>
+                            <th>Total</th>
+                            <th>Pembayaran</th>
+                            <th>Status Pesanan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>#@item.IdPemesanan</td>
+                                <td>@item.TglPesan.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>Rp @item.TotalBayar.ToString("N0")</td>
+                                <td>
+                                    <span class="status-badge">
+                                        @item.StatusPembayaran
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge">
+                                        @item.StatusPesanan
+                                    </span>
+                                </td>
+                                <td>
+                                    <a asp-controller="PesananSaya"
+                                       asp-action="Detail"
+                                       asp-route-id="@item.IdPemesanan"
+                                       class="btn btn-outline-custom btn-sm">
+                                        Detail
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

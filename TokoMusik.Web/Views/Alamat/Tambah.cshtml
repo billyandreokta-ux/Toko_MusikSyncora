@@ -1,0 +1,108 @@
+﻿
+@model TokoMusik.Web.Models.AlamatCustomer
+
+@{
+    ViewData["Title"] = "Tambah Alamat";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <span class="eyebrow">DELIVERY ADDRESS</span>
+            <h1>Tambah Alamat</h1>
+            <p>Masukkan informasi alamat tujuan pengiriman.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-section" style="max-width:750px;">
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger"></div>
+
+        <form asp-action="Tambah" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label asp-for="LabelAlamat">Label Alamat</label>
+                <select asp-for="LabelAlamat" class="form-control">
+                    <option value="Rumah">Rumah</option>
+                    <option value="Kantor">Kantor</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+                <span asp-validation-for="LabelAlamat"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Penerima">Nama Penerima</label>
+                <input asp-for="Penerima"
+                       class="form-control"
+                       placeholder="Nama penerima barang" />
+                <span asp-validation-for="Penerima"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Telepon">Nomor Telepon</label>
+                <input asp-for="Telepon"
+                       class="form-control"
+                       placeholder="08xxxxxxxxxx" />
+                <span asp-validation-for="Telepon"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AlamatLengkap">Alamat Lengkap</label>
+                <textarea asp-for="AlamatLengkap"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, dan kecamatan"></textarea>
+                <span asp-validation-for="AlamatLengkap"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Kota">Kota/Kabupaten</label>
+                <input asp-for="Kota"
+                       class="form-control"
+                       placeholder="Nama kota atau kabupaten" />
+                <span asp-validation-for="Kota"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Provinsi">Provinsi</label>
+                <input asp-for="Provinsi"
+                       class="form-control"
+                       placeholder="Nama provinsi" />
+                <span asp-validation-for="Provinsi"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="KodePos">Kode Pos</label>
+                <input asp-for="KodePos"
+                       class="form-control"
+                       placeholder="Kode pos" />
+                <span asp-validation-for="KodePos"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input asp-for="IsUtama" />
+                    Jadikan sebagai alamat utama
+                </label>
+            </div>
+
+            <button type="submit" class="btn-primary-custom">
+                Simpan Alamat
+            </button>
+
+            <a asp-action="Index"
+               class="btn-outline-custom"
+               style="display:block;margin-top:12px;">
+                Batal
+            </a>
+        </form>
+    </div>
+</div>

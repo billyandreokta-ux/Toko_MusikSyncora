@@ -1,147 +1,989 @@
-﻿@{
-    ViewData["Title"] = "Beranda";
+﻿
+@{
+    ViewData["Title"] = "Syncora - Find Your Sound";
+    Layout = "_Layout";
 }
 
-<section class="hero">
-    <div class="container hero-content">
+<style>
+    .syncora-home {
+        --sync-green: #174c35;
+        --sync-dark: #102f24;
+        --sync-light: #e9f0e9;
+        --sync-cream: #f8f7f2;
+        --sync-text: #202923;
+        color: var(--sync-text);
+        background: var(--sync-cream);
+        overflow: hidden;
+    }
 
-        <div>
-            <span class="eyebrow">MUSIC STORE</span>
+    .syncora-home * {
+        box-sizing: border-box;
+    }
 
-            <h1>
-                Temukan Instrumen Musik
-                <span>Favoritmu.</span>
-            </h1>
+    .syncora-container {
+        width: min(1180px, calc(100% - 48px));
+        margin: 0 auto;
+    }
 
-            <p>
-                Temukan berbagai alat musik berkualitas
-                untuk menemani perjalanan bermusikmu.
-            </p>
+    .syncora-hero {
+        min-height: 570px;
+        display: flex;
+        align-items: center;
+        position: relative;
+        background: #102f24;
+        color: white;
+        overflow: hidden;
+    }
 
-            <a href="#produk" class="btn-primary">
-                Lihat Produk
-            </a>
-        </div>
+    .syncora-hero::before {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        right: -100px;
+        top: -220px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+    }
 
-        <div class="hero-decoration">
-            <span>♫</span>
-        </div>
+    .syncora-hero::after {
+        content: "";
+        position: absolute;
+        width: 470px;
+        height: 470px;
+        right: -25px;
+        top: -145px;
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 50%;
+    }
 
-    </div>
-</section>
+    .syncora-hero-content {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
+        align-items: center;
+        gap: 45px;
+        padding-top: 65px;
+        padding-bottom: 65px;
+    }
 
-<section class="products-section" id="produk">
-    <div class="container">
+    .syncora-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #c7d8c8;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 23px;
+    }
 
-        <div class="section-heading">
+    .syncora-eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 1px;
+        background: #a8c5aa;
+    }
+
+    .syncora-hero h1 {
+        font-size: clamp(42px, 5.5vw, 68px);
+        line-height: 1.08;
+        letter-spacing: -2.5px;
+        font-weight: 750;
+        margin: 0 0 24px;
+        max-width: 620px;
+    }
+
+    .syncora-hero h1 span {
+        color: #a9c9a9;
+    }
+
+    .syncora-hero-description {
+        max-width: 480px;
+        color: #d1ddd4;
+        font-size: 16px;
+        line-height: 1.8;
+        margin-bottom: 34px;
+    }
+
+    .syncora-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 13px;
+    }
+
+    .syncora-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 23px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        transition: .25s ease;
+    }
+
+    .syncora-btn-primary {
+        background: #e5eee2;
+        color: #173e2d;
+    }
+
+    .syncora-btn-primary:hover {
+        background: white;
+        color: #173e2d;
+        transform: translateY(-2px);
+    }
+
+    .syncora-btn-outline {
+        border: 1px solid rgba(255,255,255,.45);
+        color: white;
+    }
+
+    .syncora-btn-outline:hover {
+        background: rgba(255,255,255,.1);
+        color: white;
+    }
+
+    .syncora-hero-visual {
+        position: relative;
+        min-height: 390px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .syncora-hero-image {
+        width: 100%;
+        max-width: 440px;
+        height: 390px;
+        object-fit: cover;
+        border-radius: 5px;
+        position: relative;
+        z-index: 1;
+        box-shadow: 20px 25px 60px rgba(0,0,0,.28);
+    }
+
+    .syncora-image-label {
+        position: absolute;
+        z-index: 2;
+        left: 0;
+        bottom: 15px;
+        background: #f7f5ec;
+        color: #173e2d;
+        padding: 17px 22px;
+        min-width: 185px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    }
+
+    .syncora-image-label small {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: #718274;
+        margin-bottom: 5px;
+    }
+
+    .syncora-image-label strong {
+        font-size: 15px;
+        letter-spacing: .5px;
+    }
+
+    /* Trust section */
+
+    .syncora-benefits {
+        background: #fff;
+        border-bottom: 1px solid #e9e9e2;
+    }
+
+    .syncora-benefit-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        padding: 27px 0;
+        gap: 25px;
+    }
+
+    .syncora-benefit {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .syncora-benefit-icon {
+        width: 43px;
+        height: 43px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #edf3ec;
+        color: #24583d;
+        font-size: 19px;
+    }
+
+    .syncora-benefit strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .syncora-benefit span {
+        display: block;
+        color: #81877f;
+        font-size: 11px;
+    }
+
+    /* General section */
+
+    .syncora-section {
+        padding: 82px 0;
+    }
+
+    .syncora-section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .syncora-section-kicker {
+        display: block;
+        color: #6d8b70;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    .syncora-section-heading h2 {
+        font-size: clamp(27px, 3vw, 36px);
+        letter-spacing: -1px;
+        line-height: 1.2;
+        color: #1b3025;
+        margin: 0;
+        font-weight: 750;
+    }
+
+    .syncora-section-heading p {
+        color: #858b83;
+        font-size: 13px;
+        line-height: 1.7;
+        max-width: 390px;
+        margin: 10px 0 0;
+    }
+
+    .syncora-text-link {
+        color: #24583d;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .syncora-text-link:hover {
+        color: #63896a;
+    }
+
+    /* Categories */
+
+    .syncora-categories {
+        background: #f8f7f2;
+    }
+
+    .syncora-category-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    .syncora-category-card {
+        display: block;
+        position: relative;
+        height: 270px;
+        overflow: hidden;
+        border-radius: 5px;
+        background: #203c2d;
+        text-decoration: none;
+    }
+
+    .syncora-category-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: .78;
+        transition: transform .5s ease, opacity .5s ease;
+    }
+
+    .syncora-category-card:hover img {
+        transform: scale(1.07);
+        opacity: .95;
+    }
+
+    .syncora-category-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: end;
+        padding: 22px;
+        background: linear-gradient(transparent 25%, rgba(8,25,17,.85));
+        color: white;
+    }
+
+    .syncora-category-overlay small {
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #d4e2d4;
+        margin-bottom: 7px;
+    }
+
+    .syncora-category-overlay strong {
+        font-size: 19px;
+        font-weight: 700;
+    }
+
+    /* Products */
+
+    .syncora-products {
+        background: #fff;
+    }
+
+    .syncora-product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .syncora-product-card {
+        min-width: 0;
+        border: 1px solid #eceee8;
+        background: white;
+        border-radius: 5px;
+        overflow: hidden;
+        transition: .25s ease;
+    }
+
+    .syncora-product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(25,55,35,.09);
+        border-color: #d6e2d5;
+    }
+
+    .syncora-product-image {
+        height: 215px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f6f1;
+        overflow: hidden;
+    }
+
+    .syncora-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 15px;
+        transition: transform .3s ease;
+    }
+
+    .syncora-product-card:hover .syncora-product-image img {
+        transform: scale(1.05);
+    }
+
+    .syncora-product-info {
+        padding: 17px;
+    }
+
+    .syncora-product-category {
+        color: #7b927d;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .syncora-product-name {
+        color: #25352a;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.5;
+        min-height: 42px;
+        margin-bottom: 10px;
+    }
+
+    .syncora-product-price {
+        color: #24583d;
+        font-size: 15px;
+        font-weight: 800;
+        margin-bottom: 14px;
+    }
+
+    .syncora-product-detail {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #dce6dc;
+        color: #24583d;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 3px;
+        transition: .2s ease;
+    }
+
+    .syncora-product-detail:hover {
+        background: #174c35;
+        border-color: #174c35;
+        color: white;
+    }
+
+    .syncora-loading,
+    .syncora-empty {
+        grid-column: 1 / -1;
+        padding: 45px 20px;
+        text-align: center;
+        color: #788078;
+        background: #f7f8f4;
+        border-radius: 5px;
+        font-size: 13px;
+    }
+
+    /* Brand banner */
+
+    .syncora-brand-banner {
+        padding: 0 0 82px;
+        background: white;
+    }
+
+    .syncora-banner-inner {
+        min-height: 260px;
+        padding: 45px 55px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 30px;
+        background: #174c35;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        border-radius: 5px;
+    }
+
+    .syncora-banner-inner::after {
+        content: "S";
+        position: absolute;
+        right: 60px;
+        top: -100px;
+        font-size: 350px;
+        line-height: 1;
+        font-weight: 800;
+        color: rgba(255,255,255,.045);
+        pointer-events: none;
+    }
+
+    .syncora-banner-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .syncora-banner-content small {
+        display: block;
+        color: #b9d2ba;
+        font-size: 10px;
+        letter-spacing: 3px;
+        font-weight: 700;
+        margin-bottom: 13px;
+    }
+
+    .syncora-banner-content h2 {
+        font-size: clamp(25px, 3vw, 37px);
+        line-height: 1.2;
+        margin: 0 0 12px;
+        letter-spacing: -1px;
+    }
+
+    .syncora-banner-content p {
+        color: #d2dfd3;
+        font-size: 13px;
+        line-height: 1.7;
+        margin: 0;
+        max-width: 500px;
+    }
+
+    .syncora-banner-inner .syncora-btn {
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+    }
+
+    @@media (max-width: 900px) {
+        .syncora-hero-content {
+            grid-template-columns: 1fr  .85fr;
+            gap: 25px;
+        }
+
+        .syncora-hero-image {
+            height: 330px;
+        }
+
+        .syncora-category-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .syncora-product-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 650px) {
+        .syncora-container {
+            width: min(100% - 32px, 1180px);
+        }
+
+        .syncora-hero {
+            min-height: auto;
+        }
+
+        .syncora-hero-content {
+            grid-template-columns: 1fr;
+            padding-top: 65px;
+            padding-bottom: 55px;
+        }
+
+        .syncora-hero h1 {
+            font-size: 43px;
+        }
+
+        .syncora-hero-description {
+            font-size: 14px;
+        }
+
+        .syncora-hero-visual {
+            min-height: 280px;
+            margin-top: 10px;
+        }
+
+        .syncora-hero-image {
+            height: 280px;
+            max-width: 100%;
+        }
+
+        .syncora-image-label {
+            left: 10px;
+            bottom: 10px;
+        }
+
+        .syncora-benefit-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 25px 0;
+        }
+
+        .syncora-section {
+            padding: 60px 0;
+        }
+
+        .syncora-section-heading {
+            align-items: start;
+            flex-direction: column;
+        }
+
+        .syncora-category-card {
+            height: 205px;
+        }
+
+        .syncora-category-overlay {
+            padding: 14px;
+        }
+
+        .syncora-category-overlay strong {
+            font-size: 16px;
+        }
+
+        .syncora-product-grid {
+            gap: 12px;
+        }
+
+        .syncora-product-image {
+            height: 155px;
+        }
+
+        .syncora-product-info {
+            padding: 12px;
+        }
+
+        .syncora-product-name {
+            font-size: 12px;
+        }
+
+        .syncora-product-price {
+            font-size: 13px;
+        }
+
+        .syncora-banner-inner {
+            padding: 35px 25px;
+            align-items: start;
+            flex-direction: column;
+        }
+
+        .syncora-brand-banner {
+            padding-bottom: 55px;
+        }
+    }
+</style>
+
+<div class="syncora-home">
+
+    <!-- HERO -->
+    <section class="syncora-hero">
+        <div class="syncora-container syncora-hero-content">
+
             <div>
-                <span class="eyebrow">KOLEKSI KAMI</span>
-                <h2>Produk Pilihan</h2>
+                <div class="syncora-eyebrow">Welcome to Syncora</div>
+
+                <h1>
+                    Find Your<br />
+                    <span>Sound.</span> Define Your Style.
+                </h1>
+
+                <p class="syncora-hero-description">
+                    Temukan alat musik dan perlengkapan audio pilihan
+                    untuk menemani setiap perjalanan musikalmu.
+                    Mulai ciptakan suara yang menjadi ciri khasmu bersama Syncora.
+                </p>
+
+                <div class="syncora-hero-actions">
+                    <a href="/Produk" class="syncora-btn syncora-btn-primary">
+                        Jelajahi Produk <span>→</span>
+                    </a>
+
+                    <a href="#kategori" class="syncora-btn syncora-btn-outline">
+                        Lihat Kategori
+                    </a>
+                </div>
             </div>
 
-            <span class="product-count" id="jumlahProduk">
-                Memuat produk...
-            </span>
+            <div class="syncora-hero-visual">
+                <img
+                    class="syncora-hero-image"
+                    src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=1000&q=85"
+                    alt="Musisi memainkan gitar"
+                    onerror="this.style.display='none';" />
+
+                <div class="syncora-image-label">
+                    <small>YOUR MUSIC JOURNEY</small>
+                    <strong>Start with Syncora.</strong>
+                </div>
+            </div>
+
         </div>
+    </section>
 
-        <div id="produkList" class="product-grid">
-            <p>Memuat data produk...</p>
+    <!-- BENEFITS -->
+    <section class="syncora-benefits">
+        <div class="syncora-container syncora-benefit-grid">
+
+            <div class="syncora-benefit">
+                <div class="syncora-benefit-icon">♫</div>
+                <div>
+                    <strong>Pilihan Produk Musik</strong>
+                    <span>Beragam instrumen untuk kebutuhanmu</span>
+                </div>
+            </div>
+
+            <div class="syncora-benefit">
+                <div class="syncora-benefit-icon">✓</div>
+                <div>
+                    <strong>Transaksi Praktis</strong>
+                    <span>Proses belanja yang mudah dan nyaman</span>
+                </div>
+            </div>
+
+            <div class="syncora-benefit">
+                <div class="syncora-benefit-icon">◎</div>
+                <div>
+                    <strong>Untuk Setiap Musisi</strong>
+                    <span>Dari pemula hingga profesional</span>
+                </div>
+            </div>
+
         </div>
+    </section>
 
-        <p id="pesanError" class="error-message"></p>
+    <!-- CATEGORIES -->
+    <section class="syncora-section syncora-categories" id="kategori">
+        <div class="syncora-container">
 
-    </div>
-</section>
+            <div class="syncora-section-heading">
+                <div>
+                    <span class="syncora-section-kicker">Explore Collections</span>
+                    <h2>Temukan Instrumenmu</h2>
+                    <p>
+                        Setiap instrumen punya karakter. Temukan yang paling
+                        sesuai dengan musik dan kreativitasmu.
+                    </p>
+                </div>
 
-@section Scripts {
+                <a href="/Produk" class="syncora-text-link">
+                    Semua Produk →
+                </a>
+            </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", async function () {
+            <div class="syncora-category-grid">
 
-            const produkList = document.getElementById("produkList");
-            const jumlahProduk = document.getElementById("jumlahProduk");
-            const pesanError = document.getElementById("pesanError");
+                <a href="/Produk" class="syncora-category-card">
+                    <img
+                        src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=700&q=80"
+                        alt="Gitar" />
+                    <div class="syncora-category-overlay">
+                        <small>String Instruments</small>
+                        <strong>Gitar</strong>
+                    </div>
+                </a>
 
-            try {
+                <a href="/Produk" class="syncora-category-card">
+                    <img
+                        src="https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=700&q=80"
+                        alt="Piano dan keyboard" />
+                    <div class="syncora-category-overlay">
+                        <small>Keys & Piano</small>
+                        <strong>Keyboard</strong>
+                    </div>
+                </a>
 
-                const response = await fetch("/api/produk");
+                <a href="/Produk" class="syncora-category-card">
+                    <img
+                        src="https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?auto=format&fit=crop&w=700&q=80"
+                        alt="Drum" />
+                    <div class="syncora-category-overlay">
+                        <small>Percussion</small>
+                        <strong>Drum</strong>
+                    </div>
+                </a>
 
+                <a href="/Produk" class="syncora-category-card">
+                    <img
+                        src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=700&q=80"
+                        alt="Peralatan audio" />
+                    <div class="syncora-category-overlay">
+                        <small>Sound Equipment</small>
+                        <strong>Audio & Mikrofon</strong>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="syncora-section syncora-products" id="produk">
+        <div class="syncora-container">
+
+            <div class="syncora-section-heading">
+                <div>
+                    <span class="syncora-section-kicker">Our Collection</span>
+                    <h2>Produk Pilihan</h2>
+                    <p>
+                        Lihat koleksi produk musik yang tersedia di Syncora.
+                    </p>
+                </div>
+
+                <a href="/Produk" class="syncora-text-link">
+                    Lihat Katalog →
+                </a>
+            </div>
+
+            <div class="syncora-product-grid" id="syncoraProductGrid">
+                <div class="syncora-loading">
+                    Memuat koleksi produk Syncora...
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- BRAND BANNER -->
+    <section class="syncora-brand-banner">
+        <div class="syncora-container">
+            <div class="syncora-banner-inner">
+
+                <div class="syncora-banner-content">
+                    <small>MAKE EVERY NOTE MATTER</small>
+                    <h2>Musik adalah tentang menemukan dirimu.</h2>
+                    <p>
+                        Apa pun genre dan perjalanan musikmu, Syncora hadir
+                        untuk menjadi bagian dari setiap nada yang kamu ciptakan.
+                    </p>
+                </div>
+
+                <a href="/Produk" class="syncora-btn syncora-btn-primary">
+                    Mulai Belanja <span>→</span>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const productGrid = document.getElementById("syncoraProductGrid");
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, function (char) {
+                const entities = {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#039;"
+                };
+
+                return entities[char];
+            });
+        }
+
+        function getValue(item, ...keys) {
+            for (const key of keys) {
+                if (item && item[key] !== undefined && item[key] !== null) {
+                    return item[key];
+                }
+            }
+
+            return "";
+        }
+
+        function formatRupiah(value) {
+            const number = Number(value);
+
+            if (!Number.isFinite(number)) {
+                return "Harga belum tersedia";
+            }
+
+            return new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                maximumFractionDigits: 0
+            }).format(number);
+        }
+
+        function getImageUrl(photo) {
+            if (!photo) {
+                return "https://placehold.co/500x400/f1f3ed/45634d?text=Syncora";
+            }
+
+            const value = String(photo).trim();
+
+            if (value.startsWith("http://") || value.startsWith("https://")) {
+                return value;
+            }
+
+            if (value.startsWith("/")) {
+                return value;
+            }
+
+            return "/images/" + value;
+        }
+
+        function renderProducts(products) {
+            if (!Array.isArray(products) || products.length === 0) {
+                productGrid.innerHTML = `
+                    <div class="syncora-empty">
+                        Belum ada produk yang dapat ditampilkan.
+                        <br />
+                        Silakan periksa kembali katalog produk.
+                    </div>
+                `;
+                return;
+            }
+
+            productGrid.innerHTML = products.slice(0, 4).map(function (item) {
+
+                const id = getValue(item, "idProduk", "IdProduk", "id_produk");
+                const name = getValue(item, "namaProduk", "NamaProduk", "nama_produk") || "Produk Syncora";
+                const category = getValue(item, "namaCategory", "NamaCategory", "namaKategori", "NamaKategori") || "Instrumen Musik";
+                const price = getValue(item, "hargaJual", "HargaJual", "harga_jual");
+                const photo = getValue(item, "foto", "Foto", "gambar", "Gambar");
+                const image = getImageUrl(photo);
+
+                return `
+                    <article class="syncora-product-card">
+                        <div class="syncora-product-image">
+                            <img
+                                src="${escapeHtml(image)}"
+                                alt="${escapeHtml(name)}"
+                                loading="lazy"
+                                onerror="this.onerror=null;this.src='https://placehold.co/500x400/f1f3ed/45634d?text=Syncora';" />
+                        </div>
+
+                        <div class="syncora-product-info">
+                            <div class="syncora-product-category">
+                                ${escapeHtml(category)}
+                            </div>
+
+                            <div class="syncora-product-name">
+                                ${escapeHtml(name)}
+                            </div>
+
+                            <div class="syncora-product-price">
+                                ${escapeHtml(formatRupiah(price))}
+                            </div>
+
+                            <a
+                                href="/Produk/Detail/${encodeURIComponent(id)}"
+                                class="syncora-product-detail">
+                                Lihat Detail Produk →
+                            </a>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+        }
+
+        fetch("/api/produk")
+            .then(function (response) {
                 if (!response.ok) {
                     throw new Error("Gagal mengambil data produk.");
                 }
 
-                const data = await response.json();
+                return response.json();
+            })
+            .then(function (result) {
+                let products = result;
 
-                const produkAktif = data.filter(
-                    p => p.status === "aktif"
-                );
-
-                jumlahProduk.textContent =
-                    produkAktif.length + " produk tersedia";
-
-                produkList.replaceChildren();
-
-                if (produkAktif.length === 0) {
-                    produkList.textContent =
-                        "Belum ada produk tersedia.";
-                    return;
+                if (!Array.isArray(products)) {
+                    products =
+                        result.data ||
+                        result.Data ||
+                        result.items ||
+                        result.Items ||
+                        result.produk ||
+                        result.Produk ||
+                        [];
                 }
 
-                produkAktif.forEach(function (produk) {
+                renderProducts(products);
+            })
+            .catch(function (error) {
+                console.error("Syncora product loading error:", error);
 
-                    const card = document.createElement("article");
-                    card.className = "product-card";
+                productGrid.innerHTML = `
+                    <div class="syncora-empty">
+                        Produk belum dapat dimuat.
+                        <br />
+                        Silakan coba kembali beberapa saat lagi.
+                    </div>
+                `;
+            });
 
-                    const image = document.createElement("div");
-                    image.className = "product-image";
-
-                    if (produk.foto) {
-                        const img = document.createElement("img");
-                        img.src = "/images/" + encodeURIComponent(
-                            produk.foto
-                        );
-                        img.alt = produk.namaProduk;
-                        image.appendChild(img);
-                    } else {
-                        image.textContent = "♫";
-                    }
-
-                    const info = document.createElement("div");
-                    info.className = "product-info";
-
-                    const code = document.createElement("span");
-                    code.className = "product-code";
-                    code.textContent = produk.kodeProduk;
-
-                    const name = document.createElement("h3");
-                    name.textContent = produk.namaProduk;
-
-                    const price = document.createElement("p");
-                    price.className = "product-price";
-                    price.textContent = new Intl.NumberFormat(
-                        "id-ID",
-                        {
-                            style: "currency",
-                            currency: "IDR",
-                            maximumFractionDigits: 0
-                        }
-                    ).format(produk.hargaJual);
-
-                    info.append(code, name, price);
-                    card.append(image, info);
-                    produkList.appendChild(card);
-                });
-
-            } catch (error) {
-
-                produkList.textContent =
-                    "Produk belum dapat ditampilkan.";
-
-                pesanError.textContent = error.message;
-
-            }
-
-        });
-    </script>
-
-}
+    });
+</script>

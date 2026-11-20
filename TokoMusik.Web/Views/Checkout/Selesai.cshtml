@@ -1,0 +1,140 @@
+﻿
+@model TokoMusik.Web.Models.CheckoutSelesaiViewModel
+
+@{
+    ViewData["Title"] = "Pesanan Berhasil";
+
+    var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+}
+
+<div class="dashboard-container">
+
+    <div class="dashboard-section text-center">
+
+        <div style="font-size:56px;margin-bottom:15px;">
+            ✓
+        </div>
+
+        <span class="eyebrow">ORDER SUCCESSFUL</span>
+
+        <h1>Pesanan Berhasil Dibuat!</h1>
+
+        <p class="text-secondary">
+            Terima kasih telah berbelanja di TokoMusik.
+            Pesananmu sudah tercatat dalam sistem.
+        </p>
+
+        <div class="order-success-number">
+            <span>Nomor Pesanan</span>
+
+            <h2>#@Model.IdPemesanan</h2>
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-section">
+
+        <h2>Informasi Pesanan</h2>
+
+        <div class="specification-row">
+            <span>Nomor Pesanan</span>
+            <strong>#@Model.IdPemesanan</strong>
+        </div>
+
+        <div class="specification-row">
+            <span>Tanggal Pesanan</span>
+            <strong>
+                @Model.TanggalPesan.ToString("dd MMMM yyyy HH:mm")
+            </strong>
+        </div>
+
+        <div class="specification-row">
+            <span>Status Pesanan</span>
+            <strong>@Model.StatusPesanan</strong>
+        </div>
+
+        <div class="specification-row">
+            <span>Metode Pembayaran</span>
+            <strong>@Model.NamaMetode</strong>
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-section">
+
+        <h2>Alamat Pengiriman</h2>
+
+        <strong>@Model.NamaPenerima</strong>
+
+        <p>@Model.Telepon</p>
+
+        <p>
+            @Model.AlamatLengkap,
+            @Model.Kota,
+            @Model.Provinsi,
+            @Model.KodePos
+        </p>
+
+    </div>
+
+
+    <div class="dashboard-section">
+
+        <h2>Rincian Pembayaran</h2>
+
+        <div class="specification-row">
+            <span>Subtotal Produk</span>
+            <strong>
+                @Model.Subtotal.ToString("C0", rupiah)
+            </strong>
+        </div>
+
+        <div class="specification-row">
+            <span>Ongkos Kirim</span>
+            <strong>
+                @Model.Ongkir.ToString("C0", rupiah)
+            </strong>
+        </div>
+
+        <div class="specification-row">
+            <span>Diskon</span>
+            <strong>
+                @Model.Diskon.ToString("C0", rupiah)
+            </strong>
+        </div>
+
+        <div class="specification-row">
+            <span>Total Pembayaran</span>
+            <strong>
+                @Model.TotalBayar.ToString("C0", rupiah)
+            </strong>
+        </div>
+
+        <p class="text-secondary" style="margin-top:20px;">
+            Pembayaran masih menunggu proses konfirmasi.
+            Silakan lanjutkan sesuai petunjuk metode pembayaran
+            yang dipilih.
+        </p>
+
+    </div>
+
+
+    <div class="cart-actions">
+
+        <a asp-controller="User"
+           asp-action="Index"
+           class="btn-primary-custom">
+            Lihat Pesanan Saya
+        </a>
+
+        <a asp-controller="Produk"
+           asp-action="Index"
+           class="btn-outline-custom">
+            Kembali Belanja
+        </a>
+
+    </div>
+
+</div>

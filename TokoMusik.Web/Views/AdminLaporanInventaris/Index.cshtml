@@ -1,0 +1,276 @@
+﻿
+@model TokoMusik.Web.Models.LaporanInventarisViewModel
+
+@{
+    ViewData["Title"] = "Laporan Inventaris";
+
+    var nilaiMaksimalProduk = Model.ProdukTerlarisRestock.Any()
+        ? Model.ProdukTerlarisRestock.Max(x => x.TotalUnitMasuk)
+        : 1;
+
+    var nilaiMaksimalSupplier = Model.PembelianPerSupplier.Any()
+        ? Model.PembelianPerSupplier.Max(x => x.TotalPembelian)
+        : 1;
+}
+
+<style>
+    .inventory-report-page {
+        padding: 30px 0 55px;
+        color: #293b30;
+    }
+
+    .inventory-report-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .inventory-report-heading h1 {
+        font-size: 27px;
+        font-weight: 750;
+        margin-bottom: 5px;
+    }
+
+    .inventory-report-heading p {
+        color: #829087;
+        margin: 0;
+    }
+
+    .inventory-report-actions {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+
+    .inventory-report-button {
+        display: inline-block;
+        padding: 11px 16px;
+        border-radius: 9px;
+        background: #176b45;
+        color: white;
+        text-decoration: none;
+        border: 0;
+        font-size: 13px;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .inventory-report-button:hover {
+        color: white;
+        background: #105638;
+    }
+
+    .inventory-report-button.secondary {
+        background: #edf3ef;
+        color: #315640;
+    }
+
+    .inventory-report-filter {
+        display: flex;
+        align-items: end;
+        flex-wrap: wrap;
+        gap: 13px;
+        background: white;
+        border: 1px solid #e5ece7;
+        border-radius: 14px;
+        padding: 19px;
+        margin-bottom: 22px;
+    }
+
+    .inventory-report-filter-group {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .inventory-report-filter-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 650;
+        margin-bottom: 7px;
+    }
+
+    .inventory-report-filter-group input {
+        width: 100%;
+        min-height: 43px;
+        padding: 9px 12px;
+        border: 1px solid #dce5df;
+        border-radius: 8px;
+    }
+
+    .inventory-report-filter-group input:focus {
+        outline: none;
+        border-color: #24764f;
+        box-shadow: 0 0 0 3px rgba(36, 118, 79, .1);
+    }
+
+    .inventory-report-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .inventory-report-card {
+        background: white;
+        border: 1px solid #e5ece7;
+        border-radius: 13px;
+        padding: 19px;
+        box-shadow: 0 4px 16px rgba(25, 55, 39, .035);
+        min-width: 0;
+    }
+
+    .inventory-report-card-label {
+        color: #829087;
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .inventory-report-card-value {
+        font-size: 25px;
+        font-weight: 750;
+        overflow-wrap: anywhere;
+    }
+
+    .inventory-report-card-description {
+        color: #87928b;
+        font-size: 11px;
+        margin-top: 6px;
+    }
+
+    .inventory-report-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 20px;
+    }
+
+    .inventory-report-section {
+        background: white;
+        border: 1px solid #e5ece7;
+        border-radius: 14px;
+        padding: 21px;
+        min-width: 0;
+    }
+
+    .inventory-report-section h2 {
+        font-size: 17px;
+        font-weight: 750;
+        margin: 0 0 5px;
+    }
+
+    .inventory-report-section-description {
+        color: #87928b;
+        font-size: 12px;
+        margin-bottom: 21px;
+    }
+
+    .inventory-report-ranking {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .inventory-report-ranking-item {
+        min-width: 0;
+    }
+
+    .inventory-report-ranking-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .inventory-report-ranking-name {
+        font-size: 13px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .inventory-report-ranking-value {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .inventory-report-progress {
+        height: 8px;
+        background: #edf2ee;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .inventory-report-progress-fill {
+        height: 100%;
+        background: #24764f;
+        border-radius: 20px;
+        min-width: 3px;
+    }
+
+    .inventory-report-progress-fill.supplier {
+        background: #729b7e;
+    }
+
+    .inventory-report-subtext {
+        font-size: 11px;
+        color: #87928b;
+        margin-top: 6px;
+    }
+
+    .inventory-report-movement {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+    }
+
+    .inventory-report-movement-item {
+        background: #f7faf8;
+        border-radius: 11px;
+        padding: 17px;
+    }
+
+    .inventory-report-movement-label {
+        font-size: 12px;
+        color: #829087;
+        margin-bottom: 8px;
+    }
+
+    .inventory-report-movement-value {
+        font-size: 24px;
+        font-weight: 750;
+    }
+
+    .inventory-report-movement-value.in {
+        color: #207747;
+    }
+
+    .inventory-report-movement-value.out {
+        color: #b33b36;
+    }
+
+    .inventory-report-table-wrap {
+        overflow-x: auto;
+    }
+
+    .inventory-report-table {
+        width: 100%;
+        min-width: 650px;
+        border-collapse: collapse;
+    }
+
+    .inventory-report-table th {
+        text-align: left;
+        padding: 12px;
+        background: #f6f9f7;
+        color: #718078;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .inventory-report-table td {
+        padding: 13px

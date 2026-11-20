@@ -1,0 +1,212 @@
+﻿@model IEnumerable<TokoMusik.Web.Models.KeranjangViewModel>
+
+@{
+    ViewData["Title"] = "Keranjang Belanja";
+
+    var daftar = Model.ToList();
+
+    decimal total = daftar.Sum(x => x.Subtotal);
+
+    var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+}
+
+<div class="dashboard-container">
+
+    <div class="dashboard-heading">
+
+        <div>
+            <span class="eyebrow">YOUR SHOPPING CART</span>
+
+            <h1>Keranjang Belanja</h1>
+
+            <p>
+                Periksa kembali produk sebelum melanjutkan pembelian.
+            </p>
+        </div>
+
+    </div>
+
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+
+    @if (!daftar.Any())
+    {
+        <div class="dashboard-section text-center">
+
+            <h2>Keranjang Masih Kosong</h2>
+
+            <p class="text-secondary">
+                Kamu belum menambahkan produk ke keranjang.
+            </p>
+
+            <a asp-controller="Produk"
+               asp-action="Index"
+               class="btn-primary-custom"
+               style="max-width:240px;margin:auto;">
+                Mulai Belanja
+            </a>
+
+        </div>
+    }
+    else
+    {
+        <div class="dashboard-section">
+
+            <div class="table-responsive">
+
+                <table class="table-custom">
+
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>Harga</th>
+                            <th>Jumlah</th>
+                            <th>Subtotal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in daftar)
+                        {
+                            <tr>
+
+                                <td>
+                                    <strong>@item.NamaProduk</strong>
+
+                                    <br />
+
+                                    <small>@item.KodeProduk</small>
+                                </td>
+
+                                <td>
+                                    @item.HargaJual.ToString("C0", rupiah)
+                                </td>
+
+                                <td>
+
+                                    <form asp-controller="Keranjang"
+                                          asp-action="UbahJumlah"
+                                          method="post"
+                                          class="cart-quantity-form">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="idProduk"
+                                               value="@item.IdProduk" />
+
+                                        <input type="number"
+                                               name="jumlah"
+                                               value="@item.Jumlah"
+                                               min="1"
+                                               max="@item.Stok"
+                                               required />
+
+                                        <button type="submit"
+                                                class="btn-outline-custom">
+                                            Ubah
+                                        </button>
+
+                                    </form>
+
+                                    <small>
+                                        Stok tersedia: @item.Stok
+                                    </small>
+
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @item.Subtotal.ToString("C0", rupiah)
+                                    </strong>
+                                </td>
+
+                                <td>
+
+                                    <form asp-controller="Keranjang"
+                                          asp-action="Hapus"
+                                          method="post">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="idProduk"
+                                               value="@item.IdProduk" />
+
+                                        <button type="submit"
+                                                class="btn-danger-custom">
+                                            Hapus
+                                        </button>
+
+                                    </form>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="cart-summary">
+
+                <div>
+
+                    <span>Total Belanja</span>
+
+                    <h2>
+                        @total.ToString("C0", rupiah)
+                    </h2>
+
+                </div>
+
+
+                <div class="cart-actions">
+
+                    <form asp-controller="Keranjang"
+                          asp-action="Kosongkan"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="btn-outline-custom">
+                            Kosongkan Keranjang
+                        </button>
+
+                    </form>
+
+
+                    <a asp-controller="Checkout"
+                       asp-action="Index"
+                       class="btn-primary-custom">
+                        Lanjut ke Checkout
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>

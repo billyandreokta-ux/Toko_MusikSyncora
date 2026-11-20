@@ -1,0 +1,97 @@
+﻿
+@model List<TokoMusik.Web.Models.AdminPesananViewModel>
+
+@{
+    ViewData["Title"] = "Pengelolaan Pesanan";
+    string? filter = ViewBag.StatusFilter as string;
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Pengelolaan Pesanan</h2>
+            <p class="text-secondary">Pantau dan kelola transaksi pelanggan.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="dashboard-section">
+        <form method="get" asp-controller="AdminPesanan" asp-action="Index" class="mb-4">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">Semua Status</option>
+                        <option value="menunggu_bayar" selected="@(filter == "menunggu_bayar")">Menunggu Bayar</option>
+                        <option value="dibayar" selected="@(filter == "dibayar")">Dibayar</option>
+                        <option value="diproses" selected="@(filter == "diproses")">Diproses</option>
+                        <option value="dikirim" selected="@(filter == "dikirim")">Dikirim</option>
+                        <option value="selesai" selected="@(filter == "selesai")">Selesai</option>
+                        <option value="dibatalkan" selected="@(filter == "dibatalkan")">Dibatalkan</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary-custom">Filter</button>
+                    <a asp-action="Index" class="btn btn-outline-custom">Reset</a>
+                </div>
+            </div>
+        </form>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <h4>Belum Ada Pesanan</h4>
+                <p class="text-secondary">Transaksi pelanggan akan tampil di sini.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>No. Pesanan</th>
+                            <th>Pelanggan</th>
+                            <th>Tanggal</th>
+                            <th>Total</th>
+                            <th>Pembayaran</th>
+                            <th>Status Pesanan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>#@item.IdPemesanan</td>
+                                <td>
+                                    <strong>@item.NamaCustomer</strong>
+                                    <div class="small text-secondary">@item.Username</div>
+                                </td>
+                                <td>@item.TglPesan.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>Rp @item.TotalBayar.ToString("N0")</td>
+                                <td>@item.StatusPembayaran</td>
+                                <td><span class="status-badge">@item.Status</span></td>
+                                <td>
+                                    <a asp-action="Detail"
+                                       asp-route-id="@item.IdPemesanan"
+                                       class="btn btn-outline-custom btn-sm">
+                                        Detail
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

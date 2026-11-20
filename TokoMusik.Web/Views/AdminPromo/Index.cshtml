@@ -1,0 +1,107 @@
+﻿
+@model List<TokoMusik.Web.Models.PromoViewModel>
+
+@{
+    ViewData["Title"] = "Pengelolaan Promo";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Pengelolaan Promo</h2>
+            <p class="text-secondary">Buat dan kelola kode promo toko musik.</p>
+        </div>
+
+        <a asp-action="Tambah" class="btn btn-primary-custom">
+            + Tambah Promo
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="dashboard-section">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <h4>Belum Ada Promo</h4>
+                <p class="text-secondary">Silakan tambahkan promo pertama.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Nama Promo</th>
+                            <th>Tipe</th>
+                            <th>Nilai</th>
+                            <th>Minimum Belanja</th>
+                            <th>Masa Berlaku</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.KodePromo</strong></td>
+                                <td>@item.NamaPromo</td>
+                                <td>@item.Tipe</td>
+                                <td>
+                                    @if (item.Tipe == "persen")
+                                    {
+                                        @($"{item.Nilai:N0}%")
+                                    }
+                                    else
+                                    {
+                                        @($"Rp {item.Nilai:N0}")
+                                    }
+                                </td>
+                                <td>Rp @item.MinBelanja.ToString("N0")</td>
+                                <td>
+                                    @item.TglMulai.ToString("dd/MM/yyyy")
+                                    -
+                                    @item.TglSelesai.ToString("dd/MM/yyyy")
+                                </td>
+                                <td><span class="status-badge">@item.Status</span></td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.IdPromo"
+                                           class="btn btn-outline-custom btn-sm">
+                                            Edit
+                                        </a>
+
+                                        @if (item.Status == "aktif")
+                                        {
+                                            <form asp-action="Nonaktifkan"
+                                                  asp-route-id="@item.IdPromo"
+                                                  method="post"
+                                                  onsubmit="return confirm('Nonaktifkan promo ini?')">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    Nonaktifkan
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,105 @@
+﻿@model IEnumerable<TokoMusik.Web.Models.AlamatCustomer>
+
+@{
+    ViewData["Title"] = "Alamat Saya";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <span class="eyebrow">DELIVERY ADDRESS</span>
+            <h1>Alamat Saya</h1>
+            <p>Kelola alamat tujuan pengiriman pesanan.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div style="margin-bottom:20px;">
+        <a asp-action="Tambah" class="btn-primary-custom"
+           style="max-width:220px;">
+            + Tambah Alamat
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="dashboard-section text-center">
+            <h3>Belum Ada Alamat</h3>
+            <p class="text-secondary">
+                Tambahkan alamat sebelum melakukan checkout.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="address-grid">
+            @foreach (var alamat in Model)
+            {
+                <div class="address-card">
+                    <div class="address-card-heading">
+                        <h3>@alamat.LabelAlamat</h3>
+
+                        @if (alamat.IsUtama)
+                        {
+                            <span class="status-badge">Alamat Utama</span>
+                        }
+                    </div>
+
+                    <strong>@alamat.Penerima</strong>
+                    <p>@alamat.Telepon</p>
+                    <p>
+                        @alamat.AlamatLengkap,
+                        @alamat.Kota,
+                        @alamat.Provinsi,
+                        @alamat.KodePos
+                    </p>
+
+                    <div class="address-actions">
+                        @if (!alamat.IsUtama)
+                        {
+                            <form asp-action="JadikanUtama" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="idAlamat"
+                                       value="@alamat.IdAlamat" />
+                                <button type="submit"
+                                        class="btn-outline-custom">
+                                    Jadikan Utama
+                                </button>
+                            </form>
+                        }
+
+                        <form asp-action="Hapus" method="post"
+                              onsubmit="return confirm('Yakin ingin menghapus alamat ini?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden"
+                                   name="idAlamat"
+                                   value="@alamat.IdAlamat" />
+                            <button type="submit"
+                                    class="btn-danger-custom">
+                                Hapus
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div style="margin-top:25px;">
+        <a asp-controller="Keranjang"
+           asp-action="Index"
+           class="btn-outline-custom">
+            Kembali ke Keranjang
+        </a>
+    </div>
+</div>

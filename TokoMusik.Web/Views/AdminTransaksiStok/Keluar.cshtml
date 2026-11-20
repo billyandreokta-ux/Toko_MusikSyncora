@@ -1,0 +1,195 @@
+﻿@model TokoMusik.Web.Models.TransaksiStokKeluarViewModel
+
+@{
+    ViewData["Title"] = "Stok Keluar";
+}
+
+<style>
+    .stock-form-page {
+        max-width: 850px;
+        margin: 30px auto 55px;
+        color: #293b30;
+    }
+
+    .stock-form-card {
+        background: white;
+        border: 1px solid #e5ece7;
+        border-radius: 16px;
+        padding: 27px;
+        box-shadow: 0 5px 22px rgba(25, 55, 39, .04);
+    }
+
+    .stock-form-page h1 {
+        font-size: 27px;
+        font-weight: 750;
+        margin: 14px 0 6px;
+    }
+
+    .stock-form-page .subtitle {
+        color: #829087;
+        margin-bottom: 24px;
+    }
+
+    .stock-form-group {
+        margin-bottom: 19px;
+    }
+
+    .stock-form-group label {
+        display: block;
+        font-weight: 650;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .stock-form-control {
+        width: 100%;
+        min-height: 45px;
+        border: 1px solid #dce5df;
+        border-radius: 9px;
+        padding: 10px 13px;
+        background: white;
+    }
+
+    .stock-form-control:focus {
+        outline: none;
+        border-color: #24764f;
+        box-shadow: 0 0 0 3px rgba(36, 118, 79, .1);
+    }
+
+    .stock-form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .stock-primary-button {
+        border: 0;
+        background: #b33b36;
+        color: white;
+        border-radius: 9px;
+        padding: 12px 19px;
+        font-weight: 650;
+    }
+
+    .stock-secondary-button {
+        background: #edf3ef;
+        color: #315640;
+        border-radius: 9px;
+        padding: 12px 19px;
+        text-decoration: none;
+        font-weight: 650;
+    }
+
+    .stock-validation {
+        color: #bb3737;
+        font-size: 12px;
+    }
+
+    .stock-validation-summary {
+        background: #fff0ef;
+        color: #a83434;
+        padding: 13px;
+        border-radius: 9px;
+        margin-bottom: 17px;
+    }
+
+    .stock-warning {
+        background: #fff5df;
+        color: #8d6416;
+        padding: 13px;
+        border-radius: 9px;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container stock-form-page">
+
+    <a asp-action="Riwayat"
+       class="stock-secondary-button">
+        ← Kembali ke riwayat
+    </a>
+
+    <h1>Stok Keluar</h1>
+    <p class="subtitle">
+        Catat pengurangan persediaan produk Syncora.
+    </p>
+
+    <div class="stock-form-card">
+
+        <div class="stock-warning">
+            Pastikan jumlah dan alasan pengeluaran sudah benar.
+            Stok akan langsung dikurangi setelah transaksi disimpan.
+        </div>
+
+        <div asp-validation-summary="ModelOnly"
+             class="stock-validation-summary"></div>
+
+        <form asp-action="Keluar" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="stock-form-group">
+                <label asp-for="IdProduk">Pilih Produk</label>
+
+                <select asp-for="IdProduk" class="stock-form-control">
+                    <option value="">-- Pilih produk --</option>
+
+                    @foreach (var produk in Model.DaftarProduk)
+                    {
+                        <option value="@produk.IdProduk">
+                            @produk.KodeProduk - @produk.NamaProduk
+                            (Stok: @produk.JumlahStok)
+                        </option>
+                    }
+                </select>
+
+                <span asp-validation-for="IdProduk"
+                      class="stock-validation"></span>
+            </div>
+
+            <div class="stock-form-group">
+                <label asp-for="Jumlah">Jumlah Stok Keluar</label>
+
+                <input asp-for="Jumlah"
+                       type="number"
+                       min="1"
+                       class="stock-form-control"
+                       placeholder="Masukkan jumlah" />
+
+                <span asp-validation-for="Jumlah"
+                      class="stock-validation"></span>
+            </div>
+
+            <div class="stock-form-group">
+                <label asp-for="Keterangan">Alasan Pengeluaran</label>
+
+                <textarea asp-for="Keterangan"
+                          rows="4"
+                          class="stock-form-control"
+                          placeholder="Contoh: Barang rusak, barang digunakan untuk demo, atau penyesuaian stok."></textarea>
+
+                <span asp-validation-for="Keterangan"
+                      class="stock-validation"></span>
+            </div>
+
+            <div class="stock-form-actions">
+                <button type="submit" class="stock-primary-button">
+                    Simpan Stok Keluar
+                </button>
+
+                <a asp-action="Riwayat"
+                   class="stock-secondary-button">
+                    Batal
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,131 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Katalog Produk";
+}
+
+<div class="catalog-container">
+    <div class="catalog-header">
+        <span class="eyebrow">TOKOMUSIK COLLECTION</span>
+        <h1>Temukan Alat Musik Favoritmu</h1>
+        <p>Jelajahi berbagai pilihan alat musik berkualitas dari TokoMusik.</p>
+    </div>
+
+    <form method="get"
+          asp-controller="Produk"
+          asp-action="Index"
+          class="catalog-filter">
+
+        <input type="text"
+               name="cari"
+               value="@ViewBag.Cari"
+               placeholder="Cari nama produk, merek, atau kategori..." />
+
+        <select name="kategori">
+            <option value="">Semua Kategori</option>
+
+            @foreach (var item in ViewBag.Kategori)
+            {
+                if (ViewBag.KategoriTerpilih != null &&
+                    (int)ViewBag.KategoriTerpilih == (int)item.IdCategory)
+                {
+                    <option value="@item.IdCategory" selected>
+                        @item.NamaCategory
+                    </option>
+                }
+                else
+                {
+                    <option value="@item.IdCategory">
+                        @item.NamaCategory
+                    </option>
+                }
+            }
+        </select>
+
+        <button type="submit">Cari Produk</button>
+    </form>
+
+    <div class="catalog-result">
+        <h2>Daftar Produk</h2>
+        <span>@Model.Count() produk ditemukan</span>
+    </div>
+
+    <div class="product-grid">
+        @foreach (var item in Model)
+        {
+            <a class="product-card"
+               asp-controller="Produk"
+               asp-action="Detail"
+               asp-route-id="@item.IdProduk">
+
+                <div class="product-image">
+                    @{
+                        string? foto = item.Foto == null
+                            ? null
+                            : (string)item.Foto;
+
+                        string fotoUrl = string.IsNullOrWhiteSpace(foto)
+                            ? ""
+                            : foto.StartsWith("/")
+                                ? foto
+                                : "~/images/" + foto;
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(foto))
+                    {
+                        <img src="@Url.Content(fotoUrl)"
+                             alt="@item.NamaProduk"
+                             loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="product-placeholder">
+                            <span>♪</span>
+                            <small>Foto belum tersedia</small>
+                        </div>
+                    }
+                </div>
+
+                <div class="product-info">
+                    <span class="product-category">
+                        @item.NamaCategory
+                    </span>
+
+                    <h3>@item.NamaProduk</h3>
+
+                    <p class="product-brand">@item.NamaMerk</p>
+
+                    <div class="product-price">
+                        @(((decimal)item.HargaJual).ToString(
+                            "C0",
+                            System.Globalization.CultureInfo.GetCultureInfo("id-ID")
+                        ))
+                    </div>
+
+                    <div class="product-stock">
+                        @if ((int)item.JumlahStok > 0)
+                        {
+                            <span>Tersedia: @item.JumlahStok</span>
+                        }
+                        else
+                        {
+                            <span class="stock-empty">Stok habis</span>
+                        }
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="catalog-empty">
+            <h3>Produk tidak ditemukan</h3>
+            <p>Coba gunakan kata pencarian atau kategori lainnya.</p>
+
+            <a asp-controller="Produk" asp-action="Index">
+                Tampilkan semua produk
+            </a>
+        </div>
+    }
+</div>

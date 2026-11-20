@@ -1,26 +1,25 @@
 ﻿
 using MySqlConnector;
 
-namespace TokoMusik.Web.Data
+namespace TokoMusik.Web.Data;
+
+public class Koneksi
 {
-    public class Koneksi
+    private readonly IConfiguration _configuration;
+
+    public Koneksi(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        _configuration = configuration;
+    }
 
-        public Koneksi(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+    public MySqlConnection GetConnection()
+    {
+        string connectionString =
+            _configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException(
+                "Connection string tidak ditemukan."
+            );
 
-        public MySqlConnection GetConnection()
-        {
-            string connectionString =
-                _configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException(
-                    "Connection string DefaultConnection tidak ditemukan."
-                );
-
-            return new MySqlConnection(connectionString);
-        }
+        return new MySqlConnection(connectionString);
     }
 }

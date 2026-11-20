@@ -1,0 +1,211 @@
+﻿@model dynamic
+
+@{
+    ViewData["Title"] = "Detail Produk";
+
+    string namaProduk = Convert.ToString(Model.NamaProduk) ?? "Produk";
+    string kodeProduk = Convert.ToString(Model.KodeProduk) ?? "-";
+    string namaCategory = Convert.ToString(Model.NamaCategory) ?? "-";
+    string namaMerk = Convert.ToString(Model.NamaMerk) ?? "-";
+    string deskripsi = Convert.ToString(Model.Deskripsi) ?? "Belum ada deskripsi produk.";
+    string foto = Convert.ToString(Model.Foto) ?? "";
+
+    int idProduk = Convert.ToInt32(Model.IdProduk);
+    int jumlahStok = Convert.ToInt32(Model.JumlahStok);
+
+    string harga = Convert.ToDecimal(Model.HargaJual).ToString(
+        "C0",
+        System.Globalization.CultureInfo.GetCultureInfo("id-ID")
+    );
+
+    string fotoUrl = string.IsNullOrWhiteSpace(foto)
+        ? Url.Content("~/images/no-image.png")
+        : foto.StartsWith("/")
+            ? foto
+            : Url.Content("~/images/" + foto);
+
+    string warna = Convert.ToString(Model.Warna) ?? "-";
+    string bahan = Convert.ToString(Model.Bahan) ?? "-";
+    string ukuran = Convert.ToString(Model.Ukuran) ?? "-";
+    string berat = Model.BeratGram == null
+        ? "-"
+        : Convert.ToString(Model.BeratGram) + " gram";
+
+    string spesifikasi = Convert.ToString(Model.Spesifikasi) ?? "-";
+}
+
+<div class="dashboard-container">
+
+    <div class="dashboard-heading">
+        <div>
+            <span class="eyebrow">PRODUCT DETAIL</span>
+            <h1>Detail Produk</h1>
+            <p>Informasi lengkap mengenai produk pilihanmu.</p>
+        </div>
+
+        <a asp-controller="Produk"
+           asp-action="Index"
+           class="btn-outline-custom">
+            Kembali ke Katalog
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="product-detail-layout">
+
+        <div class="product-detail-image">
+            <img src="@fotoUrl"
+                 alt="@namaProduk"
+                 onerror="this.onerror=null;this.src='https://placehold.co/600x450/f0f3f0/64746a?text=TokoMusik';" />
+        </div>
+
+        <div class="product-detail-info">
+
+            <span class="eyebrow">@namaCategory</span>
+
+            <h1>@namaProduk</h1>
+
+            <p class="product-code">
+                Kode Produk: @kodeProduk
+            </p>
+
+            <h2 class="product-detail-price">
+                @harga
+            </h2>
+
+            <div class="product-stock-info">
+                @if (jumlahStok > 0)
+                {
+                    <span class="status-badge">
+                        Stok tersedia: @jumlahStok
+                    </span>
+                }
+                else
+                {
+                    <span class="status-badge status-danger">
+                        Stok habis
+                    </span>
+                }
+            </div>
+
+            <div class="product-detail-description">
+                <h3>Deskripsi Produk</h3>
+                <p>@deskripsi</p>
+            </div>
+
+            <div class="product-detail-specification">
+                <h3>Informasi Produk</h3>
+
+                <div class="specification-row">
+                    <span>Merek</span>
+                    <strong>@namaMerk</strong>
+                </div>
+
+                <div class="specification-row">
+                    <span>Kategori</span>
+                    <strong>@namaCategory</strong>
+                </div>
+
+                <div class="specification-row">
+                    <span>Warna</span>
+                    <strong>@warna</strong>
+                </div>
+
+                <div class="specification-row">
+                    <span>Bahan</span>
+                    <strong>@bahan</strong>
+                </div>
+
+                <div class="specification-row">
+                    <span>Ukuran</span>
+                    <strong>@ukuran</strong>
+                </div>
+
+                <div class="specification-row">
+                    <span>Berat</span>
+                    <strong>@berat</strong>
+                </div>
+
+                <div class="specification-row">
+                    <span>Spesifikasi</span>
+                    <strong>@spesifikasi</strong>
+                </div>
+            </div>
+
+            <div class="product-detail-actions">
+
+                @if (User.Identity?.IsAuthenticated == true &&
+                     User.IsInRole("user"))
+                {
+                    @if (jumlahStok > 0)
+                    {
+                        <form asp-controller="Keranjang"
+                              asp-action="Tambah"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="idProduk"
+                                   value="@idProduk" />
+
+                            <div class="form-group">
+                                <label for="jumlah">
+                                    Jumlah Pembelian
+                                </label>
+
+                                <input type="number"
+                                       id="jumlah"
+                                       name="jumlah"
+                                       class="form-control"
+                                       value="1"
+                                       min="1"
+                                       max="@jumlahStok"
+                                       required />
+                            </div>
+
+                            <button type="submit"
+                                    class="btn-primary-custom">
+                                + Tambahkan ke Keranjang
+                            </button>
+
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button"
+                                class="btn-primary-custom"
+                                disabled>
+                            Stok Habis
+                        </button>
+                    }
+                }
+                else if (User.Identity?.IsAuthenticated != true)
+                {
+                    <a asp-controller="Auth"
+                       asp-action="Login"
+                       class="btn-primary-custom">
+                        Login untuk Berbelanja
+                    </a>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

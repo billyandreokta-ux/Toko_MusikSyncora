@@ -1,0 +1,87 @@
+﻿
+@model TokoMusik.Web.Models.PromoViewModel
+
+@{
+    ViewData["Title"] = "Tambah Promo";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Tambah Promo</h2>
+            <p class="text-secondary">Masukkan informasi promo baru.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-custom">Kembali</a>
+    </div>
+
+    <div class="dashboard-section">
+        <form asp-action="Tambah" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="KodePromo" class="form-label">Kode Promo</label>
+                    <input asp-for="KodePromo" class="form-control" placeholder="Contoh: MUSIK10" />
+                    <span asp-validation-for="KodePromo" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="NamaPromo" class="form-label">Nama Promo</label>
+                    <input asp-for="NamaPromo" class="form-control" placeholder="Promo Akhir Tahun" />
+                    <span asp-validation-for="NamaPromo" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Tipe" class="form-label">Jenis Promo</label>
+                    <select asp-for="Tipe" class="form-select">
+                        <option value="persen">Persentase (%)</option>
+                        <option value="nominal">Potongan Nominal (Rp)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Nilai" class="form-label">Nilai Promo</label>
+                    <input asp-for="Nilai" type="number" min="1" step="0.01" class="form-control" />
+                    <span asp-validation-for="Nilai" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="MinBelanja" class="form-label">Minimum Belanja (Rp)</label>
+                    <input asp-for="MinBelanja" type="number" min="0" step="1000" class="form-control" />
+                    <span asp-validation-for="MinBelanja" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Status" class="form-label">Status</label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="aktif">Aktif</option>
+                        <option value="nonaktif">Nonaktif</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="TglMulai" class="form-label">Tanggal Mulai</label>
+                    <input asp-for="TglMulai" type="date" class="form-control" />
+                    <span asp-validation-for="TglMulai" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="TglSelesai" class="form-label">Tanggal Selesai</label>
+                    <input asp-for="TglSelesai" type="date" class="form-control" />
+                    <span asp-validation-for="TglSelesai" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary-custom">Simpan Promo</button>
+                <a asp-action="Index" class="btn btn-outline-custom">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

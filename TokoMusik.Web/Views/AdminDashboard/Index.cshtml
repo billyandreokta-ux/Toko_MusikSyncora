@@ -1,0 +1,633 @@
+﻿
+@model TokoMusik.Web.Models.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Admin";
+    Layout = "_Layout";
+}
+
+<style>
+    .syncora-admin {
+        --admin-green: #174c35;
+        --admin-dark: #102f24;
+        --admin-bg: #f5f7f3;
+        --admin-text: #24352a;
+        --admin-muted: #89918a;
+        min-height: 100vh;
+        background: var(--admin-bg);
+        color: var(--admin-text);
+        padding: 35px 0 65px;
+    }
+
+    .admin-container {
+        width: min(1200px, calc(100% - 40px));
+        margin: auto;
+    }
+
+    .admin-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .admin-heading small {
+        display: block;
+        color: #789078;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 9px;
+    }
+
+    .admin-heading h1 {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+
+    .admin-heading p {
+        margin: 8px 0 0;
+        color: var(--admin-muted);
+        font-size: 13px;
+    }
+
+    .admin-date {
+        padding: 12px 17px;
+        background: white;
+        border: 1px solid #e7ebe5;
+        border-radius: 6px;
+        color: #586b5d;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 17px;
+        margin-bottom: 25px;
+    }
+
+    .admin-stat {
+        background: white;
+        border: 1px solid #e9ede7;
+        border-radius: 7px;
+        padding: 21px;
+        min-width: 0;
+        transition: .2s ease;
+    }
+
+    .admin-stat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(20, 60, 35, .06);
+    }
+
+    .admin-stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .admin-stat-label {
+        color: #7d887e;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .admin-stat-icon {
+        width: 39px;
+        height: 39px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #edf4ed;
+        color: #24583d;
+        font-size: 18px;
+    }
+
+    .admin-stat-value {
+        font-size: 27px;
+        font-weight: 800;
+        letter-spacing: -.8px;
+        color: #20382a;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-stat-note {
+        margin-top: 7px;
+        color: #9ba39b;
+        font-size: 11px;
+    }
+
+    .admin-main-grid {
+        display: grid;
+        grid-template-columns: 1.55fr 1fr;
+        gap: 20px;
+        margin-bottom: 22px;
+    }
+
+    .admin-panel {
+        min-width: 0;
+        background: white;
+        border: 1px solid #e9ede7;
+        border-radius: 7px;
+        overflow: hidden;
+    }
+
+    .admin-panel-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        padding: 20px 22px;
+        border-bottom: 1px solid #edf0eb;
+    }
+
+    .admin-panel-heading h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .admin-panel-heading p {
+        margin: 5px 0 0;
+        color: #9aa29a;
+        font-size: 11px;
+    }
+
+    .admin-panel-link {
+        color: #24583d;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .admin-table-wrap {
+        overflow-x: auto;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 470px;
+    }
+
+    .admin-table th {
+        padding: 13px 17px;
+        background: #fafbf8;
+        color: #929b92;
+        text-align: left;
+        font-size: 10px;
+        letter-spacing: .7px;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    .admin-table td {
+        padding: 15px 17px;
+        border-top: 1px solid #f0f2ed;
+        font-size: 12px;
+        color: #536056;
+    }
+
+    .admin-table td strong {
+        color: #293b2e;
+    }
+
+    .admin-status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        background: #edf3eb;
+        color: #3d7047;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .status-menunggu_bayar,
+    .status-pending {
+        background: #fff5df;
+        color: #a47722;
+    }
+
+    .status-dibayar {
+        background: #eaf2ff;
+        color: #426baf;
+    }
+
+    .status-diproses {
+        background: #f0edff;
+        color: #6b58a7;
+    }
+
+    .status-dikirim {
+        background: #e9f5f5;
+        color: #397b7b;
+    }
+
+    .status-selesai,
+    .status-berhasil {
+        background: #e8f5e9;
+        color: #397449;
+    }
+
+    .status-dibatalkan,
+    .status-gagal {
+        background: #fcebea;
+        color: #a64e48;
+    }
+
+    .admin-stock-list {
+        padding: 4px 20px;
+    }
+
+    .admin-stock-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f2ed;
+    }
+
+    .admin-stock-item:last-child {
+        border-bottom: 0;
+    }
+
+    .admin-stock-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: #344639;
+        line-height: 1.5;
+    }
+
+    .admin-stock-minimum {
+        margin-top: 4px;
+        color: #a0a79f;
+        font-size: 10px;
+    }
+
+    .admin-stock-number {
+        padding: 7px 10px;
+        border-radius: 5px;
+        background: #fff0e9;
+        color: #b45d3c;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .admin-empty {
+        padding: 35px 15px;
+        color: #929b92;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .admin-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .admin-shortcut {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 18px;
+        background: white;
+        border: 1px solid #e9ede7;
+        border-radius: 7px;
+        color: #263b2d;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .admin-shortcut:hover {
+        border-color: #b9cdb9;
+        transform: translateY(-3px);
+        color: #174c35;
+    }
+
+    .admin-shortcut-icon {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 7px;
+        background: #edf4ed;
+        color: #24583d;
+        font-size: 17px;
+    }
+
+    .admin-shortcut strong {
+        display: block;
+        font-size: 12px;
+    }
+
+    .admin-shortcut span {
+        display: block;
+        margin-top: 4px;
+        color: #9aa29a;
+        font-size: 10px;
+    }
+
+    @@media (max-width: 950px) {
+        .admin-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .admin-main-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-shortcuts {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .admin-container {
+            width: calc(100% - 28px);
+        }
+
+        .admin-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .admin-heading h1 {
+            font-size: 25px;
+        }
+
+        .admin-stats {
+            gap: 10px;
+        }
+
+        .admin-stat {
+            padding: 15px;
+        }
+
+        .admin-stat-value {
+            font-size: 22px;
+        }
+
+        .admin-shortcuts {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-panel-heading {
+            padding: 16px;
+        }
+    }
+</style>
+
+<div class="syncora-admin">
+    <div class="admin-container">
+
+        <div class="admin-heading">
+            <div>
+                <small>SYNCORA MANAGEMENT</small>
+                <h1>Dashboard</h1>
+                <p>Selamat datang di pusat pengelolaan toko Syncora.</p>
+            </div>
+
+            <div class="admin-date">
+                @DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("id-ID"))
+            </div>
+        </div>
+
+        <!-- STATISTICS -->
+        <div class="admin-stats">
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Pendapatan</span>
+                    <div class="admin-stat-icon">Rp</div>
+                </div>
+                <div class="admin-stat-value">
+                    @Model.TotalPendapatan.ToString("C0", new System.Globalization.CultureInfo("id-ID"))
+                </div>
+                <div class="admin-stat-note">Akumulasi pembayaran berhasil</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Pesanan</span>
+                    <div class="admin-stat-icon">▤</div>
+                </div>
+                <div class="admin-stat-value">@Model.TotalPesanan</div>
+                <div class="admin-stat-note">Seluruh transaksi pesanan</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Produk</span>
+                    <div class="admin-stat-icon">♫</div>
+                </div>
+                <div class="admin-stat-value">@Model.TotalProduk</div>
+                <div class="admin-stat-note">Produk terdaftar di katalog</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Pelanggan</span>
+                    <div class="admin-stat-icon">♙</div>
+                </div>
+                <div class="admin-stat-value">@Model.TotalPelanggan</div>
+                <div class="admin-stat-note">Pelanggan terdaftar</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Pesanan Hari Ini</span>
+                    <div class="admin-stat-icon">▦</div>
+                </div>
+                <div class="admin-stat-value">@Model.PesananHariIni</div>
+                <div class="admin-stat-note">Pesanan berdasarkan tanggal hari ini</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Menunggu Verifikasi</span>
+                    <div class="admin-stat-icon">◷</div>
+                </div>
+                <div class="admin-stat-value">@Model.PembayaranMenunggu</div>
+                <div class="admin-stat-note">Pembayaran berstatus pending</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Stok Menipis</span>
+                    <div class="admin-stat-icon">!</div>
+                </div>
+                <div class="admin-stat-value">@Model.ProdukStokMenipis</div>
+                <div class="admin-stat-note">Produk mencapai batas stok minimum</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Identitas Toko</span>
+                    <div class="admin-stat-icon">S</div>
+                </div>
+                <div class="admin-stat-value">Syncora</div>
+                <div class="admin-stat-note">Find Your Sound. Define Your Style.</div>
+            </div>
+
+        </div>
+
+        <!-- ORDERS AND STOCK -->
+        <div class="admin-main-grid">
+
+            <section class="admin-panel">
+                <div class="admin-panel-heading">
+                    <div>
+                        <h2>Pesanan Terbaru</h2>
+                        <p>Aktivitas transaksi pelanggan</p>
+                    </div>
+                    <a href="/AdminPesanan" class="admin-panel-link">Lihat Semua →</a>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Pesanan</th>
+                                <th>Pelanggan</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.PesananTerbaru.Any())
+                            {
+                                @foreach (var item in Model.PesananTerbaru)
+                                {
+                                    var statusClass = "status-" + (item.Status ?? "").ToLowerInvariant();
+
+                                    <tr>
+                                        <td><strong>#@item.IdPemesanan</strong></td>
+                                        <td>@item.NamaCustomer</td>
+                                        <td>
+                                            @item.TotalBayar.ToString("C0", new System.Globalization.CultureInfo("id-ID"))
+                                        </td>
+                                        <td>
+                                            <span class="admin-status @statusClass">
+                                                @item.Status.Replace("_", " ")
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="admin-empty">Belum ada pesanan.</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="admin-panel">
+                <div class="admin-panel-heading">
+                    <div>
+                        <h2>Perhatian Stok</h2>
+                        <p>Produk yang perlu diperiksa</p>
+                    </div>
+                    <a href="/Produk" class="admin-panel-link">Katalog →</a>
+                </div>
+
+                <div class="admin-stock-list">
+                    @if (Model.StokMenipis.Any())
+                    {
+                        @foreach (var item in Model.StokMenipis)
+                        {
+                            <div class="admin-stock-item">
+                                <div>
+                                    <div class="admin-stock-name">@item.NamaProduk</div>
+                                    <div class="admin-stock-minimum">
+                                        Batas minimum: @item.StokMinimum
+                                    </div>
+                                </div>
+
+                                <div class="admin-stock-number">
+                                    Sisa @item.Jumlah
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="admin-empty">
+                            Tidak ada produk dengan stok menipis.
+                        </div>
+                    }
+                </div>
+            </section>
+
+        </div>
+
+        <!-- QUICK ACCESS -->
+        <section class="admin-panel">
+            <div class="admin-panel-heading">
+                <div>
+                    <h2>Akses Cepat</h2>
+                    <p>Kelola bagian penting toko Syncora</p>
+                </div>
+            </div>
+
+            <div style="padding: 18px;">
+                <div class="admin-shortcuts">
+
+                    <a href="/AdminPesanan" class="admin-shortcut">
+                        <div class="admin-shortcut-icon">▤</div>
+                        <div>
+                            <strong>Kelola Pesanan</strong>
+                            <span>Periksa dan proses pesanan</span>
+                        </div>
+                    </a>
+
+                    <a href="/AdminPembayaran" class="admin-shortcut">
+                        <div class="admin-shortcut-icon">Rp</div>
+                        <div>
+                            <strong>Verifikasi Pembayaran</strong>
+                            <span>Periksa bukti pembayaran</span>
+                        </div>
+                    </a>
+
+                    <a href="/AdminPromo" class="admin-shortcut">
+                        <div class="admin-shortcut-icon">%</div>
+                        <div>
+                            <strong>Kelola Promo</strong>
+                            <span>Atur diskon dan kode promo</span>
+                        </div>
+                    </a>
+
+                    <a href="/Produk" class="admin-shortcut">
+                        <div class="admin-shortcut-icon">♫</div>
+                        <div>
+                            <strong>Kelola Produk</strong>
+                            <span>Lihat katalog produk</span>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>

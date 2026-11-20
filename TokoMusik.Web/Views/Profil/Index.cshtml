@@ -1,0 +1,210 @@
+﻿
+@model TokoMusik.Web.Models.ProfilViewModel
+
+@{
+    ViewData["Title"] = "Profil Saya";
+}
+
+<style>
+    .profile-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 25px 15px 55px;
+        color: #263b30;
+    }
+
+    .profile-heading {
+        margin-bottom: 25px;
+    }
+
+    .profile-heading h2 {
+        font-weight: 750;
+        margin-bottom: 7px;
+    }
+
+    .profile-heading p {
+        color: #7a8980;
+        margin: 0;
+    }
+
+    .profile-card {
+        background: #fff;
+        border: 1px solid #e5ebe6;
+        border-radius: 17px;
+        padding: 28px;
+        box-shadow: 0 8px 30px rgba(20, 55, 35, .05);
+    }
+
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e7f3eb;
+        color: #176b45;
+        font-size: 28px;
+        font-weight: 750;
+        border-radius: 50%;
+        margin-bottom: 14px;
+    }
+
+    .profile-username {
+        color: #78877e;
+        font-size: 14px;
+        margin-bottom: 25px;
+    }
+
+    .profile-section-title {
+        font-size: 17px;
+        font-weight: 750;
+        margin-bottom: 18px;
+    }
+
+    .profile-form label {
+        font-size: 13px;
+        font-weight: 650;
+        margin-bottom: 7px;
+    }
+
+    .profile-form .form-control {
+        min-height: 45px;
+        border-radius: 9px;
+        border: 1px solid #dce5df;
+        padding: 10px 13px;
+    }
+
+    .profile-form .form-control:focus {
+        border-color: #176b45;
+        box-shadow: 0 0 0 3px rgba(23, 107, 69, .1);
+    }
+
+    .profile-readonly {
+        background: #f3f6f3 !important;
+        color: #77847d;
+    }
+
+    .profile-save {
+        background: #176b45;
+        color: white;
+        border: 0;
+        border-radius: 9px;
+        padding: 11px 22px;
+        font-weight: 700;
+    }
+
+    .profile-save:hover {
+        background: #105536;
+        color: white;
+    }
+
+    .profile-link {
+        color: #176b45;
+        text-decoration: none;
+        font-weight: 650;
+    }
+
+    @@media (max-width: 600px) {
+        .profile-card {
+            padding: 20px;
+        }
+    }
+</style>
+
+<div class="profile-page">
+    <div class="profile-heading">
+        <h2>Profil Saya</h2>
+        <p>Kelola informasi pribadi dan akun Syncora kamu.</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="profile-card">
+        <div class="profile-avatar">
+            @(string.IsNullOrWhiteSpace(Model.NamaCustomer)
+                ? "S"
+                : Model.NamaCustomer.Substring(0, 1).ToUpper())
+        </div>
+
+        <h5 class="fw-bold mb-1">@Model.NamaCustomer</h5>
+        <div class="profile-username">@@@Model.Username</div>
+
+        <hr class="my-4" />
+
+        <div class="profile-section-title">Informasi Pribadi</div>
+
+        <form asp-controller="Profil"
+              asp-action="Index"
+              method="post"
+              class="profile-form">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="IdCustomer" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Username"></label>
+                <input asp-for="Username"
+                       class="form-control profile-readonly"
+                       readonly />
+                <small class="text-muted">
+                    Username tidak dapat diubah melalui halaman ini.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="NamaCustomer"></label>
+                <input asp-for="NamaCustomer" class="form-control" />
+                <span asp-validation-for="NamaCustomer"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email"></label>
+                <input asp-for="Email"
+                       type="email"
+                       class="form-control"
+                       placeholder="nama@email.com" />
+                <span asp-validation-for="Email"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Telepon"></label>
+                <input asp-for="Telepon"
+                       type="tel"
+                       class="form-control"
+                       placeholder="08xxxxxxxxxx" />
+                <span asp-validation-for="Telepon"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <button type="submit" class="profile-save">
+                    Simpan Perubahan
+                </button>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="profile-link">
+                    Kembali ke Beranda
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,96 @@
+﻿@{
+    ViewData["Title"] = "Dashboard Admin";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <span class="eyebrow">ADMINISTRATION</span>
+            <h1>Dashboard Admin</h1>
+            <p>Selamat datang di panel pengelolaan TokoMusik.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>Total Produk</span>
+            <h2>@ViewBag.TotalProduk</h2>
+            <small>Produk aktif</small>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Pelanggan</span>
+            <h2>@ViewBag.TotalCustomer</h2>
+            <small>Customer terdaftar</small>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Pesanan</span>
+            <h2>@ViewBag.TotalPesanan</h2>
+            <small>Seluruh transaksi</small>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Pendapatan</span>
+            <h2>
+                @(((decimal)ViewBag.TotalPendapatan).ToString("C0",
+                    System.Globalization.CultureInfo.GetCultureInfo("id-ID")))
+            </h2>
+            <small>Pesanan yang telah dibayar</small>
+        </div>
+    </div>
+
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <h2>Pesanan Terbaru</h2>
+                <p>Daftar transaksi terbaru pelanggan.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>ID Pesanan</th>
+                        <th>Pelanggan</th>
+                        <th>Tanggal</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in ViewBag.PesananTerbaru)
+                    {
+                        <tr>
+                            <td>#@item.IdPesanan</td>
+                            <td>@item.NamaCustomer</td>
+                            <td>
+                                @(((DateTime)item.TanggalPesan).ToString("dd MMM yyyy"))
+                            </td>
+                            <td>
+                                @(((decimal)item.TotalBayar).ToString("C0",
+                                    System.Globalization.CultureInfo.GetCultureInfo("id-ID")))
+                            </td>
+                            <td>
+                                <span class="status-badge">
+                                    @item.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+
+                    @if (ViewBag.PesananTerbaru == null ||
+                         !((IEnumerable<dynamic>)ViewBag.PesananTerbaru).Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                Belum ada pesanan.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

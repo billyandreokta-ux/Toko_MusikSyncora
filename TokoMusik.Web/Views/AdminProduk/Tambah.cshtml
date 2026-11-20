@@ -1,0 +1,282 @@
+﻿
+@model TokoMusik.Web.Models.AdminProdukFormViewModel
+
+@{
+    ViewData["Title"] = "Tambah Produk";
+    Layout = "_Layout";
+}
+
+<style>
+    .syncora-form-page {
+        min-height: 100vh;
+        background: #f5f7f3;
+        padding: 40px 0 65px;
+        color: #263b2d;
+    }
+
+    .syncora-form-container {
+        width: min(850px, calc(100% - 35px));
+        margin: auto;
+    }
+
+    .syncora-form-heading {
+        margin-bottom: 25px;
+    }
+
+    .syncora-form-heading small {
+        color: #789078;
+        font-size: 10px;
+        letter-spacing: 2px;
+        font-weight: 800;
+    }
+
+    .syncora-form-heading h1 {
+        font-size: 29px;
+        margin: 9px 0;
+        font-weight: 800;
+    }
+
+    .syncora-form-heading p {
+        color: #89918a;
+        font-size: 13px;
+    }
+
+    .syncora-form-card {
+        background: white;
+        border: 1px solid #e7ece5;
+        border-radius: 7px;
+        padding: 28px;
+    }
+
+    .syncora-form-section-title {
+        font-size: 14px;
+        font-weight: 800;
+        margin: 0 0 20px;
+        padding-bottom: 13px;
+        border-bottom: 1px solid #edf0eb;
+    }
+
+    .syncora-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 19px;
+    }
+
+    .syncora-field {
+        min-width: 0;
+    }
+
+    .syncora-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .syncora-field label {
+        display: block;
+        color: #536056;
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .syncora-field input,
+    .syncora-field select,
+    .syncora-field textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e0e7de;
+        border-radius: 4px;
+        background: white;
+        color: #293b2e;
+        outline: none;
+        font-size: 12px;
+    }
+
+    .syncora-field textarea {
+        resize: vertical;
+        min-height: 105px;
+    }
+
+    .syncora-field input:focus,
+    .syncora-field select:focus,
+    .syncora-field textarea:focus {
+        border-color: #739578;
+    }
+
+    .syncora-field input[type="file"] {
+        padding: 10px;
+        background: #fafbf8;
+    }
+
+    .syncora-hint {
+        color: #9aa29a;
+        font-size: 10px;
+        margin-top: 7px;
+    }
+
+    .syncora-validation {
+        color: #b34d43;
+        font-size: 11px;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .syncora-validation-summary {
+        color: #a64e48;
+        background: #fcebea;
+        padding: 12px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-size: 12px;
+    }
+
+    .syncora-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid #edf0eb;
+    }
+
+    .syncora-form-button {
+        padding: 12px 19px;
+        border: 0;
+        border-radius: 4px;
+        background: #174c35;
+        color: white;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .syncora-form-button:hover {
+        background: #245f43;
+        color: white;
+    }
+
+    .syncora-form-button.secondary {
+        background: #edf1eb;
+        color: #536056;
+    }
+
+    @@media(max-width: 600px) {
+        .syncora-form-card {
+            padding: 20px 16px;
+        }
+
+        .syncora-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .syncora-field.full {
+            grid-column: auto;
+        }
+    }
+</style>
+
+<div class="syncora-form-page">
+    <div class="syncora-form-container">
+
+        <div class="syncora-form-heading">
+            <small>SYNCORA MANAGEMENT / PRODUK</small>
+            <h1>Tambah Produk</h1>
+            <p>Masukkan informasi produk baru ke dalam katalog Syncora.</p>
+        </div>
+
+        <div class="syncora-form-card">
+
+            <form
+                asp-controller="AdminProduk"
+                asp-action="Tambah"
+                method="post"
+                enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="syncora-validation-summary"></div>
+
+                <h2 class="syncora-form-section-title">Informasi Produk</h2>
+
+                <div class="syncora-form-grid">
+
+                    <div class="syncora-field">
+                        <label asp-for="KodeProduk">Kode Produk</label>
+                        <input asp-for="KodeProduk" placeholder="Contoh: GTR-001" />
+                        <span asp-validation-for="KodeProduk" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field">
+                        <label asp-for="NamaProduk">Nama Produk</label>
+                        <input asp-for="NamaProduk" placeholder="Nama instrumen musik" />
+                        <span asp-validation-for="NamaProduk" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field">
+                        <label asp-for="IdCategory">Kategori</label>
+                        <select asp-for="IdCategory"
+                                asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Kategori, "Id", "Nama"))">
+                            <option value="0">-- Pilih Kategori --</option>
+                        </select>
+                        <span asp-validation-for="IdCategory" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field">
+                        <label asp-for="IdMerk">Merek</label>
+                        <select asp-for="IdMerk"
+                                asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Merek, "Id", "Nama"))">
+                            <option value="0">-- Pilih Merek --</option>
+                        </select>
+                        <span asp-validation-for="IdMerk" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field">
+                        <label asp-for="HargaJual">Harga Jual (Rp)</label>
+                        <input asp-for="HargaJual" type="number" min="0" step="1000" placeholder="Contoh: 1500000" />
+                        <span asp-validation-for="HargaJual" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field">
+                        <label asp-for="FotoFile">Foto Produk</label>
+                        <input asp-for="FotoFile" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                        <div class="syncora-hint">Format JPG, JPEG, PNG, WEBP. Maksimal 5 MB.</div>
+                        <span asp-validation-for="FotoFile" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field full">
+                        <label asp-for="Deskripsi">Deskripsi Produk</label>
+                        <textarea asp-for="Deskripsi" placeholder="Jelaskan informasi dan karakteristik produk..."></textarea>
+                        <span asp-validation-for="Deskripsi" class="syncora-validation"></span>
+                    </div>
+
+                </div>
+
+                <h2 class="syncora-form-section-title" style="margin-top:30px;">
+                    Informasi Persediaan
+                </h2>
+
+                <div class="syncora-form-grid">
+
+                    <div class="syncora-field">
+                        <label asp-for="JumlahStok">Jumlah Stok Awal</label>
+                        <input asp-for="JumlahStok" type="number" min="0" />
+                        <span asp-validation-for="JumlahStok" class="syncora-validation"></span>
+                    </div>
+
+                    <div class="syncora-field">
+                        <label asp-for="StokMinimum">Batas Minimum Stok</label>
+                        <input asp-for="StokMinimum" type="number" min="0" />
+                        <span asp-validation-for="StokMinimum" class="syncora-validation"></span>
+                    </div>
+
+                </div>
+
+                <div class="syncora-form-actions">
+                    <a href="/AdminProduk" class="syncora-form-button secondary">Batal</a>
+                    <button type="submit" class="syncora-form-button">Simpan Produk</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

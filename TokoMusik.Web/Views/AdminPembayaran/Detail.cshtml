@@ -1,0 +1,176 @@
+﻿
+@model TokoMusik.Web.Models.AdminPembayaranDetailViewModel
+
+@{
+    ViewData["Title"] = "Detail Pembayaran";
+
+    bool dapatDiverifikasi =
+        Model.StatusPesanan == "menunggu_bayar" &&
+        Model.StatusPembayaran == "pending" &&
+        !string.IsNullOrWhiteSpace(Model.BuktiBayar);
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h2>Verifikasi Pembayaran #@Model.IdPemesanan</h2>
+            <p class="text-secondary">
+                Periksa informasi pelanggan dan bukti transfer sebelum mengambil keputusan.
+            </p>
+        </div>
+
+        <a asp-controller="AdminPembayaran"
+           asp-action="Index"
+           class="btn btn-outline-custom">
+            Kembali
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="dashboard-section">
+                <h4>Informasi Pelanggan</h4>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Nama Pelanggan</small>
+                    <div><strong>@Model.NamaCustomer</strong></div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Username</small>
+                    <div>@Model.Username</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Telepon</small>
+                    <div>@Model.Telepon</div>
+                </div>
+
+                <hr />
+
+                <h4>Informasi Pembayaran</h4>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Nomor Pesanan</small>
+                    <div>#@Model.IdPemesanan</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Metode Pembayaran</small>
+                    <div>@Model.NamaMetode</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Tanggal Pembayaran</small>
+                    <div>@Model.TglBayar.ToString("dd MMMM yyyy HH:mm")</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Jumlah Dibayar</small>
+                    <h4 class="text-success">
+                        Rp @Model.JumlahBayar.ToString("N0")
+                    </h4>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Total Pesanan</small>
+                    <div>Rp @Model.TotalPesanan.ToString("N0")</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-secondary">Status Pembayaran</small>
+                    <div><strong>@Model.StatusPembayaran</strong></div>
+                </div>
+
+                <div>
+                    <small class="text-secondary">Status Pesanan</small>
+                    <div><strong>@Model.StatusPesanan</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="dashboard-section">
+                <h4>Bukti Pembayaran Pelanggan</h4>
+
+                @if (!string.IsNullOrWhiteSpace(Model.BuktiBayar))
+                {
+                    <a href="@Model.BuktiBayar" target="_blank" rel="noopener noreferrer">
+                        <img src="@Model.BuktiBayar"
+                             alt="Bukti pembayaran pelanggan"
+                             class="img-fluid rounded"
+                             style="width:100%;max-height:500px;object-fit:contain;" />
+                    </a>
+
+                    <p class="text-secondary small mt-2">
+                        Klik gambar untuk melihat ukuran penuh.
+                    </p>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        Pelanggan belum mengunggah bukti pembayaran.
+                    </div>
+                }
+
+                @if (dapatDiverifikasi)
+                {
+                    <hr />
+
+                    <h5>Keputusan Verifikasi</h5>
+                    <p class="text-secondary">
+                        Pastikan nominal dan bukti pembayaran sesuai dengan transaksi.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <form asp-controller="AdminPembayaran"
+                              asp-action="Verifikasi"
+                              asp-route-id="@Model.IdPayment"
+                              method="post"
+                              onsubmit="return confirm('Terima pembayaran ini? Status pesanan akan berubah menjadi dibayar.');">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="keputusan" value="berhasil" />
+
+                            <button type="submit" class="btn btn-success">
+                                Terima Pembayaran
+                            </button>
+                        </form>
+
+                        <form asp-controller="AdminPembayaran"
+                              asp-action="Verifikasi"
+                              asp-route-id="@Model.IdPayment"
+                              method="post"
+                              onsubmit="return confirm('Tolak pembayaran ini? Pelanggan harus mengunggah bukti kembali.');">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="keputusan" value="gagal" />
+
+                            <button type="submit" class="btn btn-danger">
+                                Tolak Pembayaran
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        Pembayaran ini tidak sedang menunggu verifikasi atau belum memiliki bukti pembayaran.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
