@@ -41,13 +41,29 @@
         --syncora-light: #eaf5ef;
         --syncora-muted: #7b8b85;
         --syncora-border: #e8eee9;
-        color: #24352f;
-        padding: 28px 0 50px;
-    }
 
-    .admin-dashboard * {
+        width: calc(100% - 64px);
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 30px 0 55px;
+        color: #24352f;
         box-sizing: border-box;
     }
+
+    .admin-dashboard *,
+    .admin-dashboard *::before,
+    .admin-dashboard *::after {
+        box-sizing: border-box;
+    }
+
+    .admin-dashboard svg {
+        display: block;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+    }
+
+    /* WELCOME BANNER */
 
     .dashboard-welcome {
         position: relative;
@@ -56,8 +72,9 @@
         align-items: center;
         justify-content: space-between;
         gap: 24px;
-        padding: 34px 38px;
-        margin-bottom: 28px;
+        min-height: 230px;
+        padding: 38px 42px;
+        margin-bottom: 32px;
         border-radius: 22px;
         color: #fff;
         background: linear-gradient(115deg, #123d32 0%, #176b50 65%, #25825f 100%);
@@ -95,8 +112,8 @@
     .welcome-eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 9px;
+        margin-bottom: 15px;
         color: #bce8d0;
         font-size: 11px;
         font-weight: 800;
@@ -105,25 +122,27 @@
 
     .welcome-eyebrow::before {
         content: "";
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background: #8ee0b2;
         box-shadow: 0 0 12px rgba(142,224,178,.7);
     }
 
     .welcome-content h1 {
-        margin: 0 0 9px;
+        margin: 0 0 12px;
         color: #fff;
-        font-size: clamp(25px, 3vw, 34px);
+        font-size: clamp(27px, 3vw, 36px);
         font-weight: 800;
         letter-spacing: -.8px;
     }
 
     .welcome-content p {
+        max-width: 750px;
         margin: 0;
-        color: rgba(255,255,255,.77);
+        color: rgba(255,255,255,.80);
         font-size: 14px;
+        line-height: 1.7;
     }
 
     .welcome-decoration {
@@ -132,19 +151,25 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 90px;
-        height: 90px;
+        width: 94px;
+        height: 94px;
         flex-shrink: 0;
         border: 1px solid rgba(255,255,255,.2);
-        border-radius: 24px;
+        border-radius: 25px;
         background: rgba(255,255,255,.10);
         color: #d9f5e5;
-        font-size: 38px;
         backdrop-filter: blur(5px);
     }
 
+    .welcome-decoration svg {
+        width: 43px;
+        height: 43px;
+    }
+
+    /* SECTION LABEL */
+
     .dashboard-section-label {
-        margin: 0 0 15px;
+        margin: 0 0 17px;
         color: #71827a;
         font-size: 11px;
         font-weight: 800;
@@ -152,18 +177,20 @@
         text-transform: uppercase;
     }
 
+    /* STATISTICS */
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 17px;
-        margin-bottom: 30px;
+        gap: 18px;
+        margin-bottom: 34px;
     }
 
     .stat-card {
         position: relative;
         overflow: hidden;
         min-width: 0;
-        padding: 23px;
+        padding: 24px;
         border: 1px solid var(--syncora-border);
         border-radius: 18px;
         background: #fff;
@@ -194,13 +221,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 43px;
-        height: 43px;
+        width: 44px;
+        height: 44px;
         flex-shrink: 0;
         border-radius: 13px;
         background: #eaf5ef;
         color: #176b50;
-        font-size: 19px;
+    }
+
+    .stat-icon svg {
+        width: 21px;
+        height: 21px;
     }
 
     .stat-card:nth-child(2) .stat-icon {
@@ -221,7 +252,7 @@
     .stat-value {
         display: block;
         overflow-wrap: anywhere;
-        margin-bottom: 7px;
+        margin-bottom: 8px;
         color: #1d352b;
         font-size: clamp(23px, 2.2vw, 29px);
         font-weight: 800;
@@ -237,10 +268,13 @@
         font-size: 12px;
     }
 
-    /* MENU MANAJEMEN PRODUK */
+    /* PENGELOLAAN TOKO */
 
     .product-management {
-        margin-bottom: 30px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 34px;
     }
 
     .management-card {
@@ -248,7 +282,8 @@
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        padding: 23px 25px;
+        min-width: 0;
+        padding: 24px;
         border: 1px solid var(--syncora-border);
         border-radius: 18px;
         background: #fff;
@@ -278,7 +313,16 @@
         border-radius: 16px;
         background: #eaf5ef;
         color: #176b50;
-        font-size: 24px;
+    }
+
+    .management-icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .management-card:nth-child(2) .management-icon {
+        background: #edf2fc;
+        color: #496da4;
     }
 
     .management-info h3 {
@@ -292,7 +336,7 @@
         margin: 0;
         color: #89978f;
         font-size: 12px;
-        line-height: 1.6;
+        line-height: 1.7;
     }
 
     .management-button {
@@ -301,7 +345,7 @@
         justify-content: center;
         gap: 9px;
         flex-shrink: 0;
-        padding: 12px 19px;
+        padding: 12px 17px;
         border: none;
         border-radius: 11px;
         background: #176b50;
@@ -309,6 +353,7 @@
         font-size: 12px;
         font-weight: 700;
         text-decoration: none;
+        white-space: nowrap;
         transition: background .2s ease, transform .2s ease;
     }
 
@@ -317,6 +362,13 @@
         color: #fff;
         transform: translateY(-2px);
     }
+
+    .management-button svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    /* PESANAN TERBARU */
 
     .orders-panel {
         overflow: hidden;
@@ -331,7 +383,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 15px;
-        padding: 23px 25px;
+        padding: 24px 25px;
         border-bottom: 1px solid #edf1ee;
     }
 
@@ -361,8 +413,9 @@
         white-space: nowrap;
     }
 
-    .orders-count i {
-        font-size: 12px;
+    .orders-count svg {
+        width: 15px;
+        height: 15px;
     }
 
     .orders-table-wrapper {
@@ -478,6 +531,8 @@
         color: #68766e;
     }
 
+    /* KONDISI KOSONG */
+
     .empty-orders {
         padding: 55px 20px !important;
         text-align: center;
@@ -493,7 +548,11 @@
         border-radius: 18px;
         background: #eef5f0;
         color: #6b9a7e;
-        font-size: 24px;
+    }
+
+    .empty-orders-icon svg {
+        width: 27px;
+        height: 27px;
     }
 
     .empty-orders strong {
@@ -508,7 +567,23 @@
         font-size: 12px;
     }
 
+    /* RESPONSIVE */
+
+    @@media (max-width: 1100px) {
+        .product-management {
+            grid-template-columns: 1fr;
+        }
+
+        .management-card {
+            padding: 22px;
+        }
+    }
+
     @@media (max-width: 992px) {
+        .admin-dashboard {
+            width: calc(100% - 44px);
+        }
+
         .stats-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -516,24 +591,41 @@
 
     @@media (max-width: 576px) {
         .admin-dashboard {
-            padding-top: 18px;
+            width: calc(100% - 28px);
+            padding-top: 20px;
+            padding-bottom: 35px;
         }
 
         .dashboard-welcome {
-            padding: 25px 22px;
+            min-height: auto;
+            padding: 25px 21px;
             border-radius: 18px;
         }
 
-        .welcome-decoration {
-            width: 58px;
-            height: 58px;
-            border-radius: 17px;
+        .welcome-content h1 {
             font-size: 25px;
         }
 
         .welcome-content p {
-            max-width: 230px;
-            line-height: 1.6;
+            max-width: 240px;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .welcome-decoration {
+            width: 52px;
+            height: 52px;
+            border-radius: 15px;
+        }
+
+        .welcome-decoration svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .welcome-eyebrow {
+            font-size: 9px;
+            letter-spacing: 1.3px;
         }
 
         .stats-grid {
@@ -550,133 +642,387 @@
         }
 
         .stat-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 16px;
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+        }
+
+        .stat-icon svg {
+            width: 18px;
+            height: 18px;
         }
 
         .stat-label {
             font-size: 11px;
         }
 
+        .stat-value {
+            font-size: 23px;
+        }
+
+        .stat-card:nth-child(4) .stat-value {
+            font-size: 17px;
+        }
+
         .stat-description {
             font-size: 10px;
+            line-height: 1.5;
         }
 
-        .orders-panel-header {
-            padding: 19px 17px;
-        }
-
-        .orders-table thead th,
-        .orders-table tbody td {
-            padding-right: 17px;
-            padding-left: 17px;
+        .product-management {
+            gap: 13px;
         }
 
         .management-card {
             align-items: flex-start;
             flex-direction: column;
-            padding: 19px;
+            gap: 17px;
+            padding: 18px;
+        }
+
+        .management-info {
+            gap: 13px;
+        }
+
+        .management-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 13px;
+        }
+
+        .management-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .management-info h3 {
+            font-size: 14px;
+        }
+
+        .management-info p {
+            font-size: 11px;
         }
 
         .management-button {
             width: 100%;
+        }
+
+        .orders-panel {
+            border-radius: 16px;
+        }
+
+        .orders-panel-header {
+            align-items: flex-start;
+            padding: 18px 16px;
+        }
+
+        .orders-heading h2 {
+            font-size: 16px;
+        }
+
+        .orders-heading p {
+            max-width: 200px;
+            line-height: 1.5;
+        }
+
+        .orders-count {
+            padding: 7px 9px;
+            font-size: 10px;
+        }
+
+        .orders-table thead th,
+        .orders-table tbody td {
+            padding-right: 16px;
+            padding-left: 16px;
+        }
+    }
+
+    @@media (max-width: 380px) {
+        .dashboard-welcome {
+            padding: 22px 17px;
+        }
+
+        .welcome-decoration {
+            width: 43px;
+            height: 43px;
+        }
+
+        .welcome-decoration svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .stat-card {
+            padding: 13px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+        }
+
+        .stat-card:nth-child(4) .stat-value {
+            font-size: 15px;
         }
     }
 </style>
 
 <div class="admin-dashboard">
 
+    <!-- WELCOME BANNER -->
+
     <section class="dashboard-welcome">
+
         <div class="welcome-content">
             <span class="welcome-eyebrow">SYNCORA ADMINISTRATION</span>
+
             <h1>Dashboard Admin</h1>
-            <p>Selamat datang di panel pengelolaan Syncora. Pantau aktivitas toko dan transaksi terbaru di sini.</p>
+
+            <p>
+                Selamat datang di panel pengelolaan Syncora.
+                Pantau aktivitas toko dan transaksi terbaru di sini.
+            </p>
         </div>
 
         <div class="welcome-decoration">
-            <i class="bi bi-music-note-beamed"></i>
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+            </svg>
         </div>
+
     </section>
 
-    <div class="dashboard-section-label">Ringkasan Toko</div>
+    <!-- RINGKASAN TOKO -->
+
+    <div class="dashboard-section-label">
+        Ringkasan Toko
+    </div>
 
     <section class="stats-grid">
 
+        <!-- TOTAL PRODUK -->
+
         <div class="stat-card">
+
             <div class="stat-top">
                 <span class="stat-label">Total Produk</span>
+
                 <div class="stat-icon">
-                    <i class="bi bi-music-note-list"></i>
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+                        <path d="m3 8 9 5 9-5" />
+                        <path d="M3 8v8l9 5 9-5V8" />
+                        <path d="M12 13v8" />
+                    </svg>
                 </div>
             </div>
+
             <strong class="stat-value">@ViewBag.TotalProduk</strong>
-            <span class="stat-description">Produk aktif di katalog</span>
+
+            <span class="stat-description">
+                Produk aktif di katalog
+            </span>
+
         </div>
 
+        <!-- TOTAL PELANGGAN -->
+
         <div class="stat-card">
+
             <div class="stat-top">
                 <span class="stat-label">Total Pelanggan</span>
+
                 <div class="stat-icon">
-                    <i class="bi bi-people"></i>
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="10" cy="7" r="4" />
+                        <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M17 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
                 </div>
             </div>
+
             <strong class="stat-value">@ViewBag.TotalCustomer</strong>
-            <span class="stat-description">Customer terdaftar</span>
+
+            <span class="stat-description">
+                Customer terdaftar
+            </span>
+
         </div>
 
+        <!-- TOTAL PESANAN -->
+
         <div class="stat-card">
+
             <div class="stat-top">
                 <span class="stat-label">Total Pesanan</span>
+
                 <div class="stat-icon">
-                    <i class="bi bi-bag-check"></i>
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 8H6" />
+                        <circle cx="10" cy="21" r="1" />
+                        <circle cx="18" cy="21" r="1" />
+                        <path d="m12 11 2 2 4-4" />
+                    </svg>
                 </div>
             </div>
+
             <strong class="stat-value">@ViewBag.TotalPesanan</strong>
-            <span class="stat-description">Seluruh transaksi pelanggan</span>
+
+            <span class="stat-description">
+                Seluruh transaksi pelanggan
+            </span>
+
         </div>
 
+        <!-- TOTAL PENDAPATAN -->
+
         <div class="stat-card">
+
             <div class="stat-top">
                 <span class="stat-label">Total Pendapatan</span>
+
                 <div class="stat-icon">
-                    <i class="bi bi-wallet2"></i>
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <path d="M2 10h20" />
+                        <path d="M6 15h3" />
+                        <path d="M16 15h2" />
+                    </svg>
                 </div>
             </div>
-            <strong class="stat-value">@FormatRupiah(totalPendapatan)</strong>
-            <span class="stat-description">Dari pesanan yang telah dibayar</span>
+
+            <strong class="stat-value">
+                @FormatRupiah(totalPendapatan)
+            </strong>
+
+            <span class="stat-description">
+                Dari pesanan yang telah dibayar
+            </span>
+
         </div>
 
     </section>
 
-    <!-- MENU MANAJEMEN PRODUK -->
+    <!-- PENGELOLAAN TOKO -->
 
-    <div class="dashboard-section-label">Pengelolaan Toko</div>
+    <div class="dashboard-section-label">
+        Pengelolaan Toko
+    </div>
 
     <section class="product-management">
+
+        <!-- MANAJEMEN PRODUK -->
 
         <div class="management-card">
 
             <div class="management-info">
+
                 <div class="management-icon">
-                    <i class="bi bi-box-seam"></i>
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+                        <path d="m3 8 9 5 9-5" />
+                        <path d="M3 8v8l9 5 9-5V8" />
+                        <path d="M12 13v8" />
+                    </svg>
                 </div>
 
                 <div>
                     <h3>Manajemen Produk</h3>
+
                     <p>
                         Tambahkan produk baru, lihat daftar produk,
                         ubah informasi, dan kelola produk di katalog Syncora.
                     </p>
                 </div>
+
             </div>
 
             <a asp-controller="AdminProduk"
                asp-action="Index"
                class="management-button">
-                <i class="bi bi-gear"></i>
+
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.8.34l-.06.06h-3.4l-.06-.06a1.7 1.7 0 0 0-1.8-.34l-.08.02-1.7-2.94.06-.06A1.7 1.7 0 0 0 9.6 15l-.02-.08v-3.4l.02-.08a1.7 1.7 0 0 0-.34-1.88l-.06-.06 1.7-2.94.08.02a1.7 1.7 0 0 0 1.8-.34l.06-.06h3.4l.06.06a1.7 1.7 0 0 0 1.8.34l.08-.02 1.7 2.94-.06.06a1.7 1.7 0 0 0-.34 1.88l.02.08v3.4L19.4 15Z" />
+                </svg>
+
                 Kelola Produk
-                <i class="bi bi-arrow-right"></i>
+
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                </svg>
+
+            </a>
+
+        </div>
+
+        <!-- MANAJEMEN RETUR -->
+
+        <div class="management-card">
+
+            <div class="management-info">
+
+                <div class="management-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 14 4 9l5-5" />
+                        <path d="M4 9h10a6 6 0 0 1 0 12h-2" />
+                        <path d="M16 8h4" />
+                    </svg>
+                </div>
+
+                <div>
+                    <h3>Manajemen Retur</h3>
+
+                    <p>
+                        Lihat pengajuan retur pelanggan, setujui atau tolak
+                        permintaan, serta periksa barang yang dikembalikan.
+                    </p>
+                </div>
+
+            </div>
+
+            <a asp-controller="AdminRetur"
+               asp-action="Index"
+               class="management-button">
+
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5h-3" />
+                    <path d="M14 3v5h5" />
+                    <path d="m8 14 2.5 2.5L16 11" />
+                </svg>
+
+                Kelola Retur
+
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                </svg>
+
             </a>
 
         </div>
@@ -688,19 +1034,31 @@
     <section class="orders-panel">
 
         <div class="orders-panel-header">
+
             <div class="orders-heading">
                 <h2>Pesanan Terbaru</h2>
                 <p>Pantau transaksi terbaru dari pelanggan Syncora.</p>
             </div>
 
             <span class="orders-count">
-                <i class="bi bi-receipt"></i>
+
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16v16H4z" />
+                    <path d="M8 8h8M8 12h8M8 16h5" />
+                </svg>
+
                 @daftarPesanan.Count Pesanan
+
             </span>
+
         </div>
 
         <div class="orders-table-wrapper">
+
             <table class="orders-table">
+
                 <thead>
                     <tr>
                         <th>ID Pesanan</th>
@@ -712,6 +1070,7 @@
                 </thead>
 
                 <tbody>
+
                     @if (daftarPesanan.Any())
                     {
                         foreach (var item in daftarPesanan)
@@ -720,7 +1079,10 @@
                             var tanggal = Convert.ToDateTime(item.TanggalPesan);
 
                             <tr>
-                                <td class="order-id">#@item.IdPesanan</td>
+
+                                <td class="order-id">
+                                    #@item.IdPesanan
+                                </td>
 
                                 <td>
                                     <span class="customer-name">
@@ -741,6 +1103,7 @@
                                         @status.Replace("_", " ")
                                     </span>
                                 </td>
+
                             </tr>
                         }
                     }
@@ -748,16 +1111,30 @@
                     {
                         <tr>
                             <td colspan="5" class="empty-orders">
+
                                 <div class="empty-orders-icon">
-                                    <i class="bi bi-inbox"></i>
+                                    <svg viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="1.8"
+                                         stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 4h16v16H4z" />
+                                        <path d="M8 8h8M8 12h8M8 16h5" />
+                                    </svg>
                                 </div>
+
                                 <strong>Belum ada pesanan</strong>
-                                <span>Pesanan pelanggan akan muncul di bagian ini.</span>
+
+                                <span>
+                                    Pesanan pelanggan akan muncul di bagian ini.
+                                </span>
+
                             </td>
                         </tr>
                     }
+
                 </tbody>
+
             </table>
+
         </div>
 
     </section>

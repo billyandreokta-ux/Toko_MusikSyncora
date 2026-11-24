@@ -1,86 +1,991 @@
-﻿@{
+﻿
+@{
     ViewData["Title"] = "Dashboard Pelanggan";
     var customer = ViewBag.Customer;
+    var pesanan = ViewBag.Pesanan as IEnumerable<dynamic>;
+    var totalPesanan = ViewBag.TotalPesanan ?? 0;
+
+    string GetStatusClass(string? status)
+    {
+        var normalized = (status ?? "")
+            .Trim()
+            .ToLowerInvariant()
+            .Replace("_", " ");
+
+        return normalized switch
+        {
+            "menunggu bayar" => "waiting",
+            "menunggu pembayaran" => "waiting",
+            "menunggu verifikasi" => "waiting",
+            "dibayar" => "paid",
+            "diproses" => "process",
+            "dikirim" => "shipping",
+            "selesai" => "complete",
+            "dibatalkan" => "cancelled",
+            "batal" => "cancelled",
+            _ => "default"
+        };
+    }
+
+    string GetStatusDescription(string? status)
+    {
+        var normalized = (status ?? "")
+            .Trim()
+            .ToLowerInvariant()
+            .Replace("_", " ");
+
+        return normalized switch
+        {
+            "menunggu bayar" => "Menunggu pembayaran dari pelanggan.",
+            "menunggu pembayaran" => "Menunggu pembayaran dari pelanggan.",
+            "menunggu verifikasi" => "Pembayaran sedang diperiksa admin.",
+            "dibayar" => "Pembayaran telah berhasil.",
+            "diproses" => "Pesanan sedang disiapkan.",
+            "dikirim" => "Pesanan sedang dalam perjalanan.",
+            "selesai" => "Pesanan telah selesai.",
+            "dibatalkan" => "Pesanan telah dibatalkan.",
+            "batal" => "Pesanan telah dibatalkan.",
+            _ => "Lihat detail pesanan untuk informasi lebih lanjut."
+        };
+    }
 }
 
-<div class="dashboard-container">
-    <div class="dashboard-heading">
-        <div>
-            <span class="eyebrow">CUSTOMER AREA</span>
-            <h1>Halo, @customer.NamaCustomer!</h1>
-            <p>Selamat datang kembali di TokoMusik.</p>
-        </div>
-    </div>
+<style>
+    .sync-user-dashboard {
+        --sync-green: #176b49;
+        --sync-dark: #103c2c;
+        --sync-light: #eaf4ed;
+        --sync-bg: #f6f8f5;
+        --sync-text: #20352a;
+        --sync-muted: #819087;
+        color: var(--sync-text);
+        background: var(--sync-bg);
+        min-height: 100vh;
+        padding-bottom: 75px;
+    }
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span>Total Pesanan</span>
-            <h2>@ViewBag.TotalPesanan</h2>
-            <small>Riwayat transaksi kamu</small>
-        </div>
+    .sync-user-dashboard * {
+        box-sizing: border-box;
+    }
 
-        <div class="stat-card">
-            <span>Email</span>
-            <h2 class="stat-text">@customer.Email</h2>
-            <small>Email akun kamu</small>
-        </div>
+    .sync-user-container {
+        width: min(1180px, calc(100% - 48px));
+        margin: 0 auto;
+    }
 
-        <div class="stat-card">
-            <span>Nomor Telepon</span>
-            <h2 class="stat-text">@customer.Telepon</h2>
-            <small>Kontak pelanggan</small>
-        </div>
-    </div>
+    /* HERO */
+    .sync-user-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(120deg, #103c2c, #176b49 65%, #25845c);
+        color: white;
+        padding: 58px 0;
+    }
 
-    <section class="dashboard-section">
-        <div class="section-heading">
+    .sync-user-hero::before,
+    .sync-user-hero::after {
+        content: "";
+        position: absolute;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .sync-user-hero::before {
+        width: 440px;
+        height: 440px;
+        right: -90px;
+        top: -280px;
+    }
+
+    .sync-user-hero::after {
+        width: 340px;
+        height: 340px;
+        right: 80px;
+        bottom: -280px;
+    }
+
+    .sync-user-hero-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .sync-user-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: #b9e5c8;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2.5px;
+        margin-bottom: 17px;
+    }
+
+    .sync-user-eyebrow::before {
+        content: "";
+        width: 23px;
+        height: 2px;
+        background: #a5dfb9;
+    }
+
+    .sync-user-hero h1 {
+        font-size: clamp(32px, 4vw, 48px);
+        line-height: 1.15;
+        letter-spacing: -1.5px;
+        font-weight: 800;
+        margin: 0 0 13px;
+    }
+
+    .sync-user-hero h1 span {
+        color: #b8e7c6;
+    }
+
+    .sync-user-hero p {
+        color: #d5e7dc;
+        font-size: 15px;
+        line-height: 1.8;
+        margin: 0;
+        max-width: 570px;
+    }
+
+    .sync-user-hero-decoration {
+        width: 105px;
+        height: 105px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.25);
+        background: rgba(255,255,255,.10);
+        border-radius: 28px;
+        color: #d7f2df;
+        transform: rotate(7deg);
+    }
+
+    .sync-user-hero-decoration svg {
+        width: 48px;
+        height: 48px;
+    }
+
+    /* MAIN */
+    .sync-user-main {
+        padding-top: 38px;
+    }
+
+    .sync-user-section-label {
+        color: #799083;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 17px;
+    }
+
+    /* STATS */
+    .sync-user-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 19px;
+        margin-bottom: 28px;
+    }
+
+    .sync-user-stat-card {
+        min-width: 0;
+        padding: 25px;
+        background: white;
+        border: 1px solid #e5ece6;
+        border-radius: 17px;
+        box-shadow: 0 8px 25px rgba(24,65,42,.035);
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .sync-user-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 30px rgba(24,65,42,.08);
+    }
+
+    .sync-user-stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+
+    .sync-user-stat-title {
+        color: #75857a;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .sync-user-stat-icon {
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        background: #eaf4ed;
+        color: #24734d;
+    }
+
+    .sync-user-stat-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .sync-user-stat-icon.purple {
+        background: #f0edff;
+        color: #7462bb;
+    }
+
+    .sync-user-stat-icon.orange {
+        background: #fff2e7;
+        color: #c47a37;
+    }
+
+    .sync-user-stat-value {
+        display: block;
+        color: #173e2b;
+        font-size: 27px;
+        line-height: 1.35;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+        margin-bottom: 8px;
+    }
+
+    .sync-user-stat-value.contact {
+        font-size: clamp(15px, 1.6vw, 19px);
+    }
+
+    .sync-user-stat-description {
+        color: #98a39a;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    /* QUICK ACTIONS */
+    .sync-user-quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 37px;
+    }
+
+    .sync-user-quick-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+        padding: 19px 21px;
+        background: white;
+        border: 1px solid #e5ece6;
+        border-radius: 15px;
+        text-decoration: none;
+        transition: .25s ease;
+    }
+
+    .sync-user-quick-card:hover {
+        transform: translateY(-3px);
+        border-color: #b9d6c1;
+        box-shadow: 0 10px 24px rgba(24,65,42,.07);
+    }
+
+    .sync-user-quick-icon {
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        background: #eaf4ed;
+        color: #24734d;
+    }
+
+    .sync-user-quick-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .sync-user-quick-text {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .sync-user-quick-text strong {
+        display: block;
+        color: #244633;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .sync-user-quick-text span {
+        display: block;
+        color: #89968d;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .sync-user-quick-arrow {
+        color: #679078;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    /* HISTORY */
+    .sync-user-history {
+        background: white;
+        border: 1px solid #e6ece6;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(24,65,42,.035);
+    }
+
+    .sync-user-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 27px 28px;
+        border-bottom: 1px solid #edf0ec;
+    }
+
+    .sync-user-history-heading h2 {
+        color: #193d2b;
+        font-size: 21px;
+        font-weight: 800;
+        margin: 0 0 7px;
+    }
+
+    .sync-user-history-heading p {
+        color: #8a968e;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .sync-user-order-count {
+        padding: 9px 13px;
+        border-radius: 30px;
+        background: #edf5ef;
+        color: #27724b;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .sync-user-history-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #27724b;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        margin-top: 12px;
+    }
+
+    .sync-user-history-action:hover {
+        color: #103c2c;
+    }
+
+    .sync-user-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .sync-user-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 650px;
+    }
+
+    .sync-user-table thead {
+        background: #f8faf7;
+    }
+
+    .sync-user-table th {
+        padding: 16px 25px;
+        color: #839188;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .sync-user-table td {
+        padding: 19px 25px;
+        border-top: 1px solid #f0f2ef;
+        color: #526359;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .sync-user-table tbody tr {
+        transition: background .2s ease;
+    }
+
+    .sync-user-table tbody tr:hover {
+        background: #fbfdfb;
+    }
+
+    .sync-user-order-id {
+        color: #1d5739;
+        font-weight: 800;
+    }
+
+    .sync-user-total {
+        color: #176b49 !important;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    /* STATUS COLORS - MATCH ADMIN */
+    .sync-user-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 11px;
+        border-radius: 30px;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .sync-user-status::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .sync-user-status.waiting {
+        background: #fff4df;
+        color: #a66c16;
+    }
+
+    .sync-user-status.paid {
+        background: #e4f5ec;
+        color: #218052;
+    }
+
+    .sync-user-status.process {
+        background: #e8f1ff;
+        color: #426bb1;
+    }
+
+    .sync-user-status.shipping {
+        background: #f0eaff;
+        color: #7958b5;
+    }
+
+    .sync-user-status.complete {
+        background: #e2f5e9;
+        color: #187344;
+    }
+
+    .sync-user-status.cancelled {
+        background: #ffebeb;
+        color: #bd4b4b;
+    }
+
+    .sync-user-status.default {
+        background: #f0f2f1;
+        color: #68766e;
+    }
+
+    /* STATUS GUIDE */
+    .sync-user-status-guide {
+        padding: 23px 27px;
+        background: #fbfcfa;
+        border-top: 1px solid #edf0ec;
+    }
+
+    .sync-user-status-guide h3 {
+        color: #40594a;
+        font-size: 12px;
+        font-weight: 800;
+        margin: 0 0 15px;
+    }
+
+    .sync-user-guide-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 11px 18px;
+    }
+
+    .sync-user-guide-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #849087;
+        font-size: 11px;
+    }
+
+    .sync-user-guide-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .sync-user-guide-dot.waiting { background: #d99b36; }
+    .sync-user-guide-dot.paid { background: #218052; }
+    .sync-user-guide-dot.process { background: #426bb1; }
+    .sync-user-guide-dot.shipping { background: #7958b5; }
+    .sync-user-guide-dot.complete { background: #187344; }
+    .sync-user-guide-dot.cancelled { background: #bd4b4b; }
+
+    /* EMPTY STATE */
+    .sync-user-empty {
+        padding: 55px 20px !important;
+        text-align: center;
+    }
+
+    .sync-user-empty-icon {
+        width: 55px;
+        height: 55px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 15px;
+        border-radius: 17px;
+        background: #edf5ef;
+        color: #43815b;
+    }
+
+    .sync-user-empty-icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .sync-user-empty strong {
+        display: block;
+        color: #304d3b;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .sync-user-empty span {
+        color: #97a198;
+        font-size: 12px;
+    }
+
+    .sync-user-empty a {
+        display: inline-flex;
+        margin-top: 16px;
+        padding: 10px 17px;
+        border-radius: 8px;
+        background: #176b49;
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .sync-user-empty a:hover {
+        background: #103c2c;
+    }
+
+    /* RESPONSIVE */
+    @@media (max-width: 800px) {
+        .sync-user-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .sync-user-stat-card:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .sync-user-container {
+            width: calc(100% - 30px);
+        }
+
+        .sync-user-hero {
+            padding: 42px 0;
+        }
+
+        .sync-user-hero-content {
+            align-items: flex-start;
+        }
+
+        .sync-user-hero h1 {
+            font-size: 32px;
+        }
+
+        .sync-user-hero p {
+            font-size: 13px;
+        }
+
+        .sync-user-hero-decoration {
+            width: 58px;
+            height: 58px;
+            border-radius: 17px;
+        }
+
+        .sync-user-hero-decoration svg {
+            width: 29px;
+            height: 29px;
+        }
+
+        .sync-user-main {
+            padding-top: 27px;
+        }
+
+        .sync-user-stats {
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 23px;
+        }
+
+        .sync-user-stat-card,
+        .sync-user-stat-card:last-child {
+            grid-column: auto;
+            padding: 19px;
+        }
+
+        .sync-user-stat-top {
+            margin-bottom: 13px;
+        }
+
+        .sync-user-stat-value {
+            font-size: 24px;
+        }
+
+        .sync-user-stat-value.contact {
+            font-size: 17px;
+        }
+
+        .sync-user-quick-actions {
+            grid-template-columns: 1fr;
+            gap: 11px;
+            margin-bottom: 27px;
+        }
+
+        .sync-user-quick-card {
+            padding: 16px;
+        }
+
+        .sync-user-history-header {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 22px 19px;
+            gap: 13px;
+        }
+
+        .sync-user-history-heading h2 {
+            font-size: 19px;
+        }
+
+        .sync-user-table th,
+        .sync-user-table td {
+            padding: 15px 17px;
+        }
+
+        .sync-user-status-guide {
+            padding: 20px;
+        }
+    }
+
+    @@media (max-width: 380px) {
+        .sync-user-hero-decoration {
+            display: none;
+        }
+    }
+</style>
+
+<div class="sync-user-dashboard">
+
+    <!-- WELCOME HERO -->
+    <section class="sync-user-hero">
+        <div class="sync-user-container sync-user-hero-content">
+
             <div>
-                <h2>Riwayat Pesanan</h2>
-                <p>Pantau pesanan yang pernah kamu buat.</p>
+                <div class="sync-user-eyebrow">
+                    SYNCORA CUSTOMER AREA
+                </div>
+
+                <h1>
+                    Halo, <span>@customer.NamaCustomer!</span>
+                </h1>
+
+                <p>
+                    Selamat datang kembali di Syncora.
+                    Temukan inspirasi musikmu, jelajahi koleksi instrumen,
+                    dan pantau perjalanan belanjamu dalam satu tempat.
+                </p>
             </div>
-        </div>
 
-        <div class="table-responsive">
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>ID Pesanan</th>
-                        <th>Tanggal</th>
-                        <th>Total Pembayaran</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in ViewBag.Pesanan)
-                    {
-                        <tr>
-                            <td>#@item.IdPesanan</td>
-                            <td>
-                                @(((DateTime)item.TanggalPesan).ToString("dd MMM yyyy"))
-                            </td>
-                            <td>
-                                @(((decimal)item.TotalBayar).ToString("C0",
-                                    System.Globalization.CultureInfo.GetCultureInfo("id-ID")))
-                            </td>
-                            <td>
-                                <span class="status-badge">
-                                    @item.Status
-                                </span>
-                            </td>
-                        </tr>
-                    }
+            <div class="sync-user-hero-decoration">
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="16" r="3" />
+                </svg>
+            </div>
 
-                    @if (ViewBag.Pesanan == null ||
-                         !((IEnumerable<dynamic>)ViewBag.Pesanan).Any())
-                    {
-                        <tr>
-                            <td colspan="4" class="empty-state">
-                                Kamu belum memiliki pesanan.
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
         </div>
     </section>
+
+    <main class="sync-user-container sync-user-main">
+
+        <!-- ACCOUNT SUMMARY -->
+        <div class="sync-user-section-label">
+            RINGKASAN AKUN
+        </div>
+
+        <section class="sync-user-stats">
+
+            <article class="sync-user-stat-card">
+                <div class="sync-user-stat-top">
+                    <span class="sync-user-stat-title">Total Pesanan</span>
+
+                    <div class="sync-user-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 3h12l3 4v14H3V7l3-4Z" />
+                            <path d="M3 7h18M9 12h6" />
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="sync-user-stat-value">@totalPesanan</strong>
+                <div class="sync-user-stat-description">
+                    Jumlah seluruh pesanan yang tercatat pada akunmu.
+                </div>
+            </article>
+
+            <article class="sync-user-stat-card">
+                <div class="sync-user-stat-top">
+                    <span class="sync-user-stat-title">Email Akun</span>
+
+                    <div class="sync-user-stat-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="5" width="18" height="14" rx="2" />
+                            <path d="m3 7 9 6 9-6" />
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="sync-user-stat-value contact">
+                    @customer.Email
+                </strong>
+                <div class="sync-user-stat-description">
+                    Alamat email yang terhubung dengan akun Syncora.
+                </div>
+            </article>
+
+            <article class="sync-user-stat-card">
+                <div class="sync-user-stat-top">
+                    <span class="sync-user-stat-title">Nomor Telepon</span>
+
+                    <div class="sync-user-stat-icon orange">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+                            <path d="M10 18h4" />
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="sync-user-stat-value contact">
+                    @customer.Telepon
+                </strong>
+                <div class="sync-user-stat-description">
+                    Nomor kontak yang terdaftar pada akunmu.
+                </div>
+            </article>
+
+        </section>
+
+        <!-- QUICK ACCESS -->
+        <div class="sync-user-section-label">
+            AKSES CEPAT
+        </div>
+
+        <section class="sync-user-quick-actions">
+
+            <a href="/Produk" class="sync-user-quick-card">
+                <div class="sync-user-quick-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7h18l-2 13H5L3 7Z" />
+                        <path d="M8 7a4 4 0 0 1 8 0" />
+                    </svg>
+                </div>
+
+                <div class="sync-user-quick-text">
+                    <strong>Jelajahi Produk</strong>
+                    <span>Temukan instrumen dan perlengkapan musik pilihan.</span>
+                </div>
+
+                <span class="sync-user-quick-arrow">→</span>
+            </a>
+
+            <a href="/PesananSaya" class="sync-user-quick-card">
+                <div class="sync-user-quick-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16v16H4z" />
+                        <path d="M8 8h8M8 12h8M8 16h5" />
+                    </svg>
+                </div>
+
+                <div class="sync-user-quick-text">
+                    <strong>Kelola Pesanan Saya</strong>
+                    <span>Lihat detail, pembayaran, dan perkembangan pesanan.</span>
+                </div>
+
+                <span class="sync-user-quick-arrow">→</span>
+            </a>
+
+        </section>
+
+        <!-- ORDER HISTORY -->
+        <section class="sync-user-history">
+
+            <div class="sync-user-history-header">
+                <div class="sync-user-history-heading">
+                    <h2>Riwayat Pesanan</h2>
+                    <p>
+                        Ringkasan transaksi yang pernah kamu lakukan di Syncora.
+                    </p>
+
+                    <a href="/PesananSaya" class="sync-user-history-action">
+                        Lihat semua pesanan <span>→</span>
+                    </a>
+                </div>
+
+                <span class="sync-user-order-count">
+                    @totalPesanan PESANAN
+                </span>
+            </div>
+
+            <div class="sync-user-table-wrapper">
+                <table class="sync-user-table">
+                    <thead>
+                        <tr>
+                            <th>ID Pesanan</th>
+                            <th>Tanggal Pesanan</th>
+                            <th>Total Pembayaran</th>
+                            <th>Status Pesanan</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (pesanan != null && pesanan.Any())
+                        {
+                            foreach (var item in pesanan)
+                            {
+                                var status = Convert.ToString(item.Status) ?? "";
+
+                                <tr>
+                                    <td>
+                                        <span class="sync-user-order-id">
+                                            #@item.IdPesanan
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @(((DateTime)item.TanggalPesan).ToString("dd MMM yyyy"))
+                                    </td>
+
+                                    <td class="sync-user-total">
+                                        @(((decimal)item.TotalBayar).ToString(
+                                            "C0",
+                                            System.Globalization.CultureInfo.GetCultureInfo("id-ID")))
+                                    </td>
+
+                                    <td>
+                                        <span class="sync-user-status @GetStatusClass(status)"
+                                              title="@GetStatusDescription(status)">
+                                            @status.Replace("_", " ")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="sync-user-empty">
+                                    <div class="sync-user-empty-icon">
+                                        <svg viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="1.7"
+                                             stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M6 3h12l3 4v14H3V7l3-4Z" />
+                                            <path d="M3 7h18M9 12h6" />
+                                        </svg>
+                                    </div>
+
+                                    <strong>Belum Ada Pesanan</strong>
+                                    <span>
+                                        Pesanan yang kamu buat nantinya akan muncul di sini.
+                                    </span>
+
+                                    <br />
+
+                                    <a href="/Produk">
+                                        Mulai Belanja
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- STATUS LEGEND -->
+            <div class="sync-user-status-guide">
+                <h3>Panduan Status Pesanan</h3>
+
+                <div class="sync-user-guide-list">
+                    <span class="sync-user-guide-item">
+                        <i class="sync-user-guide-dot waiting"></i>
+                        Menunggu pembayaran
+                    </span>
+
+                    <span class="sync-user-guide-item">
+                        <i class="sync-user-guide-dot paid"></i>
+                        Dibayar
+                    </span>
+
+                    <span class="sync-user-guide-item">
+                        <i class="sync-user-guide-dot process"></i>
+                        Diproses
+                    </span>
+
+                    <span class="sync-user-guide-item">
+                        <i class="sync-user-guide-dot shipping"></i>
+                        Dikirim
+                    </span>
+
+                    <span class="sync-user-guide-item">
+                        <i class="sync-user-guide-dot complete"></i>
+                        Selesai
+                    </span>
+
+                    <span class="sync-user-guide-item">
+                        <i class="sync-user-guide-dot cancelled"></i>
+                        Dibatalkan
+                    </span>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
 </div>

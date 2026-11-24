@@ -100,7 +100,6 @@ namespace TokoMusik.Web.Controllers
         }
 
         // POST: /Checkout/Mulai
-        // Memulai checkout berdasarkan produk yang dicentang di keranjang.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Mulai(int[] selectedIds)
@@ -140,7 +139,6 @@ namespace TokoMusik.Web.Controllers
         }
 
         // POST: /Checkout/BeliSekarang
-        // Checkout langsung tanpa memasukkan produk ke keranjang.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BeliSekarang(
@@ -207,8 +205,6 @@ namespace TokoMusik.Web.Controllers
                 );
             }
 
-            // Produk langsung disimpan ke daftar checkout,
-            // bukan ke keranjang belanja.
             SimpanItemCheckout(new List<KeranjangItem>
             {
                 new KeranjangItem
@@ -234,6 +230,7 @@ namespace TokoMusik.Web.Controllers
                 KodePromo = kodePromo?.Trim().ToUpperInvariant()
             };
 
+            // Hanya mengambil alamat yang masih aktif.
             model.Alamat = (await connection.QueryAsync<AlamatCustomer>(
                 @"
                 SELECT
@@ -249,6 +246,7 @@ namespace TokoMusik.Web.Controllers
                     is_utama AS IsUtama
                 FROM alamat_customer
                 WHERE id_customer = @IdCustomer
+                    AND is_aktif = 1
                 ORDER BY is_utama DESC, id_alamat DESC
                 ",
                 new { IdCustomer = idCustomer }
@@ -622,6 +620,7 @@ namespace TokoMusik.Web.Controllers
                         "Data pelanggan tidak ditemukan."
                     );
 
+                // Pastikan alamat masih aktif saat pesanan dibuat.
                 var alamat =
                     await connection.QueryFirstOrDefaultAsync<AlamatCustomer>(
                         @"
@@ -639,6 +638,7 @@ namespace TokoMusik.Web.Controllers
                         FROM alamat_customer
                         WHERE id_alamat = @IdAlamat
                             AND id_customer = @IdCustomer
+                            AND is_aktif = 1
                         FOR UPDATE
                         ",
                         new
@@ -651,7 +651,7 @@ namespace TokoMusik.Web.Controllers
 
                 if (alamat == null)
                     throw new InvalidOperationException(
-                        "Alamat pengiriman tidak valid."
+                        "Alamat pengiriman tidak valid atau sudah dihapus. Silakan pilih alamat yang masih aktif."
                     );
 
                 int metodeValid =
@@ -917,11 +917,7 @@ namespace TokoMusik.Web.Controllers
 
                 await transaction.CommitAsync();
 
-                // Hapus hanya produk yang berhasil dibeli.
-                // Produk lain di keranjang tidak ikut terhapus.
                 HapusProdukYangDibeli(itemCheckout);
-
-                // Hapus daftar checkout setelah transaksi sukses.
                 HapusItemCheckout();
 
                 TempData["Success"] =
@@ -943,8 +939,6 @@ namespace TokoMusik.Web.Controllers
                     // Transaksi mungkin sudah dibatalkan.
                 }
 
-                // Daftar checkout dan keranjang tidak dihapus
-                // apabila transaksi gagal.
                 TempData["Error"] =
                     ex is MySqlException
                         ? "Terjadi kesalahan database saat membuat pesanan. Periksa kembali data dan konfigurasi database."

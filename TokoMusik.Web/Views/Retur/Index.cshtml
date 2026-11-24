@@ -1,194 +1,722 @@
-﻿@model TokoMusik.Web.Models.ReturViewModel
+﻿
+@model TokoMusik.Web.Models.ReturViewModel
 
 @{
     ViewData["Title"] = "Retur Produk";
+
+    var totalProdukDapatDiretur = Model.ProdukDapatDiretur?.Count ?? 0;
+    var totalPengajuan = Model.DaftarRetur?.Count ?? 0;
+    var totalMenunggu = Model.DaftarRetur?.Count(x => x.Status == "diajukan") ?? 0;
+    var totalSelesai = Model.DaftarRetur?.Count(x => x.Status == "selesai") ?? 0;
 }
 
 <style>
-    .syncora-page {
-        max-width: 1180px;
-        margin: 35px auto 65px;
-        padding: 0 18px;
-        color: #263a30;
-    }
-
-    .syncora-heading {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 25px;
-    }
-
-        .syncora-heading h2 {
-            font-weight: 800;
-            margin: 0 0 7px;
-        }
-
-    .syncora-muted {
-        color: #77847c;
-    }
-
-    .syncora-card {
-        background: #fff;
-        border: 1px solid #e7ece8;
-        border-radius: 16px;
-        padding: 22px;
-        margin-bottom: 22px;
-        box-shadow: 0 5px 20px rgba(20,50,30,.04);
-    }
-
-    .syncora-table {
+    .return-index-page {
+        --syncora-green: #176b50;
+        --syncora-dark: #123d32;
+        --syncora-border: #e8eee9;
+        --syncora-muted: #84928a;
+        max-width: 1400px;
         width: 100%;
-        border-collapse: collapse;
-        min-width: 760px;
+        margin: 0 auto;
+        padding: 32px 28px 65px;
+        color: #263a30;
+        box-sizing: border-box;
     }
 
-        .syncora-table th {
-            color: #6b786f;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            background: #f5f8f5;
-        }
+    .return-index-page * {
+        box-sizing: border-box;
+    }
 
-        .syncora-table th,
-        .syncora-table td {
-            padding: 14px 13px;
-            border-bottom: 1px solid #edf0ed;
-            text-align: left;
-            vertical-align: middle;
-        }
+    .return-hero {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        overflow: hidden;
+        padding: 32px 36px;
+        margin-bottom: 25px;
+        border-radius: 22px;
+        color: #fff;
+        background: linear-gradient(115deg, #123d32 0%, #176b50 65%, #25825f 100%);
+        box-shadow: 0 12px 30px rgba(18, 61, 50, .12);
+    }
 
-        .syncora-table td {
-            font-size: 14px;
-        }
+    .return-hero::before,
+    .return-hero::after {
+        content: "";
+        position: absolute;
+        border: 1px solid rgba(255,255,255,.11);
+        border-radius: 50%;
+        pointer-events: none;
+    }
 
-    .syncora-table-wrap {
+    .return-hero::before {
+        width: 270px;
+        height: 270px;
+        top: -175px;
+        right: 100px;
+    }
+
+    .return-hero::after {
+        width: 210px;
+        height: 210px;
+        right: -55px;
+        bottom: -145px;
+    }
+
+    .return-hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .return-hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 11px;
+        color: #bce8d0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .return-hero-eyebrow::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #8ee0b2;
+        box-shadow: 0 0 12px rgba(142,224,178,.7);
+    }
+
+    .return-hero h1 {
+        margin: 0 0 9px;
+        color: #fff;
+        font-size: clamp(25px, 3vw, 34px);
+        font-weight: 800;
+        letter-spacing: -.8px;
+    }
+
+    .return-hero p {
+        max-width: 650px;
+        margin: 0;
+        color: rgba(255,255,255,.78);
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .return-hero-action {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        flex-shrink: 0;
+        padding: 12px 17px;
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 11px;
+        background: rgba(255,255,255,.12);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s ease, transform .2s ease;
+    }
+
+    .return-hero-action:hover {
+        background: rgba(255,255,255,.22);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .return-hero-action svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .return-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 17px;
+        margin-bottom: 18px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .return-alert svg {
+        width: 19px;
+        height: 19px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .return-alert-success {
+        border-color: #cce8d4;
+        background: #edf8f0;
+        color: #24643d;
+    }
+
+    .return-alert-error {
+        border-color: #f3d0cd;
+        background: #fff0ef;
+        color: #a33c32;
+    }
+
+    .return-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .return-summary-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        min-width: 0;
+        padding: 19px 20px;
+        border: 1px solid var(--syncora-border);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(27, 55, 43, .035);
+    }
+
+    .return-summary-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        border-radius: 14px;
+        background: #eaf5ef;
+        color: #176b50;
+    }
+
+    .return-summary-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .return-summary-card:nth-child(2) .return-summary-icon {
+        background: #eef2ff;
+        color: #5869bd;
+    }
+
+    .return-summary-card:nth-child(3) .return-summary-icon {
+        background: #fff4e8;
+        color: #bd7b32;
+    }
+
+    .return-summary-card:nth-child(4) .return-summary-icon {
+        background: #e7f4ec;
+        color: #218052;
+    }
+
+    .return-summary-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #829088;
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    .return-summary-value {
+        display: block;
+        color: #1d352b;
+        font-size: 25px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .return-section {
+        overflow: hidden;
+        margin-bottom: 24px;
+        border: 1px solid var(--syncora-border);
+        border-radius: 19px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(27, 55, 43, .035);
+    }
+
+    .return-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 22px 25px;
+        border-bottom: 1px solid #edf1ee;
+    }
+
+    .return-section-heading h2 {
+        margin: 0 0 6px;
+        color: #1d352b;
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    .return-section-heading p {
+        margin: 0;
+        color: #89978f;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .return-section-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        flex-shrink: 0;
+        padding: 8px 12px;
+        border-radius: 30px;
+        background: #eaf5ef;
+        color: #176b50;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .return-section-count svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .return-table-wrap {
+        width: 100%;
         overflow-x: auto;
     }
 
-    .syncora-btn {
-        display: inline-block;
+    .return-table {
+        width: 100%;
+        min-width: 850px;
+        margin: 0;
+        border-collapse: collapse;
+    }
+
+    .return-table thead th {
+        padding: 15px 20px;
+        background: #f8faf8;
+        color: #87958e;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .8px;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .return-table tbody td {
+        padding: 17px 20px;
+        border-bottom: 1px solid #f0f3f1;
+        color: #53645b;
+        font-size: 12px;
+        line-height: 1.6;
+        vertical-align: middle;
+    }
+
+    .return-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .return-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .return-table tbody tr:hover {
+        background: #fbfdfb;
+    }
+
+    .return-product-name {
+        display: block;
+        color: #30453a;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .return-product-code {
+        color: #96a199;
+        font-size: 11px;
+    }
+
+    .return-order-id {
+        color: #176b50;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .return-quantity {
+        color: #30453a;
+        font-weight: 800;
+    }
+
+    .return-table-date {
+        min-width: 135px;
+        color: #718078;
+        white-space: nowrap;
+    }
+
+    .return-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 10px 13px;
         border: 0;
         border-radius: 9px;
-        padding: 10px 15px;
-        background: #24583d;
+        background: #176b50;
         color: #fff;
+        font-size: 11px;
+        font-weight: 750;
         text-decoration: none;
-        font-weight: 650;
-        font-size: 13px;
+        white-space: nowrap;
+        transition: background .2s ease, transform .2s ease;
     }
 
-        .syncora-btn:hover {
-            background: #19452e;
-            color: #fff;
-        }
-
-    .syncora-btn-light {
-        background: #edf4ef;
-        color: #24583d;
+    .return-action-btn:hover {
+        background: #123d32;
+        color: #fff;
+        transform: translateY(-2px);
     }
 
-        .syncora-btn-light:hover {
-            background: #dfece2;
-            color: #19452e;
-        }
+    .return-action-btn svg {
+        width: 14px;
+        height: 14px;
+    }
 
-    .syncora-badge {
-        display: inline-block;
+    .return-status {
+        display: inline-flex;
+        align-items: center;
         padding: 6px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        background: #edf1ed;
-        color: #59665e;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+        text-transform: capitalize;
     }
 
     .status-diajukan {
-        background: #fff3d9;
-        color: #95650b;
+        background: #fff4df;
+        color: #a66c16;
     }
 
     .status-disetujui {
-        background: #e4f2e8;
-        color: #24643d;
+        background: #e4f5ec;
+        color: #218052;
     }
 
     .status-ditolak {
-        background: #fde9e7;
-        color: #a33c32;
+        background: #ffebeb;
+        color: #bd4b4b;
     }
 
     .status-selesai {
-        background: #e7eefb;
-        color: #315a9a;
-    }
-
-    .syncora-alert {
-        padding: 13px 16px;
-        border-radius: 10px;
-        margin-bottom: 16px;
-    }
-
-    .syncora-success {
-        background: #e8f5eb;
-        color: #24643d;
-    }
-
-    .syncora-error {
-        background: #fdebea;
-        color: #a33c32;
+        background: #e8f1ff;
+        color: #426bb1;
     }
 
     .return-photo-link {
-        color: #24583d;
-        font-weight: 650;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #176b50;
+        font-size: 12px;
+        font-weight: 750;
         text-decoration: none;
+        white-space: nowrap;
     }
 
-        .return-photo-link:hover {
-            text-decoration: underline;
+    .return-photo-link:hover {
+        color: #123d32;
+        text-decoration: underline;
+    }
+
+    .return-photo-link svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .return-result {
+        min-width: 180px;
+        color: #66766d;
+        font-size: 11px;
+        line-height: 1.7;
+    }
+
+    .return-result-success {
+        color: #218052;
+        font-weight: 750;
+    }
+
+    .return-result-danger {
+        color: #bd4b4b;
+        font-weight: 750;
+    }
+
+    .return-empty {
+        padding: 45px 20px !important;
+        text-align: center;
+    }
+
+    .return-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 13px;
+        border-radius: 17px;
+        background: #eef5f0;
+        color: #6b9a7e;
+    }
+
+    .return-empty-icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .return-empty strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #43574b;
+        font-size: 13px;
+    }
+
+    .return-empty span {
+        color: #98a49d;
+        font-size: 11px;
+    }
+
+    .return-section-note {
+        padding: 13px 22px;
+        border-top: 1px solid #edf1ee;
+        background: #fbfdfb;
+        color: #87958e;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    @@media (max-width: 1050px) {
+        .return-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+    }
+
+    @@media (max-width: 650px) {
+        .return-index-page {
+            padding: 20px 16px 45px;
+        }
+
+        .return-hero {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 25px 22px;
+            border-radius: 18px;
+        }
+
+        .return-hero-action {
+            width: 100%;
+        }
+
+        .return-summary-grid {
+            gap: 10px;
+        }
+
+        .return-summary-card {
+            gap: 10px;
+            padding: 14px 12px;
+            border-radius: 14px;
+        }
+
+        .return-summary-icon {
+            width: 37px;
+            height: 37px;
+            border-radius: 11px;
+        }
+
+        .return-summary-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .return-summary-label {
+            font-size: 10px;
+        }
+
+        .return-summary-value {
+            font-size: 21px;
+        }
+
+        .return-section {
+            border-radius: 15px;
+        }
+
+        .return-section-header {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 18px;
+        }
+
+        .return-table thead th,
+        .return-table tbody td {
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+    }
+
+    @@media (max-width: 380px) {
+        .return-index-page {
+            padding-right: 12px;
+            padding-left: 12px;
+        }
+
+        .return-summary-card {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
 </style>
 
-<div class="syncora-page">
-    <div class="syncora-heading">
-        <div>
-            <h2>Retur Produk</h2>
-            <div class="syncora-muted">
-                Pantau pengajuan retur dan ajukan retur untuk pesanan yang telah diterima.
-            </div>
+<div class="return-index-page">
+
+    <section class="return-hero">
+        <div class="return-hero-content">
+            <span class="return-hero-eyebrow">SYNCORA CUSTOMER SERVICE</span>
+            <h1>Retur Produk</h1>
+            <p>
+                Pantau pengajuan pengembalian produk dan ajukan retur apabila
+                pesanan yang kamu terima mengalami kerusakan atau ketidaksesuaian.
+            </p>
         </div>
 
         <a asp-controller="PesananSaya"
            asp-action="Index"
-           class="syncora-btn syncora-btn-light">
+           class="return-hero-action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5" />
+                <path d="m12 19-7-7 7-7" />
+            </svg>
             Riwayat Pesanan
         </a>
-    </div>
+    </section>
 
     @if (TempData["Success"] != null)
     {
-        <div class="syncora-alert syncora-success">@TempData["Success"]</div>
+        <div class="return-alert return-alert-success" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <path d="m9 11 3 3L22 4" />
+            </svg>
+            <span>@TempData["Success"]</span>
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="syncora-alert syncora-error">@TempData["Error"]</div>
+        <div class="return-alert return-alert-error" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="m15 9-6 6" />
+                <path d="m9 9 6 6" />
+            </svg>
+            <span>@TempData["Error"]</span>
+        </div>
     }
 
-    <div class="syncora-card">
-        <h5 style="font-weight:800;margin-bottom:5px;">Produk yang Dapat Diretur</h5>
-        <p class="syncora-muted" style="font-size:13px;">
-            Retur hanya dapat diajukan maksimal 3 × 24 jam sejak barang diterima.
-        </p>
+    <section class="return-summary-grid">
+        <div class="return-summary-card">
+            <div class="return-summary-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                    <path d="m3.3 7 8.7 5 8.7-5" />
+                    <path d="M12 22V12" />
+                </svg>
+            </div>
+            <div>
+                <span class="return-summary-label">Produk Bisa Diretur</span>
+                <strong class="return-summary-value">@totalProdukDapatDiretur</strong>
+            </div>
+        </div>
+
+        <div class="return-summary-card">
+            <div class="return-summary-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 6h13" />
+                    <path d="M8 12h13" />
+                    <path d="M8 18h13" />
+                    <path d="M3 6h.01" />
+                    <path d="M3 12h.01" />
+                    <path d="M3 18h.01" />
+                </svg>
+            </div>
+            <div>
+                <span class="return-summary-label">Total Pengajuan</span>
+                <strong class="return-summary-value">@totalPengajuan</strong>
+            </div>
+        </div>
+
+        <div class="return-summary-card">
+            <div class="return-summary-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                </svg>
+            </div>
+            <div>
+                <span class="return-summary-label">Menunggu Keputusan</span>
+                <strong class="return-summary-value">@totalMenunggu</strong>
+            </div>
+        </div>
+
+        <div class="return-summary-card">
+            <div class="return-summary-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 7 10 17l-5-5" />
+                    <path d="M21 12a9 9 0 1 1-4.2-7.6" />
+                </svg>
+            </div>
+            <div>
+                <span class="return-summary-label">Retur Selesai</span>
+                <strong class="return-summary-value">@totalSelesai</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="return-section">
+        <div class="return-section-header">
+            <div class="return-section-heading">
+                <h2>Produk yang Dapat Diretur</h2>
+                <p>
+                    Pilih produk yang ingin dikembalikan selama masih memenuhi
+                    batas waktu pengajuan retur.
+                </p>
+            </div>
+
+            <span class="return-section-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                </svg>
+                @totalProdukDapatDiretur Produk
+            </span>
+        </div>
 
         @if (Model.ProdukDapatDiretur.Any())
         {
-            <div class="syncora-table-wrap">
-                <table class="syncora-table">
+            <div class="return-table-wrap">
+                <table class="return-table">
                     <thead>
                         <tr>
                             <th>Produk</th>
@@ -196,7 +724,7 @@
                             <th>Barang Diterima</th>
                             <th>Jumlah Dibeli</th>
                             <th>Sisa Retur</th>
-                            <th></th>
+                            <th>Tindakan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -204,19 +732,28 @@
                         {
                             <tr>
                                 <td>
-                                    <strong>@item.NamaProduk</strong><br />
-                                    <small class="syncora-muted">@item.KodeProduk</small>
+                                    <span class="return-product-name">@item.NamaProduk</span>
+                                    <span class="return-product-code">@item.KodeProduk</span>
                                 </td>
-                                <td>#@item.IdPemesanan</td>
                                 <td>
+                                    <span class="return-order-id">#@item.IdPemesanan</span>
+                                </td>
+                                <td class="return-table-date">
                                     @(item.WaktuTerima?.ToString("dd MMM yyyy HH:mm") ?? "-")
                                 </td>
                                 <td>@item.JumlahDibeli</td>
-                                <td><strong>@item.SisaJumlah</strong></td>
+                                <td>
+                                    <span class="return-quantity">@item.SisaJumlah</span>
+                                </td>
                                 <td>
                                     <a asp-action="Ajukan"
                                        asp-route-id="@item.IdDetailPesanan"
-                                       class="syncora-btn">
+                                       class="return-action-btn">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 5v14" />
+                                            <path d="M5 12h14" />
+                                        </svg>
                                         Ajukan Retur
                                     </a>
                                 </td>
@@ -228,19 +765,56 @@
         }
         else
         {
-            <p class="syncora-muted mb-0">
-                Belum ada produk yang memenuhi syarat retur dalam batas waktu 3 × 24 jam.
-            </p>
+            <div class="return-empty">
+                <div class="return-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                        <path d="m3.3 7 8.7 5 8.7-5" />
+                        <path d="M12 22V12" />
+                    </svg>
+                </div>
+                <strong>Belum ada produk yang dapat diretur</strong>
+                <span>
+                    Produk harus sudah diterima dan masih dalam batas waktu
+                    pengajuan retur 3 × 24 jam.
+                </span>
+            </div>
         }
-    </div>
 
-    <div class="syncora-card">
-        <h5 style="font-weight:800;margin-bottom:18px;">Riwayat Pengajuan Retur</h5>
+        <div class="return-section-note">
+            Pengajuan retur hanya dapat dilakukan maksimal 3 × 24 jam sejak barang diterima.
+        </div>
+    </section>
+
+    <section class="return-section">
+        <div class="return-section-header">
+            <div class="return-section-heading">
+                <h2>Riwayat Pengajuan Retur</h2>
+                <p>
+                    Lihat status pengajuan dan hasil pemeriksaan barang yang
+                    telah kamu ajukan.
+                </p>
+            </div>
+
+            <span class="return-section-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 6h13" />
+                    <path d="M8 12h13" />
+                    <path d="M8 18h13" />
+                    <path d="M3 6h.01" />
+                    <path d="M3 12h.01" />
+                    <path d="M3 18h.01" />
+                </svg>
+                @totalPengajuan Pengajuan
+            </span>
+        </div>
 
         @if (Model.DaftarRetur.Any())
         {
-            <div class="syncora-table-wrap">
-                <table class="syncora-table">
+            <div class="return-table-wrap">
+                <table class="return-table">
                     <thead>
                         <tr>
                             <th>Tanggal Pengajuan</th>
@@ -257,15 +831,17 @@
                         @foreach (var item in Model.DaftarRetur)
                         {
                             <tr>
-                                <td>
+                                <td class="return-table-date">
                                     @(item.TanggalPengajuan?.ToString("dd MMM yyyy HH:mm")
                                         ?? item.TanggalReturn.ToString("dd MMM yyyy"))
                                 </td>
                                 <td>
-                                    <strong>@item.NamaProduk</strong><br />
-                                    <small class="syncora-muted">@item.KodeProduk</small>
+                                    <span class="return-product-name">@item.NamaProduk</span>
+                                    <span class="return-product-code">@item.KodeProduk</span>
                                 </td>
-                                <td>#@item.IdPemesanan</td>
+                                <td>
+                                    <span class="return-order-id">#@item.IdPemesanan</span>
+                                </td>
                                 <td>@item.Jumlah</td>
                                 <td style="min-width:180px;white-space:normal;">
                                     @item.Alasan
@@ -277,6 +853,12 @@
                                            target="_blank"
                                            rel="noopener"
                                            class="return-photo-link">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <path d="m21 15-5-5L5 21" />
+                                            </svg>
                                             Lihat Foto
                                         </a>
                                     }
@@ -286,47 +868,53 @@
                                     }
                                 </td>
                                 <td>
-                                    <span class="syncora-badge status-@item.Status">
+                                    <span class="return-status status-@item.Status">
                                         @item.Status
                                     </span>
                                 </td>
-                                <td style="min-width:190px;white-space:normal;">
-                                    @if (item.Status == "selesai")
-                                    {
-                                        if (item.LayakJual == true)
+                                <td>
+                                    <div class="return-result">
+                                        @if (item.Status == "selesai")
                                         {
-                                            <span class="text-success">
-                                                Layak jual
+                                            if (item.LayakJual == true)
+                                            {
+                                                <span class="return-result-success">
+                                                    Layak jual
+                                                </span>
+
                                                 @if (item.StokDitambahkan)
                                                 {
-                                                    <br /><small>Stok telah ditambahkan</small>
+                                                    <br />
+                                                    <small>Stok telah ditambahkan</small>
                                                 }
-                                            </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="return-result-danger">
+                                                    Tidak layak jual
+                                                </span>
+                                            }
+                                        }
+                                        else if (item.Status == "disetujui")
+                                        {
+                                            <span>Menunggu barang diperiksa admin</span>
+                                        }
+                                        else if (item.Status == "ditolak")
+                                        {
+                                            <span>Pengajuan ditolak</span>
                                         }
                                         else
                                         {
-                                            <span class="text-danger">Tidak layak jual</span>
+                                            <span>Menunggu keputusan admin</span>
                                         }
-                                    }
-                                    else if (item.Status == "disetujui")
-                                    {
-                                        <span class="text-muted">Menunggu barang diperiksa admin</span>
-                                    }
-                                    else if (item.Status == "ditolak")
-                                    {
-                                        <span class="text-muted">Pengajuan ditolak</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Menunggu keputusan admin</span>
-                                    }
 
-                                    @if (!string.IsNullOrWhiteSpace(item.CatatanAdmin))
-                                    {
-                                        <div class="small mt-1">
-                                            Catatan: @item.CatatanAdmin
-                                        </div>
-                                    }
+                                        @if (!string.IsNullOrWhiteSpace(item.CatatanAdmin))
+                                        {
+                                            <div class="small mt-1">
+                                                Catatan: @item.CatatanAdmin
+                                            </div>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -336,9 +924,22 @@
         }
         else
         {
-            <p class="syncora-muted mb-0">
-                Kamu belum memiliki pengajuan retur.
-            </p>
+            <div class="return-empty">
+                <div class="return-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 6h13" />
+                        <path d="M8 12h13" />
+                        <path d="M8 18h13" />
+                        <path d="M3 6h.01" />
+                        <path d="M3 12h.01" />
+                        <path d="M3 18h.01" />
+                    </svg>
+                </div>
+                <strong>Belum ada pengajuan retur</strong>
+                <span>Pengajuan retur yang kamu buat akan ditampilkan di bagian ini.</span>
+            </div>
         }
-    </div>
+    </section>
+
 </div>

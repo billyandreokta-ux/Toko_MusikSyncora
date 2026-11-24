@@ -13,8 +13,8 @@
         color: #20382b;
     }
 
-    .sync-add-address-heading {
-        margin-bottom: 25px;
+    .sync-add-address-page * {
+        box-sizing: border-box;
     }
 
     .sync-add-address-eyebrow {
@@ -34,6 +34,10 @@
         height: 2px;
         background: #249461;
         border-radius: 10px;
+    }
+
+    .sync-add-address-heading {
+        margin-bottom: 25px;
     }
 
     .sync-add-address-heading h1 {
@@ -77,7 +81,13 @@
         border: 1px solid rgba(255,255,255,.2);
         border-radius: 13px;
         background: rgba(255,255,255,.14);
-        font-size: 20px;
+        color: white;
+    }
+
+    .sync-add-address-banner-icon svg {
+        width: 23px;
+        height: 23px;
+        display: block;
     }
 
     .sync-add-address-banner h2 {
@@ -123,7 +133,12 @@
         color: #176b45;
         background: #eaf5ed;
         border-radius: 11px;
-        font-size: 17px;
+    }
+
+    .sync-add-address-section-icon svg {
+        width: 20px;
+        height: 20px;
+        display: block;
     }
 
     .sync-add-address-section-heading h3 {
@@ -255,6 +270,13 @@
         transition: .2s ease;
     }
 
+    .sync-add-address-btn svg {
+        width: 17px;
+        height: 17px;
+        display: block;
+        flex-shrink: 0;
+    }
+
     .sync-add-address-btn:hover {
         transform: translateY(-2px);
         text-decoration: none;
@@ -330,7 +352,13 @@
 
         <div class="sync-add-address-banner">
             <div class="sync-add-address-banner-icon">
-                <i class="bi bi-geo-alt"></i>
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                    <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                </svg>
             </div>
 
             <div>
@@ -354,7 +382,14 @@
 
                     <div class="sync-add-address-section-heading">
                         <div class="sync-add-address-section-icon">
-                            <i class="bi bi-person-vcard"></i>
+                            <svg viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.8"
+                                 stroke-linecap="round" stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <circle cx="12" cy="8" r="4" />
+                                <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+                                <path d="m16 5 1.5 1.5L20 4" />
+                            </svg>
                         </div>
 
                         <div>
@@ -413,7 +448,14 @@
 
                     <div class="sync-add-address-section-heading">
                         <div class="sync-add-address-section-icon">
-                            <i class="bi bi-house-door"></i>
+                            <svg viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.8"
+                                 stroke-linecap="round" stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <path d="m3 10 9-7 9 7" />
+                                <path d="M5 9v12h14V9" />
+                                <path d="M9 21v-7h6v7" />
+                            </svg>
                         </div>
 
                         <div>
@@ -493,14 +535,26 @@
 
                     <button type="submit"
                             class="sync-add-address-btn sync-add-address-save">
-                        <i class="bi bi-check2-circle"></i>
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="m5 12 4 4L19 6" />
+                            <circle cx="12" cy="12" r="10" />
+                        </svg>
                         Simpan Alamat
                     </button>
 
                     <a asp-controller="Alamat"
                        asp-action="Index"
                        class="sync-add-address-btn sync-add-address-cancel">
-                        <i class="bi bi-arrow-left"></i>
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="m12 19-7-7 7-7" />
+                            <path d="M5 12h14" />
+                        </svg>
                         Kembali
                     </a>
 

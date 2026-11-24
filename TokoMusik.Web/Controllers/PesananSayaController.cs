@@ -52,6 +52,29 @@ namespace TokoMusik.Web.Controllers
                 new { IdUser = idUserInt });
         }
 
+        private async Task<bool> MemilikiReturAktifAsync(
+            MySqlConnection connection,
+            int idPemesanan,
+            MySqlTransaction? transaction = null)
+        {
+            const string sql = @"
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM return_produk r
+                    INNER JOIN detail_pesanan dp
+                        ON dp.id_detail_pesanan = r.id_detail_pesanan
+                    WHERE dp.id_pemesanan = @IdPemesanan
+                      AND r.status <> 'ditolak'
+                )";
+
+            int hasil = await connection.ExecuteScalarAsync<int>(
+                sql,
+                new { IdPemesanan = idPemesanan },
+                transaction);
+
+            return hasil == 1;
+        }
+
         private static string TentukanStatusTampilan(
             string? statusPesanan,
             string? statusPembayaran)
@@ -91,13 +114,43 @@ namespace TokoMusik.Web.Controllers
                     p.total_bayar AS TotalBayar,
                     p.status AS StatusPesanan,
                     COALESCE(pay.status, 'belum_bayar') AS StatusPembayaran,
-                    COALESCE(mp.nama_metode, '-') AS NamaMetode
+                    COALESCE(mp.nama_metode, '-') AS NamaMetode,
+
+                    (
+                        SELECT r.status
+                        FROM return_produk r
+                        INNER JOIN detail_pesanan dp
+                            ON dp.id_detail_pesanan = r.id_detail_pesanan
+                        WHERE dp.id_pemesanan = p.id_pemesanan
+                        ORDER BY
+                            CASE
+                                WHEN r.status <> 'ditolak' THEN 0
+                                ELSE 1
+                            END,
+                            r.tgl_pengajuan DESC,
+                            r.id_return DESC
+                        LIMIT 1
+                    ) AS StatusRetur,
+
+                    EXISTS (
+                        SELECT 1
+                        FROM return_produk r
+                        INNER JOIN detail_pesanan dp
+                            ON dp.id_detail_pesanan = r.id_detail_pesanan
+                        WHERE dp.id_pemesanan = p.id_pemesanan
+                          AND r.status <> 'ditolak'
+                    ) AS MemilikiRetur
+
                 FROM pemesanan p
+
                 LEFT JOIN payments pay
                     ON pay.id_pemesanan = p.id_pemesanan
+
                 LEFT JOIN metode_pembayaran mp
                     ON mp.id_metode = pay.id_metode
+
                 WHERE p.id_customer = @IdCustomer
+
                 ORDER BY p.tgl_pesan DESC";
 
             var daftarPesanan =
@@ -115,18 +168,45 @@ namespace TokoMusik.Web.Controllers
                     pr.foto AS Foto,
                     dp.jumlah AS Jumlah,
                     dp.harga_satuan AS HargaSatuan,
-                    dp.subtotal AS Subtotal
+                    dp.subtotal AS Subtotal,
+
+                    (
+                        SELECT r.status
+                        FROM return_produk r
+                        WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        ORDER BY
+                            CASE
+                                WHEN r.status <> 'ditolak' THEN 0
+                                ELSE 1
+                            END,
+                            r.tgl_pengajuan DESC,
+                            r.id_return DESC
+                        LIMIT 1
+                    ) AS StatusRetur,
+
+                    EXISTS (
+                        SELECT 1
+                        FROM return_produk r
+                        WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                          AND r.status <> 'ditolak'
+                    ) AS MemilikiRetur
+
                 FROM detail_pesanan dp
+
                 INNER JOIN produk pr
                     ON pr.id_produk = dp.id_produk
+
                 INNER JOIN pemesanan p
                     ON p.id_pemesanan = dp.id_pemesanan
+
                 WHERE p.id_customer = @IdCustomer
+
                 ORDER BY dp.id_detail_pesanan";
 
-            var items = (await connection.QueryAsync<DetailPesananViewModel>(
-                sqlItems,
-                new { IdCustomer = idCustomer.Value })).ToList();
+            var items =
+                (await connection.QueryAsync<DetailPesananViewModel>(
+                    sqlItems,
+                    new { IdCustomer = idCustomer.Value })).ToList();
 
             foreach (var item in daftarPesanan)
             {
@@ -179,15 +259,47 @@ namespace TokoMusik.Web.Controllers
                     COALESCE(ac.kode_pos, '-') AS KodePos,
 
                     pg.tgl_kirim AS WaktuKirim,
-                    pg.tgl_terima AS WaktuTerima
+                    COALESCE(
+                        pg.waktu_terima,
+                        CAST(pg.tgl_terima AS DATETIME)
+                    ) AS WaktuTerima,
+
+                    (
+                        SELECT r.status
+                        FROM return_produk r
+                        INNER JOIN detail_pesanan dp
+                            ON dp.id_detail_pesanan = r.id_detail_pesanan
+                        WHERE dp.id_pemesanan = p.id_pemesanan
+                        ORDER BY
+                            CASE
+                                WHEN r.status <> 'ditolak' THEN 0
+                                ELSE 1
+                            END,
+                            r.tgl_pengajuan DESC,
+                            r.id_return DESC
+                        LIMIT 1
+                    ) AS StatusRetur,
+
+                    EXISTS (
+                        SELECT 1
+                        FROM return_produk r
+                        INNER JOIN detail_pesanan dp
+                            ON dp.id_detail_pesanan = r.id_detail_pesanan
+                        WHERE dp.id_pemesanan = p.id_pemesanan
+                          AND r.status <> 'ditolak'
+                    ) AS MemilikiRetur
 
                 FROM pemesanan p
+
                 LEFT JOIN payments pay
                     ON pay.id_pemesanan = p.id_pemesanan
+
                 LEFT JOIN metode_pembayaran mp
                     ON mp.id_metode = pay.id_metode
+
                 LEFT JOIN alamat_customer ac
                     ON ac.id_alamat = p.id_alamat
+
                 LEFT JOIN pengiriman pg
                     ON pg.id_pemesanan = p.id_pemesanan
 
@@ -211,6 +323,7 @@ namespace TokoMusik.Web.Controllers
 
             const string sqlDetail = @"
                 SELECT
+                    dp.id_pemesanan AS IdPemesanan,
                     dp.id_detail_pesanan AS IdDetailPesanan,
                     dp.id_produk AS IdProduk,
                     pr.nama_produk AS NamaProduk,
@@ -218,42 +331,120 @@ namespace TokoMusik.Web.Controllers
                     pr.foto AS Foto,
                     dp.jumlah AS Jumlah,
                     dp.harga_satuan AS HargaSatuan,
-                    dp.subtotal AS Subtotal
+                    dp.subtotal AS Subtotal,
+
+                    (
+                        SELECT r.status
+                        FROM return_produk r
+                        WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        ORDER BY
+                            CASE
+                                WHEN r.status <> 'ditolak' THEN 0
+                                ELSE 1
+                            END,
+                            r.tgl_pengajuan DESC,
+                            r.id_return DESC
+                        LIMIT 1
+                    ) AS StatusRetur,
+
+                    EXISTS (
+                        SELECT 1
+                        FROM return_produk r
+                        WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                          AND r.status <> 'ditolak'
+                    ) AS MemilikiRetur
+
                 FROM detail_pesanan dp
+
                 INNER JOIN produk pr
                     ON pr.id_produk = dp.id_produk
-                WHERE dp.id_pemesanan = @IdPemesanan";
+
+                WHERE dp.id_pemesanan = @IdPemesanan
+
+                ORDER BY dp.id_detail_pesanan";
 
             pesanan.Items =
                 (await connection.QueryAsync<DetailPesananViewModel>(
                     sqlDetail,
                     new { IdPemesanan = id })).ToList();
 
-            // Aturan pembatalan pesanan.
+            // Detail produk yang pengajuan retumnya ditolak hari ini.
+            // Produk tersebut baru boleh diajukan ulang mulai besok.
+            const string sqlDetailDalamMasaTunggu = @"
+                SELECT DISTINCT
+                    r.id_detail_pesanan
+                FROM return_produk r
+                INNER JOIN detail_pesanan dp
+                    ON dp.id_detail_pesanan = r.id_detail_pesanan
+                WHERE dp.id_pemesanan = @IdPemesanan
+                  AND r.status = 'ditolak'
+                  AND r.tgl_pengajuan >= CURDATE()
+                  AND r.tgl_pengajuan < DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
+
+            var detailIdsDalamMasaTunggu =
+                (await connection.QueryAsync<int>(
+                    sqlDetailDalamMasaTunggu,
+                    new { IdPemesanan = id }))
+                .ToHashSet();
+
+            // Detail produk yang tidak memiliki retur aktif dan tidak
+            // sedang dalam masa tunggu pengajuan ulang pada hari ini.
+            const string sqlDetailBolehAjukan = @"
+                SELECT
+                    dp.id_detail_pesanan
+                FROM detail_pesanan dp
+                WHERE dp.id_pemesanan = @IdPemesanan
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM return_produk r
+                      WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        AND r.status <> 'ditolak'
+                  )
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM return_produk r
+                      WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        AND r.status = 'ditolak'
+                        AND r.tgl_pengajuan >= CURDATE()
+                        AND r.tgl_pengajuan < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                  )";
+
+            var detailIdsBolehAjukan =
+                (await connection.QueryAsync<int>(
+                    sqlDetailBolehAjukan,
+                    new { IdPemesanan = id }))
+                .ToHashSet();
+
+            ViewBag.DetailIdsDalamMasaTungguRetur =
+                detailIdsDalamMasaTunggu;
+
+            ViewBag.DetailIdsBolehAjukanRetur =
+                detailIdsBolehAjukan;
+
             pesanan.DapatDibatalkan =
-                pesanan.StatusPesanan == "menunggu_bayar" ||
-                pesanan.StatusPesanan == "diproses";
+                !pesanan.MemilikiRetur &&
+                (
+                    pesanan.StatusPesanan == "menunggu_bayar" ||
+                    pesanan.StatusPesanan == "diproses"
+                );
 
             pesanan.PilihanAlasanPembatalan =
                 AlasanPembatalanValid.ToList();
 
-            // Nilai awal kelayakan retur.
             pesanan.DapatRetur = false;
             pesanan.BatasRetur = null;
 
-            // Aturan retur:
-            // Pesanan harus selesai dan memiliki tanggal penerimaan.
-            if (pesanan.StatusPesanan == "selesai" &&
+            if (!pesanan.MemilikiRetur &&
+                pesanan.StatusPesanan == "selesai" &&
                 pesanan.WaktuTerima.HasValue)
             {
-                // Kolom tgl_terima bertipe DATE.
-                // Karena tidak menyimpan jam, perhitungan dimulai
-                // dari pukul 00.00 pada tanggal penerimaan.
                 pesanan.BatasRetur =
-                    pesanan.WaktuTerima.Value.Date.AddHours(72);
+                    pesanan.WaktuTerima.Value.AddHours(72);
 
                 pesanan.DapatRetur =
-                    DateTime.Now <= pesanan.BatasRetur.Value;
+                    DateTime.Now < pesanan.BatasRetur.Value;
             }
 
             return View(pesanan);
@@ -297,6 +488,19 @@ namespace TokoMusik.Web.Controllers
 
             if (model == null)
                 return NotFound();
+
+            bool memilikiRetur =
+                await MemilikiReturAktifAsync(connection, id);
+
+            if (memilikiRetur)
+            {
+                TempData["Error"] =
+                    "Pesanan tidak dapat dibatalkan karena memiliki pengajuan retur yang masih aktif.";
+
+                return RedirectToAction(
+                    nameof(Detail),
+                    new { id });
+            }
 
             if (model.StatusPesanan != "menunggu_bayar" &&
                 model.StatusPesanan != "diproses")
@@ -413,6 +617,24 @@ namespace TokoMusik.Web.Controllers
                         new { id });
                 }
 
+                bool memilikiRetur =
+                    await MemilikiReturAktifAsync(
+                        connection,
+                        id,
+                        transaction);
+
+                if (memilikiRetur)
+                {
+                    await transaction.RollbackAsync();
+
+                    TempData["Error"] =
+                        "Pesanan tidak dapat dibatalkan karena memiliki pengajuan retur yang masih aktif.";
+
+                    return RedirectToAction(
+                        nameof(Detail),
+                        new { id });
+                }
+
                 const string sqlDetail = @"
                     SELECT
                         id_produk AS IdProduk,
@@ -439,7 +661,6 @@ namespace TokoMusik.Web.Controllers
                         new { id });
                 }
 
-                // Pastikan seluruh data stok tersedia sebelum stok dikembalikan.
                 foreach (var item in detailPesanan)
                 {
                     const string sqlKunciStok = @"
@@ -596,8 +817,11 @@ namespace TokoMusik.Web.Controllers
             if (!int.TryParse(idUser, out int idUserInt))
                 return Forbid();
 
+            string webRoot = _environment.WebRootPath
+                ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+
             string folder = Path.Combine(
-                _environment.WebRootPath,
+                webRoot,
                 "uploads",
                 "bukti-pembayaran");
 
@@ -630,6 +854,14 @@ namespace TokoMusik.Web.Controllers
                         AND c.id_user = @IdUser
                         AND p.status = 'menunggu_bayar'
                         AND pay.status IN ('pending', 'gagal')
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM return_produk r
+                            INNER JOIN detail_pesanan dp
+                                ON dp.id_detail_pesanan = r.id_detail_pesanan
+                            WHERE dp.id_pemesanan = p.id_pemesanan
+                              AND r.status <> 'ditolak'
+                        )
                     LIMIT 1
                     FOR UPDATE";
 
@@ -655,7 +887,15 @@ namespace TokoMusik.Web.Controllers
                         WHERE pay.id_pemesanan = @IdPemesanan
                             AND c.id_user = @IdUser
                             AND p.status = 'menunggu_bayar'
-                            AND pay.status IN ('pending', 'gagal')";
+                            AND pay.status IN ('pending', 'gagal')
+                            AND NOT EXISTS (
+                                SELECT 1
+                                FROM return_produk r
+                                INNER JOIN detail_pesanan dp
+                                    ON dp.id_detail_pesanan = r.id_detail_pesanan
+                                WHERE dp.id_pemesanan = p.id_pemesanan
+                                  AND r.status <> 'ditolak'
+                            )";
 
                     int jumlahValid =
                         await connection.ExecuteScalarAsync<int>(
@@ -703,7 +943,15 @@ namespace TokoMusik.Web.Controllers
                     WHERE pay.id_pemesanan = @IdPemesanan
                         AND c.id_user = @IdUser
                         AND p.status = 'menunggu_bayar'
-                        AND pay.status IN ('pending', 'gagal')";
+                        AND pay.status IN ('pending', 'gagal')
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM return_produk r
+                            INNER JOIN detail_pesanan dp
+                                ON dp.id_detail_pesanan = r.id_detail_pesanan
+                            WHERE dp.id_pemesanan = p.id_pemesanan
+                              AND r.status <> 'ditolak'
+                        )";
 
                 int affected = await connection.ExecuteAsync(
                     sqlUpdate,
@@ -813,8 +1061,11 @@ namespace TokoMusik.Web.Controllers
                 string namaFile =
                     Path.GetFileName(pathDatabase);
 
+                string webRoot = _environment.WebRootPath
+                    ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+
                 string path = Path.Combine(
-                    _environment.WebRootPath,
+                    webRoot,
                     "uploads",
                     "bukti-pembayaran",
                     namaFile);

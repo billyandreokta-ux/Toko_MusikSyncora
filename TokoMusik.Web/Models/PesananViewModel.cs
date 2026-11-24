@@ -1,4 +1,5 @@
-﻿namespace TokoMusik.Web.Models
+﻿
+namespace TokoMusik.Web.Models
 {
     public class PesananViewModel
     {
@@ -9,6 +10,11 @@
         public string StatusPembayaran { get; set; } = "";
         public string StatusTampilan { get; set; } = "";
         public string NamaMetode { get; set; } = "";
+
+        // Informasi retur pesanan
+        public bool MemilikiRetur { get; set; }
+        public string? StatusRetur { get; set; }
+
         public List<DetailPesananViewModel> Items { get; set; } = new();
     }
 
@@ -23,6 +29,10 @@
         public int Jumlah { get; set; }
         public decimal HargaSatuan { get; set; }
         public decimal Subtotal { get; set; }
+
+        // Informasi retur per produk
+        public bool MemilikiRetur { get; set; }
+        public string? StatusRetur { get; set; }
     }
 
     public class PesananSayaDetailViewModel
@@ -40,6 +50,10 @@
         public DateTime? BatasRetur { get; set; }
         public bool DapatRetur { get; set; }
         public bool DapatDibatalkan { get; set; }
+
+        // Informasi retur pada tingkat pesanan
+        public bool MemilikiRetur { get; set; }
+        public string? StatusRetur { get; set; }
 
         public List<string> PilihanAlasanPembatalan { get; set; } = new();
 
@@ -66,17 +80,11 @@
     public class BatalkanPesananViewModel
     {
         public int IdPemesanan { get; set; }
-
         public DateTime TglPesan { get; set; }
-
         public decimal TotalBayar { get; set; }
-
         public string StatusPesanan { get; set; } = "";
-
         public string StatusPembayaran { get; set; } = "";
-
         public string AlasanPembatalan { get; set; } = "";
-
         public string? KeteranganTambahan { get; set; }
     }
 

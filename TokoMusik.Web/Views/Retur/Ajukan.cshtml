@@ -1,4 +1,5 @@
-﻿@model TokoMusik.Web.Models.AjukanReturViewModel
+﻿
+@model TokoMusik.Web.Models.AjukanReturViewModel
 
 @{
     ViewData["Title"] = "Ajukan Retur";
@@ -6,144 +7,607 @@
 
 <style>
     .return-form-page {
-        max-width: 720px;
-        margin: 45px auto 70px;
-        padding: 0 18px;
+        --syncora-green: #176b50;
+        --syncora-dark: #123d32;
+        --syncora-border: #e8eee9;
+        max-width: 1050px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 32px 28px 65px;
         color: #263a30;
+        box-sizing: border-box;
+    }
+
+    .return-form-page * {
+        box-sizing: border-box;
+    }
+
+    .return-form-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 30px 35px;
+        margin-bottom: 23px;
+        border-radius: 21px;
+        color: #fff;
+        background: linear-gradient(115deg, #123d32 0%, #176b50 65%, #25825f 100%);
+        box-shadow: 0 12px 30px rgba(18, 61, 50, .12);
+    }
+
+    .return-form-hero::before,
+    .return-form-hero::after {
+        content: "";
+        position: absolute;
+        border: 1px solid rgba(255,255,255,.11);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .return-form-hero::before {
+        width: 250px;
+        height: 250px;
+        top: -165px;
+        right: 90px;
+    }
+
+    .return-form-hero::after {
+        width: 180px;
+        height: 180px;
+        right: -45px;
+        bottom: -125px;
+    }
+
+    .return-form-back {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        color: #c6ead5;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color .2s ease;
+    }
+
+    .return-form-back:hover {
+        color: #fff;
+    }
+
+    .return-form-back svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .return-form-hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .return-form-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 9px;
+        color: #bce8d0;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+
+    .return-form-eyebrow::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #8ee0b2;
+        box-shadow: 0 0 12px rgba(142,224,178,.7);
+    }
+
+    .return-form-hero h1 {
+        margin: 0 0 8px;
+        color: #fff;
+        font-size: clamp(25px, 3vw, 32px);
+        font-weight: 800;
+        letter-spacing: -.7px;
+    }
+
+    .return-form-hero p {
+        max-width: 600px;
+        margin: 0;
+        color: rgba(255,255,255,.78);
+        font-size: 13px;
+        line-height: 1.7;
     }
 
     .return-form-card {
+        overflow: hidden;
+        border: 1px solid var(--syncora-border);
+        border-radius: 19px;
         background: #fff;
-        border: 1px solid #e6ece7;
-        border-radius: 18px;
-        padding: 28px;
-        box-shadow: 0 8px 28px rgba(20,50,30,.06);
+        box-shadow: 0 6px 22px rgba(27, 55, 43, .045);
     }
 
-    .return-form-page h2 {
+    .return-form-card-header {
+        padding: 23px 28px;
+        border-bottom: 1px solid #edf1ee;
+    }
+
+    .return-form-card-header h2 {
+        margin: 0 0 6px;
+        color: #1d352b;
+        font-size: 18px;
         font-weight: 800;
     }
 
-    .return-form-page label {
-        font-weight: 650;
-        margin-bottom: 8px;
+    .return-form-card-header p {
+        margin: 0;
+        color: #89978f;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .return-form-body {
+        padding: 27px 28px 29px;
+    }
+
+    .return-product-info {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        padding: 19px;
+        margin-bottom: 20px;
+        border: 1px solid #dcece1;
+        border-radius: 14px;
+        background: linear-gradient(120deg, #f2f8f4, #f8fbf8);
+    }
+
+    .return-product-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 53px;
+        height: 53px;
+        flex-shrink: 0;
+        border-radius: 15px;
+        background: #e0f0e6;
+        color: #176b50;
+    }
+
+    .return-product-icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .return-product-details {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .return-product-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #829088;
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .return-product-details strong {
+        display: block;
+        margin-bottom: 3px;
+        color: #1d352b;
+        font-size: 15px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .return-product-details small {
+        color: #84928a;
+        font-size: 11px;
+    }
+
+    .return-product-quantity {
+        flex-shrink: 0;
+        padding-left: 17px;
+        border-left: 1px solid #dce8df;
+        text-align: right;
+    }
+
+    .return-product-quantity span {
+        display: block;
+        margin-bottom: 3px;
+        color: #829088;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .return-product-quantity strong {
+        color: #176b50;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .return-info-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 15px 17px;
+        margin-bottom: 25px;
+        border: 1px solid #d8e8f7;
+        border-radius: 12px;
+        background: #f0f7fd;
+        color: #42678b;
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+    .return-info-alert svg {
+        width: 19px;
+        height: 19px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .return-form-validation {
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border: 1px solid #f3d0cd;
+        border-radius: 10px;
+        background: #fff0ef;
+        color: #a33c32;
+        font-size: 12px;
+    }
+
+    .return-form-group {
+        margin-bottom: 21px;
+    }
+
+    .return-form-group label {
+        display: block;
+        margin-bottom: 9px;
+        color: #30453a;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .return-required {
+        color: #c14d42;
     }
 
     .return-form-page .form-control {
-        border-radius: 9px;
+        width: 100%;
+        min-height: 45px;
         padding: 11px 13px;
-    }
-
-    .return-info {
-        background: #f2f7f3;
-        padding: 16px;
-        border-radius: 12px;
-        margin: 20px 0;
-    }
-
-    .return-submit {
-        background: #24583d;
-        color: white;
-        border: 0;
-        border-radius: 9px;
-        padding: 12px 20px;
-        font-weight: 700;
-    }
-
-        .return-submit:hover {
-            background: #19452e;
-        }
-
-    .return-back {
-        color: #24583d;
-        text-decoration: none;
-        font-weight: 650;
-    }
-
-    .field-validation-error {
-        color: #b42318;
+        border: 1px solid #dfe7e1;
+        border-radius: 10px;
+        background-color: #fff;
+        color: #30453a;
         font-size: 13px;
+        box-shadow: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .return-form-page .form-control:focus {
+        border-color: #62a985;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(23, 107, 80, .10);
+    }
+
+    .return-form-page textarea.form-control {
+        min-height: 125px;
+        resize: vertical;
+        line-height: 1.65;
+    }
+
+    .return-form-page input[type="file"].form-control {
+        min-height: auto;
+        padding: 9px;
+        background: #fbfdfb;
+    }
+
+    .return-form-page input[type="file"]::file-selector-button {
+        padding: 8px 12px;
+        margin-right: 12px;
+        border: 0;
+        border-radius: 7px;
+        background: #eaf5ef;
+        color: #176b50;
+        font-size: 11px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .return-form-page input[type="file"]::file-selector-button:hover {
+        background: #dcefe3;
+    }
+
+    .return-field-error {
+        display: block;
+        margin-top: 6px;
+        color: #b42318;
+        font-size: 11px;
     }
 
     .return-help {
-        color: #77847c;
-        font-size: 13px;
-        margin-top: 7px;
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        margin-top: 8px;
+        color: #87958e;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    .return-help svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .return-form-divider {
+        height: 1px;
+        margin: 25px 0 21px;
+        background: #edf1ee;
+    }
+
+    .return-form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .return-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 44px;
+        padding: 11px 20px;
+        border: 0;
+        border-radius: 10px;
+        background: #176b50;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 750;
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
+    }
+
+    .return-submit:hover {
+        background: #123d32;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .return-submit svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .return-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 19px;
+        border: 1px solid #e1e9e3;
+        border-radius: 10px;
+        background: #f6f9f6;
+        color: #53645b;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s ease;
+    }
+
+    .return-cancel:hover {
+        background: #eaf1eb;
+        color: #30453a;
+    }
+
+    @@media (max-width: 650px) {
+        .return-form-page {
+            padding: 20px 16px 45px;
+        }
+
+        .return-form-hero {
+            padding: 24px 22px;
+            border-radius: 18px;
+        }
+
+        .return-form-card {
+            border-radius: 15px;
+        }
+
+        .return-form-card-header {
+            padding: 19px 18px;
+        }
+
+        .return-form-body {
+            padding: 20px 18px 22px;
+        }
+
+        .return-product-info {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 15px;
+        }
+
+        .return-product-quantity {
+            width: 100%;
+            padding: 12px 0 0;
+            border-top: 1px solid #dce8df;
+            border-left: 0;
+            text-align: left;
+        }
+
+        .return-product-quantity span {
+            display: inline;
+            margin-right: 6px;
+        }
+
+        .return-form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .return-submit,
+        .return-cancel {
+            width: 100%;
+        }
     }
 </style>
 
 <div class="return-form-page">
-    <a asp-action="Index" class="return-back">← Kembali ke Retur Produk</a>
 
-    <div class="return-form-card mt-3">
-        <h2>Ajukan Retur</h2>
-        <p class="text-muted">
-            Lengkapi informasi berikut untuk mengajukan pengembalian produk.
-        </p>
+    <section class="return-form-hero">
+        <a asp-action="Index" class="return-form-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5" />
+                <path d="m12 19-7-7 7-7" />
+            </svg>
+            Kembali ke Retur Produk
+        </a>
 
-        <div class="return-info">
-            <div class="text-muted small">Produk</div>
-            <strong>@Model.NamaProduk</strong>
-            <div class="text-muted small">@Model.KodeProduk</div>
-            <hr />
-            <div class="d-flex justify-content-between">
-                <span>Jumlah maksimal yang dapat diretur</span>
-                <strong>@Model.SisaJumlah unit</strong>
-            </div>
+        <div class="return-form-hero-content">
+            <span class="return-form-eyebrow">SYNCORA RETURN SERVICE</span>
+            <h1>Ajukan Retur</h1>
+            <p>
+                Sampaikan kendala pada produk yang kamu terima. Lengkapi
+                informasi dan sertakan foto bukti agar pengajuan dapat diperiksa.
+            </p>
+        </div>
+    </section>
+
+    <section class="return-form-card">
+
+        <div class="return-form-card-header">
+            <h2>Formulir Pengajuan Retur</h2>
+            <p>Pastikan informasi produk dan alasan retur sudah sesuai sebelum dikirim.</p>
         </div>
 
-        <div class="alert alert-info">
-            Pengajuan retur hanya dapat dilakukan maksimal 3 × 24 jam
-            setelah barang diterima. Foto bukti kerusakan atau ketidaksesuaian
-            wajib disertakan.
-        </div>
+        <div class="return-form-body">
 
-        <form asp-action="Ajukan" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
+            <div class="return-product-info">
+                <div class="return-product-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                        <path d="m3.3 7 8.7 5 8.7-5" />
+                        <path d="M12 22V12" />
+                    </svg>
+                </div>
 
-            <input asp-for="IdDetailPesanan" type="hidden" />
+                <div class="return-product-details">
+                    <span class="return-product-label">Produk yang akan diretur</span>
+                    <strong>@Model.NamaProduk</strong>
+                    <small>@Model.KodeProduk</small>
+                </div>
 
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-            <div class="mb-3">
-                <label asp-for="Jumlah">Jumlah Produk</label>
-                <input asp-for="Jumlah"
-                       type="number"
-                       min="1"
-                       max="@Model.SisaJumlah"
-                       class="form-control" />
-                <span asp-validation-for="Jumlah"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Alasan">Alasan Retur</label>
-                <textarea asp-for="Alasan"
-                          class="form-control"
-                          rows="5"
-                          placeholder="Contoh: produk rusak saat diterima, barang yang dikirim salah, bagian produk kurang, atau tidak sesuai deskripsi."></textarea>
-                <span asp-validation-for="Alasan"></span>
-            </div>
-
-            <div class="mb-4">
-                <label asp-for="FotoBukti">Foto Bukti Retur</label>
-                <input asp-for="FotoBukti"
-                       type="file"
-                       class="form-control"
-                       accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-                <span asp-validation-for="FotoBukti"></span>
-                <div class="return-help">
-                    Format JPG, JPEG, PNG, atau WEBP. Ukuran maksimal 5 MB.
+                <div class="return-product-quantity">
+                    <span>Jumlah maksimal retur</span>
+                    <strong>@Model.SisaJumlah unit</strong>
                 </div>
             </div>
 
-            <div class="d-flex gap-2 flex-wrap">
-                <button type="submit" class="return-submit">
-                    Kirim Pengajuan
-                </button>
-                <a asp-action="Index" class="btn btn-light">Batal</a>
+            <div class="return-info-alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
+                </svg>
+                <div>
+                    Pengajuan retur hanya dapat dilakukan maksimal <strong>3 × 24 jam</strong>
+                    setelah barang diterima. Foto bukti kerusakan atau ketidaksesuaian
+                    wajib disertakan agar pengajuan dapat diproses.
+                </div>
             </div>
-        </form>
-    </div>
+
+            <form asp-action="Ajukan" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <input asp-for="IdDetailPesanan" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="return-form-validation"></div>
+
+                <div class="return-form-group">
+                    <label asp-for="Jumlah">
+                        Jumlah Produk <span class="return-required">*</span>
+                    </label>
+
+                    <input asp-for="Jumlah"
+                           type="number"
+                           min="1"
+                           max="@Model.SisaJumlah"
+                           class="form-control" />
+
+                    <span asp-validation-for="Jumlah" class="return-field-error"></span>
+                </div>
+
+                <div class="return-form-group">
+                    <label asp-for="Alasan">
+                        Alasan Retur <span class="return-required">*</span>
+                    </label>
+
+                    <textarea asp-for="Alasan"
+                              class="form-control"
+                              rows="5"
+                              placeholder="Jelaskan kendala produk yang kamu terima. Contoh: produk rusak saat diterima, barang yang dikirim salah, bagian produk kurang, atau tidak sesuai deskripsi."></textarea>
+
+                    <span asp-validation-for="Alasan" class="return-field-error"></span>
+                </div>
+
+                <div class="return-form-group">
+                    <label asp-for="FotoBukti">
+                        Foto Bukti Retur <span class="return-required">*</span>
+                    </label>
+
+                    <input asp-for="FotoBukti"
+                           type="file"
+                           class="form-control"
+                           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+
+                    <span asp-validation-for="FotoBukti" class="return-field-error"></span>
+
+                    <div class="return-help">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4" />
+                            <path d="M12 8h.01" />
+                        </svg>
+                        Format JPG, JPEG, PNG, atau WEBP. Ukuran maksimal 5 MB.
+                    </div>
+                </div>
+
+                <div class="return-form-divider"></div>
+
+                <div class="return-form-actions">
+                    <a asp-action="Index" class="return-cancel">
+                        Batal
+                    </a>
+
+                    <button type="submit" class="return-submit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m22 2-7 20-4-9-9-4Z" />
+                            <path d="M22 2 11 13" />
+                        </svg>
+                        Kirim Pengajuan
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </section>
+
 </div>
 
 @section Scripts {

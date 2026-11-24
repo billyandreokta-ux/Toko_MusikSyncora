@@ -1,10 +1,15 @@
-﻿
-@model IEnumerable<TokoMusik.Web.Models.PesananViewModel>
+﻿@model IEnumerable<TokoMusik.Web.Models.PesananViewModel>
 
 @{
     ViewData["Title"] = "Pesanan Saya";
 
-    var daftarPesanan = Model?.ToList() ?? new List<TokoMusik.Web.Models.PesananViewModel>();
+    var daftarPesanan = Model?.ToList()
+        ?? new List<TokoMusik.Web.Models.PesananViewModel>();
+
+    var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+
+    int jumlahRetur = daftarPesanan.Count(x =>
+        !string.IsNullOrWhiteSpace(x.StatusRetur));
 
     string FormatStatus(string? status)
     {
@@ -38,169 +43,290 @@
         };
     }
 
-    var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+    string StatusReturText(string? status)
+    {
+        return (status ?? "").Trim().ToLowerInvariant() switch
+        {
+            "diajukan" => "Pengajuan Diajukan",
+            "disetujui" => "Retur Disetujui",
+            "ditolak" => "Retur Ditolak",
+            "selesai" => "Retur Selesai",
+            _ => "-"
+        };
+    }
+
+    string StatusReturClass(string? status)
+    {
+        return (status ?? "").Trim().ToLowerInvariant() switch
+        {
+            "diajukan" => "return-pending",
+            "disetujui" => "return-approved",
+            "ditolak" => "return-rejected",
+            "selesai" => "return-completed",
+            _ => "return-neutral"
+        };
+    }
+
+    string FotoProduk(string? foto)
+    {
+        if (string.IsNullOrWhiteSpace(foto))
+            return "/images/no-product.png";
+
+        foto = foto.Trim();
+
+        if (foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return foto;
+
+        if (foto.StartsWith("/", StringComparison.Ordinal))
+            return foto;
+
+        if (foto.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return "/" + foto;
+
+        return "/uploads/produk/" + foto;
+    }
 }
 
 <style>
     .sync-orders-page {
-        max-width: 1120px;
+        width: 100%;
+        max-width: 1160px;
         margin: 0 auto;
-        padding: 34px 18px 65px;
+        padding: 36px 18px 65px;
         color: #20382b;
     }
 
     .sync-orders-heading {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: space-between;
         gap: 20px;
-        margin-bottom: 25px;
+        margin-bottom: 27px;
     }
 
     .sync-orders-eyebrow {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: #187347;
+        color: #198052;
         font-size: 11px;
         font-weight: 800;
-        letter-spacing: 2px;
-        margin-bottom: 10px;
+        letter-spacing: 1.8px;
+        margin-bottom: 9px;
     }
 
-    .sync-orders-eyebrow::before {
-        content: "";
-        width: 24px;
-        height: 2px;
-        background: #249461;
-        border-radius: 10px;
-    }
+        .sync-orders-eyebrow::before {
+            content: "";
+            width: 23px;
+            height: 2px;
+            border-radius: 10px;
+            background: #249461;
+        }
 
     .sync-orders-heading h1 {
+        margin: 0 0 7px;
         color: #173d2b;
-        font-size: clamp(27px, 4vw, 36px);
+        font-size: clamp(27px, 4vw, 35px);
         font-weight: 850;
         letter-spacing: -1px;
-        margin: 0 0 7px;
     }
 
     .sync-orders-heading p {
-        color: #7b8b80;
         margin: 0;
-        font-size: 14px;
+        color: #829087;
+        font-size: 13px;
     }
 
-    .sync-orders-heading-icon {
-        width: 53px;
-        height: 53px;
-        flex-shrink: 0;
+    .sync-orders-heading-icon,
+    .sync-orders-summary-icon,
+    .sync-order-number-icon,
+    .sync-orders-empty-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 16px;
-        background: #eaf5ed;
+        flex-shrink: 0;
         color: #176b45;
-        font-size: 23px;
+        background: #eaf5ed;
     }
 
+    .sync-orders-heading-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 15px;
+    }
+
+        .sync-orders-heading-icon svg {
+            width: 25px;
+            height: 25px;
+        }
+
     .sync-orders-alert {
-        border-radius: 12px;
-        font-size: 13px;
         margin-bottom: 18px;
+        border-radius: 11px;
+        font-size: 13px;
     }
 
     .sync-orders-summary {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
     }
 
     .sync-orders-summary-card {
         display: flex;
         align-items: center;
         gap: 15px;
-        padding: 19px;
+        min-width: 0;
+        padding: 20px 22px;
         border: 1px solid #e5eee7;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 5px 20px rgba(24, 66, 42, .035);
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 4px 16px rgba(24, 66, 42, .035);
     }
 
     .sync-orders-summary-icon {
-        width: 45px;
-        height: 45px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 47px;
+        height: 47px;
         border-radius: 13px;
-        color: #176b45;
-        background: #eaf5ed;
-        font-size: 19px;
     }
+
+        .sync-orders-summary-icon svg {
+            width: 23px;
+            height: 23px;
+        }
 
     .sync-orders-summary-card span {
         display: block;
-        color: #839187;
+        margin-bottom: 5px;
+        color: #87948a;
         font-size: 11px;
-        margin-bottom: 4px;
-        font-weight: 650;
+        font-weight: 700;
     }
 
     .sync-orders-summary-card strong {
         display: block;
         color: #20382b;
-        font-size: 20px;
+        font-size: 21px;
         font-weight: 850;
+        overflow-wrap: anywhere;
     }
 
     .sync-orders-section-heading {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
-        margin: 29px 0 16px;
+        margin-bottom: 16px;
     }
 
-    .sync-orders-section-heading h3 {
-        font-size: 17px;
-        font-weight: 850;
-        margin: 0;
-        color: #20382b;
+        .sync-orders-section-heading h3 {
+            margin: 0;
+            color: #20382b;
+            font-size: 18px;
+            font-weight: 850;
+        }
+
+        .sync-orders-section-heading span {
+            padding: 6px 11px;
+            border-radius: 20px;
+            background: #edf5ef;
+            color: #26754d;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .4px;
+        }
+
+    /* KATEGORI PESANAN */
+
+    .sync-orders-tabs {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e8eee9;
     }
 
-    .sync-orders-section-heading span {
+    .sync-orders-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 9px 15px;
+        border: 1px solid #e1eae3;
+        border-radius: 9px;
+        background: #fff;
+        color: #65766a;
         font-size: 11px;
-        color: #8b998f;
-        font-weight: 700;
+        font-weight: 750;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+
+        .sync-orders-tab:hover {
+            border-color: #9fc9ad;
+            background: #f3f8f4;
+            color: #176b45;
+        }
+
+        .sync-orders-tab.active {
+            border-color: #176b45;
+            background: #176b45;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(23, 107, 69, .14);
+        }
+
+    .sync-orders-tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 21px;
+        height: 21px;
+        padding: 0 6px;
+        border-radius: 20px;
+        background: #edf2ee;
+        color: #52685a;
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+    .sync-orders-tab.active .sync-orders-tab-count {
+        background: rgba(255,255,255,.2);
+        color: #fff;
     }
 
     .sync-order-list {
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 17px;
     }
 
     .sync-order-card {
         overflow: hidden;
-        border: 1px solid #e5eee7;
-        border-radius: 17px;
-        background: white;
-        box-shadow: 0 6px 22px rgba(24, 66, 42, .035);
-        transition: .2s ease;
+        border: 1px solid #e3ece5;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(24, 66, 42, .035);
+        transition: border-color .2s ease, box-shadow .2s ease;
     }
 
-    .sync-order-card:hover {
-        border-color: #c5ddcb;
-        box-shadow: 0 10px 28px rgba(24, 66, 42, .07);
-        transform: translateY(-2px);
-    }
+        .sync-order-card:hover {
+            border-color: #c4ddca;
+            box-shadow: 0 8px 24px rgba(24, 66, 42, .065);
+        }
+
+        .sync-order-card[hidden] {
+            display: none !important;
+        }
 
     .sync-order-top {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         gap: 15px;
         padding: 17px 21px;
         background: #fbfdfb;
@@ -210,99 +336,287 @@
     .sync-order-number {
         display: flex;
         align-items: center;
-        gap: 11px;
+        gap: 12px;
         min-width: 0;
     }
 
     .sync-order-number-icon {
-        width: 39px;
-        height: 39px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #176b45;
-        background: #eaf5ed;
-        border-radius: 11px;
-        font-size: 17px;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
     }
+
+        .sync-order-number-icon svg {
+            width: 21px;
+            height: 21px;
+        }
 
     .sync-order-number span {
         display: block;
-        color: #8b998f;
+        margin-bottom: 4px;
+        color: #89968d;
         font-size: 10px;
-        font-weight: 700;
-        margin-bottom: 3px;
+        font-weight: 750;
+        letter-spacing: .5px;
     }
 
     .sync-order-number strong {
         display: block;
         color: #20382b;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 850;
     }
 
-    .sync-order-body {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 18px;
-        padding: 20px 21px;
+    .sync-order-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        flex-shrink: 0;
+        padding: 8px 12px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
-    .sync-order-data span {
-        display: block;
-        color: #8b998f;
-        font-size: 11px;
-        font-weight: 650;
-        margin-bottom: 7px;
+        .sync-order-status::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .sync-order-status.waiting {
+            color: #94620b;
+            background: #fff5dc;
+        }
+
+        .sync-order-status.processing {
+            color: #235d9a;
+            background: #e9f2ff;
+        }
+
+        .sync-order-status.shipping {
+            color: #6548a1;
+            background: #f0ebff;
+        }
+
+        .sync-order-status.success {
+            color: #187347;
+            background: #e8f6ec;
+        }
+
+        .sync-order-status.failed {
+            color: #b33a43;
+            background: #fff0f0;
+        }
+
+        .sync-order-status.returning {
+            color: #9a5b20;
+            background: #fff1e4;
+        }
+
+        .sync-order-status.neutral {
+            color: #596b5e;
+            background: #edf1ed;
+        }
+
+    /* STATUS RETUR */
+
+    .sync-order-return-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        max-width: 100%;
+        padding: 7px 11px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 1.4;
     }
 
-    .sync-order-data strong {
-        display: block;
-        color: #314638;
-        font-size: 13px;
-        font-weight: 750;
-        overflow-wrap: anywhere;
+        .sync-order-return-status::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            flex: 0 0 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+    .return-pending {
+        color: #98620d;
+        background: #fff4d9;
     }
 
-    .sync-order-data strong.sync-order-total {
+    .return-approved {
         color: #176b45;
-        font-size: 17px;
-        font-weight: 850;
+        background: #e5f5e9;
     }
 
-    .sync-order-payment {
-        padding: 13px 21px;
+    .return-rejected {
+        color: #a5323b;
+        background: #fff0f0;
+    }
+
+    .return-completed {
+        color: #285b9a;
+        background: #eaf2ff;
+    }
+
+    .return-neutral {
+        color: #596b5e;
+        background: #edf1ed;
+    }
+
+    .sync-order-top-statuses {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 7px;
+        flex-shrink: 0;
+    }
+
+    .sync-order-products {
+        padding: 19px 21px;
+    }
+
+    .sync-order-products-heading {
+        margin-bottom: 12px;
+        color: #87948a;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .8px;
+    }
+
+    .sync-order-product {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 0;
+        border-bottom: 1px solid #edf2ee;
+    }
+
+        .sync-order-product:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+    .sync-order-product-image {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        background: #fbfdfb;
-        border-top: 1px solid #edf2ee;
+        justify-content: center;
+        width: 76px;
+        height: 76px;
+        overflow: hidden;
+        border: 1px solid #edf1ed;
+        border-radius: 12px;
+        background: #f5f7f5;
     }
 
-    .sync-order-payment-info {
+        .sync-order-product-image img {
+            width: 100%;
+            height: 100%;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+    .sync-order-product-info {
         min-width: 0;
     }
 
-    .sync-order-payment-info span {
+        .sync-order-product-info strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #263d30;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+        }
+
+        .sync-order-product-info small {
+            display: block;
+            margin-bottom: 6px;
+            color: #89968d;
+            font-size: 11px;
+        }
+
+        .sync-order-product-info span {
+            color: #176b45;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+    .sync-order-product-return {
         display: block;
-        color: #8b998f;
-        font-size: 10px;
-        font-weight: 650;
-        margin-bottom: 4px;
+        margin-top: 8px;
     }
 
-    .sync-order-payment-info strong {
-        color: #405447;
-        font-size: 12px;
-        font-weight: 750;
+    .sync-order-product-subtotal {
+        color: #314638;
+        font-size: 13px;
+        font-weight: 850;
+        text-align: right;
+        white-space: nowrap;
     }
+
+    .sync-order-information {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.1fr;
+        gap: 0;
+        padding: 18px 21px;
+        border-top: 1px solid #edf2ee;
+        background: #fbfdfb;
+    }
+
+    .sync-order-data {
+        min-width: 0;
+        padding: 2px 17px;
+        border-right: 1px solid #e8eee9;
+    }
+
+        .sync-order-data:first-child {
+            padding-left: 0;
+        }
+
+        .sync-order-data:last-child {
+            padding-right: 0;
+            border-right: none;
+        }
+
+        .sync-order-data span {
+            display: block;
+            margin-bottom: 7px;
+            color: #89968d;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .sync-order-data strong {
+            display: block;
+            color: #314638;
+            font-size: 12px;
+            font-weight: 750;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+            .sync-order-data strong.sync-order-total {
+                color: #176b45;
+                font-size: 19px;
+                font-weight: 900;
+            }
 
     .sync-order-footer {
         display: flex;
+        align-items: center;
         justify-content: flex-end;
-        padding: 0 21px 17px;
+        padding: 0 21px 18px;
         background: #fbfdfb;
     }
 
@@ -310,128 +624,126 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 9px;
         min-height: 40px;
-        padding: 9px 16px;
-        border-radius: 9px;
-        color: white;
-        background: #176b45;
+        padding: 10px 16px;
         border: 1px solid #176b45;
-        font-size: 12px;
+        border-radius: 9px;
+        background: #176b45;
+        color: #fff;
+        font-size: 11px;
         font-weight: 800;
         text-decoration: none;
         transition: .2s ease;
     }
 
-    .sync-order-detail-btn:hover {
-        color: white;
-        background: #105536;
-        transform: translateY(-2px);
-    }
+        .sync-order-detail-btn:hover {
+            transform: translateY(-1px);
+            border-color: #105536;
+            background: #105536;
+            color: #fff;
+        }
 
-    .sync-order-status {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 7px 11px;
-        border-radius: 30px;
-        font-size: 10px;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .sync-order-status.waiting {
-        color: #94620b;
-        background: #fff5dc;
-    }
-
-    .sync-order-status.processing {
-        color: #235d9a;
-        background: #e9f2ff;
-    }
-
-    .sync-order-status.shipping {
-        color: #6548a1;
-        background: #f0ebff;
-    }
-
-    .sync-order-status.success {
-        color: #187347;
-        background: #e8f6ec;
-    }
-
-    .sync-order-status.failed {
-        color: #b33a43;
-        background: #fff0f0;
-    }
-
-    .sync-order-status.returning {
-        color: #9a5b20;
-        background: #fff1e4;
-    }
-
-    .sync-order-status.neutral {
-        color: #596b5e;
-        background: #edf1ed;
-    }
+        .sync-order-detail-btn svg {
+            width: 15px;
+            height: 15px;
+        }
 
     .sync-orders-empty {
         padding: 55px 20px;
-        text-align: center;
         border: 1px dashed #cbdccf;
-        border-radius: 18px;
+        border-radius: 17px;
         background: #fbfdfb;
+        text-align: center;
     }
 
     .sync-orders-empty-icon {
-        width: 75px;
-        height: 75px;
+        width: 72px;
+        height: 72px;
         margin: 0 auto 17px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 22px;
-        color: #176b45;
-        background: #eaf5ed;
-        font-size: 31px;
+        border-radius: 21px;
     }
 
+        .sync-orders-empty-icon svg {
+            width: 33px;
+            height: 33px;
+        }
+
     .sync-orders-empty h3 {
-        font-size: 19px;
-        color: #20382b;
-        font-weight: 850;
         margin-bottom: 8px;
+        color: #20382b;
+        font-size: 19px;
+        font-weight: 850;
     }
 
     .sync-orders-empty p {
+        margin-bottom: 20px;
         color: #849287;
         font-size: 13px;
-        margin-bottom: 20px;
     }
 
     .sync-orders-shop-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
         padding: 11px 19px;
-        border-radius: 10px;
+        border-radius: 9px;
         background: #176b45;
-        color: white;
-        text-decoration: none;
-        font-size: 13px;
+        color: #fff;
+        font-size: 12px;
         font-weight: 800;
+        text-decoration: none;
     }
 
-    .sync-orders-shop-btn:hover {
-        color: white;
-        background: #105536;
-    }
+        .sync-orders-shop-btn:hover {
+            background: #105536;
+            color: #fff;
+        }
 
-    @@media (max-width: 650px) {
+    @@media (max-width: 768px) {
         .sync-orders-page {
-            padding: 25px 13px 45px;
+            padding: 28px 15px 50px;
+        }
+
+        .sync-order-information {
+            grid-template-columns: 1fr 1fr;
+            row-gap: 17px;
+        }
+
+        .sync-order-data:nth-child(2) {
+            border-right: none;
+        }
+
+        .sync-order-data:last-child {
+            grid-column: 1 / -1;
+            padding: 13px 0 0;
+            border-top: 1px solid #e8eee9;
+        }
+
+        .sync-order-data strong.sync-order-total {
+            font-size: 20px;
+        }
+    }
+
+    @@media (max-width: 520px) {
+        .sync-orders-page {
+            padding: 24px 12px 40px;
+        }
+
+        .sync-orders-heading {
+            align-items: flex-start;
+        }
+
+        .sync-orders-heading-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+        }
+
+        .sync-orders-heading p {
+            max-width: 270px;
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .sync-orders-summary {
@@ -439,79 +751,170 @@
         }
 
         .sync-orders-summary-card {
-            padding: 13px;
-            gap: 10px;
+            gap: 9px;
+            padding: 13px 10px;
         }
 
         .sync-orders-summary-icon {
-            width: 37px;
-            height: 37px;
-            font-size: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+            .sync-orders-summary-icon svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .sync-orders-summary-card span {
+            font-size: 9px;
         }
 
         .sync-orders-summary-card strong {
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .sync-order-top {
             align-items: flex-start;
-            flex-direction: column;
-            padding: 15px;
+            padding: 14px;
         }
 
-        .sync-order-body {
-            grid-template-columns: 1fr 1fr;
-            gap: 17px 12px;
-            padding: 17px 15px;
+        .sync-order-number-icon {
+            width: 37px;
+            height: 37px;
         }
 
-        .sync-order-payment {
-            padding: 13px 15px;
+        .sync-order-top-statuses {
+            align-items: flex-end;
         }
+
+        .sync-order-status,
+        .sync-order-return-status {
+            padding: 7px 9px;
+            font-size: 9px;
+        }
+
+        .sync-order-products {
+            padding: 15px 14px;
+        }
+
+        .sync-order-product {
+            grid-template-columns: 62px minmax(0, 1fr);
+            gap: 11px;
+        }
+
+        .sync-order-product-image {
+            width: 62px;
+            height: 62px;
+        }
+
+        .sync-order-product-info strong {
+            font-size: 12px;
+        }
+
+        .sync-order-product-info small {
+            font-size: 10px;
+        }
+
+        .sync-order-product-subtotal {
+            grid-column: 2;
+            margin-top: -5px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .sync-order-information {
+            padding: 15px 14px;
+        }
+
+        .sync-order-data {
+            padding: 2px 10px;
+        }
+
+            .sync-order-data:first-child {
+                padding-left: 0;
+            }
+
+            .sync-order-data strong {
+                font-size: 11px;
+            }
 
         .sync-order-footer {
-            padding: 0 15px 15px;
+            padding: 0 14px 14px;
         }
 
         .sync-order-detail-btn {
             width: 100%;
         }
+
+        .sync-orders-tabs {
+            gap: 7px;
+        }
+
+        .sync-orders-tab {
+            flex: 1 1 auto;
+            padding: 9px 10px;
+            font-size: 10px;
+        }
     }
 
-    @@media (max-width: 390px) {
+    @@media (max-width: 360px) {
         .sync-orders-summary {
             grid-template-columns: 1fr;
         }
 
-        .sync-order-body {
+        .sync-order-information {
             grid-template-columns: 1fr;
         }
 
-        .sync-order-payment {
+        .sync-order-data,
+        .sync-order-data:nth-child(2),
+        .sync-order-data:last-child {
+            grid-column: auto;
+            padding: 10px 0;
+            border-right: none;
+            border-top: 1px solid #e8eee9;
+        }
+
+            .sync-order-data:first-child {
+                padding-top: 0;
+                border-top: none;
+            }
+
+        .sync-order-top {
+            flex-wrap: wrap;
+        }
+
+        .sync-order-top-statuses {
+            width: 100%;
             align-items: flex-start;
-            flex-direction: column;
+            padding-left: 49px;
         }
     }
 </style>
 
 <div class="sync-orders-page">
 
+    <!-- HEADER -->
     <div class="sync-orders-heading">
         <div>
             <div class="sync-orders-eyebrow">ORDER HISTORY</div>
             <h1>Pesanan Saya</h1>
-            <p>Pantau transaksi, pembayaran, dan perjalanan pesanan kamu.</p>
+            <p>Pantau produk, pembayaran, dan perjalanan pesanan kamu.</p>
         </div>
 
         <div class="sync-orders-heading-icon">
-            <i class="bi bi-receipt"></i>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16v16H4z" />
+                <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
         </div>
     </div>
 
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success sync-orders-alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
             @TempData["Success"]
         </div>
     }
@@ -519,16 +922,20 @@
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger sync-orders-alert">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
             @TempData["Error"]
         </div>
     }
 
+    <!-- SUMMARY -->
     <div class="sync-orders-summary">
 
         <div class="sync-orders-summary-card">
             <div class="sync-orders-summary-icon">
-                <i class="bi bi-bag-check"></i>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 3h12l3 4v14H3V7l3-4z" />
+                    <path d="M3 7h18M8 11h8M8 15h8" />
+                </svg>
             </div>
             <div>
                 <span>Total Pesanan</span>
@@ -538,7 +945,11 @@
 
         <div class="sync-orders-summary-card">
             <div class="sync-orders-summary-icon">
-                <i class="bi bi-wallet2"></i>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="3" />
+                    <path d="M2 10h20M7 15h3" />
+                </svg>
             </div>
             <div>
                 <span>Total Transaksi</span>
@@ -548,16 +959,49 @@
 
     </div>
 
+    <!-- ORDER HISTORY -->
     <div class="sync-orders-section-heading">
         <h3>Riwayat Transaksi</h3>
-        <span>@daftarPesanan.Count PESANAN</span>
+        <span id="jumlahPesananTampil">@daftarPesanan.Count PESANAN</span>
+    </div>
+
+    <!-- KATEGORI PESANAN -->
+    <div class="sync-orders-tabs" role="group" aria-label="Kategori pesanan">
+
+        <button type="button"
+                class="sync-orders-tab active"
+                data-filter="all">
+            Semua Pesanan
+            <span class="sync-orders-tab-count">@daftarPesanan.Count</span>
+        </button>
+
+        <button type="button"
+                class="sync-orders-tab"
+                data-filter="orders">
+            Pesanan
+            <span class="sync-orders-tab-count">@(daftarPesanan.Count - jumlahRetur)</span>
+        </button>
+
+        <button type="button"
+                class="sync-orders-tab"
+                data-filter="returns">
+            Pengajuan Pengembalian
+            <span class="sync-orders-tab-count">@jumlahRetur</span>
+        </button>
+
     </div>
 
     @if (!daftarPesanan.Any())
     {
         <div class="sync-orders-empty">
+
             <div class="sync-orders-empty-icon">
-                <i class="bi bi-bag-x"></i>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3h2l2.2 12.2a2 2 0 0 0 2 1.8h8.6a2 2 0 0 0 2-1.6L22 8H6" />
+                    <circle cx="10" cy="21" r="1" />
+                    <circle cx="18" cy="21" r="1" />
+                </svg>
             </div>
 
             <h3>Belum Ada Pesanan</h3>
@@ -566,24 +1010,33 @@
             <a asp-controller="Produk"
                asp-action="Index"
                class="sync-orders-shop-btn">
-                <i class="bi bi-music-note-beamed"></i>
                 Mulai Belanja
             </a>
+
         </div>
     }
     else
     {
-        <div class="sync-order-list">
+        <div class="sync-order-list" id="daftarPesanan">
 
             @foreach (var item in daftarPesanan)
             {
-                <article class="sync-order-card">
+                bool memilikiPengajuanRetur =
+                    !string.IsNullOrWhiteSpace(item.StatusRetur);
 
+                <article class="sync-order-card"
+                         data-has-return="@(memilikiPengajuanRetur ? "true" : "false")">
+
+                    <!-- ORDER HEADER -->
                     <div class="sync-order-top">
 
                         <div class="sync-order-number">
                             <div class="sync-order-number-icon">
-                                <i class="bi bi-receipt-cutoff"></i>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 3h12l3 4v14H3V7l3-4z" />
+                                    <path d="M3 7h18M8 12h8" />
+                                </svg>
                             </div>
 
                             <div>
@@ -592,17 +1045,82 @@
                             </div>
                         </div>
 
-                        <span class="sync-order-status @StatusClass(item.StatusPesanan)">
-                            @FormatStatus(item.StatusPesanan)
-                        </span>
+                        <div class="sync-order-top-statuses">
+                            <span class="sync-order-status @StatusClass(item.StatusTampilan)">
+                                @FormatStatus(item.StatusTampilan)
+                            </span>
+
+                            @if (!string.IsNullOrWhiteSpace(item.StatusRetur))
+                            {
+                                <span class="sync-order-return-status @StatusReturClass(item.StatusRetur)">
+                                    @StatusReturText(item.StatusRetur)
+                                </span>
+                            }
+                        </div>
 
                     </div>
 
-                    <div class="sync-order-body">
+                    <!-- PRODUCTS -->
+                    <div class="sync-order-products">
+
+                        <div class="sync-order-products-heading">
+                            PRODUK YANG DIPESAN
+                        </div>
+
+                        @if (item.Items != null && item.Items.Any())
+                        {
+                            @foreach (var produk in item.Items)
+                            {
+                                <div class="sync-order-product">
+
+                                    <div class="sync-order-product-image">
+                                        <img src="@FotoProduk(produk.Foto)"
+                                             alt="@produk.NamaProduk"
+                                             loading="lazy"
+                                             onerror="this.onerror=null;this.style.display='none';" />
+                                    </div>
+
+                                    <div class="sync-order-product-info">
+                                        <strong>@produk.NamaProduk</strong>
+                                        <small>Kode Produk: @produk.KodeProduk</small>
+                                        <span>
+                                            @produk.Jumlah × @produk.HargaSatuan.ToString("C0", rupiah)
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(produk.StatusRetur))
+                                        {
+                                            <div class="sync-order-product-return">
+                                                <span class="sync-order-return-status @StatusReturClass(produk.StatusRetur)">
+                                                    @StatusReturText(produk.StatusRetur)
+                                                </span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="sync-order-product-subtotal">
+                                        @produk.Subtotal.ToString("C0", rupiah)
+                                    </div>
+
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-secondary mb-0">
+                                Informasi produk tidak tersedia.
+                            </p>
+                        }
+
+                    </div>
+
+                    <!-- ORDER INFORMATION -->
+                    <div class="sync-order-information">
 
                         <div class="sync-order-data">
                             <span>Tanggal Pesanan</span>
-                            <strong>@item.TglPesan.ToString("dd MMMM yyyy, HH:mm")</strong>
+                            <strong>
+                                @item.TglPesan.ToString("dd MMMM yyyy, HH:mm")
+                            </strong>
                         </div>
 
                         <div class="sync-order-data">
@@ -619,33 +1137,129 @@
 
                     </div>
 
-                    <div class="sync-order-payment">
-
-                        <div class="sync-order-payment-info">
-                            <span>STATUS PEMBAYARAN</span>
-                            <strong>@FormatStatus(item.StatusPembayaran)</strong>
-                        </div>
-
-                        <span class="sync-order-status @StatusClass(item.StatusPembayaran)">
-                            @FormatStatus(item.StatusPembayaran)
-                        </span>
-
-                    </div>
-
+                    <!-- FOOTER -->
                     <div class="sync-order-footer">
+
                         <a asp-controller="PesananSaya"
                            asp-action="Detail"
                            asp-route-id="@item.IdPemesanan"
                            class="sync-order-detail-btn">
+
                             Lihat Detail Pesanan
-                            <i class="bi bi-arrow-right"></i>
+
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+
                         </a>
+
                     </div>
 
                 </article>
             }
 
         </div>
+
+        <!-- PESANAN KOSONG UNTUK FILTER -->
+        <div class="sync-orders-empty" id="pesananFilterKosong" hidden>
+
+            <div class="sync-orders-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16v16H4z" />
+                    <path d="M8 9h8M8 13h5" />
+                </svg>
+            </div>
+
+            <h3 id="pesananFilterJudul">Belum Ada Pengajuan Pengembalian</h3>
+            <p id="pesananFilterDeskripsi">
+                Pengajuan pengembalian produk kamu akan muncul di sini.
+            </p>
+
+        </div>
     }
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const tabButtons = document.querySelectorAll(".sync-orders-tab");
+        const orderCards = document.querySelectorAll(".sync-order-card");
+        const emptyPanel = document.getElementById("pesananFilterKosong");
+        const emptyTitle = document.getElementById("pesananFilterJudul");
+        const emptyDescription = document.getElementById("pesananFilterDeskripsi");
+        const countLabel = document.getElementById("jumlahPesananTampil");
+
+        if (!tabButtons.length || !orderCards.length) {
+            return;
+        }
+
+        function filterPesanan(filter) {
+
+            let jumlahTampil = 0;
+
+            orderCards.forEach(function (card) {
+
+                const memilikiRetur =
+                    card.dataset.hasReturn === "true";
+
+                let tampil = true;
+
+                if (filter === "orders") {
+                    tampil = !memilikiRetur;
+                }
+                else if (filter === "returns") {
+                    tampil = memilikiRetur;
+                }
+
+                card.hidden = !tampil;
+
+                if (tampil) {
+                    jumlahTampil++;
+                }
+            });
+
+            if (countLabel) {
+                countLabel.textContent = jumlahTampil + " PESANAN";
+            }
+
+            if (emptyPanel) {
+                emptyPanel.hidden = jumlahTampil !== 0;
+            }
+
+            if (jumlahTampil === 0 && emptyTitle && emptyDescription) {
+
+                if (filter === "returns") {
+                    emptyTitle.textContent = "Belum Ada Pengajuan Pengembalian";
+                    emptyDescription.textContent =
+                        "Pengajuan pengembalian produk kamu akan muncul di sini.";
+                }
+                else {
+                    emptyTitle.textContent = "Tidak Ada Pesanan";
+                    emptyDescription.textContent =
+                        "Belum ada pesanan pada kategori ini.";
+                }
+            }
+        }
+
+        tabButtons.forEach(function (button) {
+
+            button.addEventListener("click", function () {
+
+                const filter = button.dataset.filter || "all";
+
+                tabButtons.forEach(function (tab) {
+                    tab.classList.remove("active");
+                });
+
+                button.classList.add("active");
+
+                filterPesanan(filter);
+            });
+
+        });
+
+    });
+</script>

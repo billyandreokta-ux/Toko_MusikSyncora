@@ -393,8 +393,10 @@ namespace TokoMusik.Web.Controllers
                 {
                     const string sqlPengiriman = @"
                         UPDATE pengiriman
-                        SET status = 'diterima',
-                            tgl_terima = CURRENT_TIMESTAMP
+                        SET
+                            status = 'diterima',
+                            tgl_terima = CURRENT_DATE(),
+                            waktu_terima = CURRENT_TIMESTAMP
                         WHERE id_pemesanan = @Id";
 
                     int jumlahPengiriman = await connection.ExecuteAsync(

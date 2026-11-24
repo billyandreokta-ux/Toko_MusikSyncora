@@ -51,34 +51,68 @@ namespace TokoMusik.Web.Controllers
                     p.kode_produk AS KodeProduk,
                     p.nama_produk AS NamaProduk,
                     dp.jumlah AS JumlahDibeli,
+
                     dp.jumlah - COALESCE((
                         SELECT SUM(r.jumlah)
                         FROM return_produk r
                         WHERE r.id_detail_pesanan = dp.id_detail_pesanan
                           AND r.status <> 'ditolak'
                     ), 0) AS SisaJumlah,
+
                     pm.status AS StatusPesanan,
                     pg.waktu_terima AS WaktuTerima
+
                 FROM detail_pesanan dp
+
                 INNER JOIN pemesanan pm
                     ON pm.id_pemesanan = dp.id_pemesanan
+
                 INNER JOIN produk p
                     ON p.id_produk = dp.id_produk
+
                 INNER JOIN pengiriman pg
                     ON pg.id_pemesanan = pm.id_pemesanan
+
                 WHERE dp.id_detail_pesanan = @IdDetailPesanan
                   AND pm.id_customer = @IdCustomer
                   AND pm.status = 'selesai'
+
                   AND pg.waktu_terima IS NOT NULL
-                  AND pg.waktu_terima >= DATE_SUB(NOW(), INTERVAL 72 HOUR)
-                  AND pg.waktu_terima <= NOW()";
+                  AND pg.waktu_terima <= NOW()
+                  AND NOW() < DATE_ADD(
+                      pg.waktu_terima,
+                      INTERVAL 72 HOUR
+                  )
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM return_produk r
+                      WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        AND r.status <> 'ditolak'
+                  )
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM return_produk r
+                      WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        AND r.status = 'ditolak'
+                        AND r.tgl_pengajuan >= CURDATE()
+                        AND r.tgl_pengajuan < DATE_ADD(
+                            CURDATE(),
+                            INTERVAL 1 DAY
+                        )
+                  )";
 
             if (kunciBaris)
                 sql += " FOR UPDATE";
 
             return await connection.QueryFirstOrDefaultAsync<ProdukReturViewModel>(
                 sql,
-                new { IdDetailPesanan = idDetailPesanan, IdCustomer = idCustomer },
+                new
+                {
+                    IdDetailPesanan = idDetailPesanan,
+                    IdCustomer = idCustomer
+                },
                 transaction);
         }
 
@@ -128,8 +162,11 @@ namespace TokoMusik.Web.Controllers
 
         private async Task<string> SimpanFoto(IFormFile file)
         {
+            string webRoot = _environment.WebRootPath
+                ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+
             string folder = Path.Combine(
-                _environment.WebRootPath,
+                webRoot,
                 "uploads",
                 "bukti-retur");
 
@@ -150,9 +187,12 @@ namespace TokoMusik.Web.Controllers
             if (string.IsNullOrWhiteSpace(foto))
                 return;
 
+            string webRoot = _environment.WebRootPath
+                ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+
             string namaFile = Path.GetFileName(foto);
             string path = Path.Combine(
-                _environment.WebRootPath,
+                webRoot,
                 "uploads",
                 "bukti-retur",
                 namaFile);
@@ -161,6 +201,7 @@ namespace TokoMusik.Web.Controllers
                 System.IO.File.Delete(path);
         }
 
+        // GET: /Retur
         public async Task<IActionResult> Index()
         {
             int idCustomer = await AmbilIdCustomer();
@@ -169,6 +210,7 @@ namespace TokoMusik.Web.Controllers
                 return Forbid();
 
             await using var connection = _koneksi.GetConnection();
+            await connection.OpenAsync();
 
             var daftarRetur = await connection.QueryAsync<ReturItemViewModel>(
                 @"
@@ -177,9 +219,11 @@ namespace TokoMusik.Web.Controllers
                     r.id_detail_pesanan AS IdDetailPesanan,
                     r.tgl_return AS TanggalReturn,
                     r.tgl_pengajuan AS TanggalPengajuan,
+
                     dp.id_pemesanan AS IdPemesanan,
                     p.kode_produk AS KodeProduk,
                     p.nama_produk AS NamaProduk,
+
                     r.jumlah AS Jumlah,
                     r.alasan AS Alasan,
                     r.foto_bukti AS FotoBukti,
@@ -189,14 +233,20 @@ namespace TokoMusik.Web.Controllers
                     r.stok_ditambahkan AS StokDitambahkan,
                     r.tgl_pemeriksaan AS TanggalPemeriksaan,
                     r.catatan_admin AS CatatanAdmin
+
                 FROM return_produk r
+
                 INNER JOIN detail_pesanan dp
                     ON dp.id_detail_pesanan = r.id_detail_pesanan
+
                 INNER JOIN pemesanan pm
                     ON pm.id_pemesanan = dp.id_pemesanan
+
                 INNER JOIN produk p
                     ON p.id_produk = dp.id_produk
+
                 WHERE pm.id_customer = @IdCustomer
+
                 ORDER BY r.tgl_pengajuan DESC, r.id_return DESC",
                 new { IdCustomer = idCustomer });
 
@@ -205,41 +255,76 @@ namespace TokoMusik.Web.Controllers
                 SELECT
                     dp.id_detail_pesanan AS IdDetailPesanan,
                     dp.id_pemesanan AS IdPemesanan,
+
                     p.kode_produk AS KodeProduk,
                     p.nama_produk AS NamaProduk,
+
                     dp.jumlah AS JumlahDibeli,
+
                     COALESCE((
                         SELECT SUM(r.jumlah)
                         FROM return_produk r
                         WHERE r.id_detail_pesanan = dp.id_detail_pesanan
                           AND r.status <> 'ditolak'
                     ), 0) AS JumlahSudahDiretur,
+
                     dp.jumlah - COALESCE((
                         SELECT SUM(r.jumlah)
                         FROM return_produk r
                         WHERE r.id_detail_pesanan = dp.id_detail_pesanan
                           AND r.status <> 'ditolak'
                     ), 0) AS SisaJumlah,
+
                     pm.status AS StatusPesanan,
                     pg.waktu_terima AS WaktuTerima
+
                 FROM detail_pesanan dp
+
                 INNER JOIN pemesanan pm
                     ON pm.id_pemesanan = dp.id_pemesanan
+
                 INNER JOIN pengiriman pg
                     ON pg.id_pemesanan = pm.id_pemesanan
+
                 INNER JOIN produk p
                     ON p.id_produk = dp.id_produk
+
                 WHERE pm.id_customer = @IdCustomer
                   AND pm.status = 'selesai'
+
                   AND pg.waktu_terima IS NOT NULL
-                  AND pg.waktu_terima >= DATE_SUB(NOW(), INTERVAL 72 HOUR)
                   AND pg.waktu_terima <= NOW()
+                  AND NOW() < DATE_ADD(
+                      pg.waktu_terima,
+                      INTERVAL 72 HOUR
+                  )
+
                   AND dp.jumlah > COALESCE((
                       SELECT SUM(r.jumlah)
                       FROM return_produk r
                       WHERE r.id_detail_pesanan = dp.id_detail_pesanan
                         AND r.status <> 'ditolak'
                   ), 0)
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM return_produk r
+                      WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        AND r.status <> 'ditolak'
+                  )
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM return_produk r
+                      WHERE r.id_detail_pesanan = dp.id_detail_pesanan
+                        AND r.status = 'ditolak'
+                        AND r.tgl_pengajuan >= CURDATE()
+                        AND r.tgl_pengajuan < DATE_ADD(
+                            CURDATE(),
+                            INTERVAL 1 DAY
+                        )
+                  )
+
                 ORDER BY pg.waktu_terima DESC",
                 new { IdCustomer = idCustomer });
 
@@ -250,6 +335,7 @@ namespace TokoMusik.Web.Controllers
             });
         }
 
+        // GET: /Retur/Ajukan/5
         [HttpGet]
         public async Task<IActionResult> Ajukan(int id)
         {
@@ -259,14 +345,17 @@ namespace TokoMusik.Web.Controllers
                 return Forbid();
 
             await using var connection = _koneksi.GetConnection();
+            await connection.OpenAsync();
 
             var produk = await AmbilProdukRetur(
-                connection, id, idCustomer);
+                connection,
+                id,
+                idCustomer);
 
             if (produk == null || produk.SisaJumlah <= 0)
             {
                 TempData["Error"] =
-                    "Produk tidak memenuhi syarat retur atau batas waktu 3 x 24 jam telah berakhir.";
+                    "Produk tidak memenuhi syarat retur. Pastikan batas waktu 3 x 24 jam belum berakhir, tidak ada pengajuan aktif, dan jika pengajuan sebelumnya ditolak, pengajuan ulang hanya dapat dilakukan pada hari berikutnya.";
 
                 return RedirectToAction(nameof(Index));
             }
@@ -281,6 +370,7 @@ namespace TokoMusik.Web.Controllers
             });
         }
 
+        // POST: /Retur/Ajukan
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Ajukan(AjukanReturViewModel model)
@@ -306,19 +396,48 @@ namespace TokoMusik.Web.Controllers
 
             try
             {
+                // Kunci detail pesanan untuk mencegah pengajuan bersamaan.
+                int? detailTerkunci = await connection.QueryFirstOrDefaultAsync<int?>(
+                    @"
+                    SELECT dp.id_detail_pesanan
+                    FROM detail_pesanan dp
+                    INNER JOIN pemesanan pm
+                        ON pm.id_pemesanan = dp.id_pemesanan
+                    WHERE dp.id_detail_pesanan = @IdDetailPesanan
+                      AND pm.id_customer = @IdCustomer
+                    FOR UPDATE",
+                    new
+                    {
+                        model.IdDetailPesanan,
+                        IdCustomer = idCustomer
+                    },
+                    transaction);
+
+                if (!detailTerkunci.HasValue)
+                {
+                    await transaction.RollbackAsync();
+
+                    TempData["Error"] =
+                        "Detail pesanan tidak ditemukan atau bukan milik akun kamu.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Validasi ulang di dalam transaksi.
+                // Termasuk batas 72 jam dan larangan pengajuan ulang
+                // pada hari yang sama setelah pengajuan sebelumnya ditolak.
                 var produk = await AmbilProdukRetur(
                     connection,
                     model.IdDetailPesanan,
                     idCustomer,
-                    transaction,
-                    true);
+                    transaction);
 
                 if (produk == null || produk.SisaJumlah <= 0)
                 {
                     await transaction.RollbackAsync();
 
                     TempData["Error"] =
-                        "Produk tidak memenuhi syarat retur atau batas waktu pengajuan telah berakhir.";
+                        "Pengajuan retur belum dapat dilakukan. Jika pengajuan sebelumnya ditolak hari ini, silakan coba kembali besok. Batas pengajuan tetap 3 x 24 jam sejak barang diterima.";
 
                     return RedirectToAction(nameof(Index));
                 }
@@ -327,11 +446,18 @@ namespace TokoMusik.Web.Controllers
                 model.KodeProduk = produk.KodeProduk;
                 model.SisaJumlah = produk.SisaJumlah;
 
-                if (model.Jumlah > produk.SisaJumlah)
+                if (model.Jumlah < 1 || model.Jumlah > produk.SisaJumlah)
                 {
                     ModelState.AddModelError(
                         "Jumlah",
-                        "Jumlah retur melebihi jumlah produk yang masih dapat diretur.");
+                        "Jumlah retur harus minimal 1 dan tidak boleh melebihi jumlah produk yang dapat diretur.");
+                }
+
+                if (string.IsNullOrWhiteSpace(model.Alasan))
+                {
+                    ModelState.AddModelError(
+                        "Alasan",
+                        "Alasan retur wajib diisi.");
                 }
 
                 if (!ModelState.IsValid)

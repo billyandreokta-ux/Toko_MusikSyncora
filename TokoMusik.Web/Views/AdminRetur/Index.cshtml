@@ -1,125 +1,437 @@
-﻿@model List<TokoMusik.Web.Models.ReturItemViewModel>
+﻿
+@model List<TokoMusik.Web.Models.ReturItemViewModel>
 
 @{
     ViewData["Title"] = "Manajemen Retur";
 
-    var totalDiajukan = Model.Count(x => x.Status == "diajukan");
-    var totalDisetujui = Model.Count(x => x.Status == "disetujui");
-    var totalDitolak = Model.Count(x => x.Status == "ditolak");
-    var totalSelesai = Model.Count(x => x.Status == "selesai");
+    var daftarRetur = Model ?? new List<TokoMusik.Web.Models.ReturItemViewModel>();
+
+    var totalDiajukan = daftarRetur.Count(x => x.Status == "diajukan");
+    var totalDisetujui = daftarRetur.Count(x => x.Status == "disetujui");
+    var totalDitolak = daftarRetur.Count(x => x.Status == "ditolak");
+    var totalSelesai = daftarRetur.Count(x => x.Status == "selesai");
+
+    var kataKunci = ViewBag.KataKunci?.ToString() ?? "";
+    var statusFilter = ViewBag.StatusFilter?.ToString() ?? "semua";
 }
 
 <style>
     .admin-return-page {
         max-width: 1400px;
         margin: 30px auto 60px;
-        padding: 0 18px;
+        padding: 0 20px;
         color: #263a30;
     }
 
-    .admin-return-heading {
+    .return-heading {
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 25px;
+        gap: 18px;
+        margin-bottom: 28px;
     }
 
-        .admin-return-heading h2 {
-            font-weight: 800;
-            margin: 0;
-        }
+    .return-heading-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .return-heading-icon {
+        width: 55px;
+        height: 55px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e7f2e9;
+        color: #24583d;
+        border-radius: 16px;
+    }
+
+    .return-heading-icon svg {
+        width: 27px;
+        height: 27px;
+    }
+
+    .return-heading h2 {
+        font-size: 25px;
+        font-weight: 800;
+        color: #203d2d;
+        margin: 0 0 5px;
+    }
+
+    .return-heading p {
+        font-size: 13px;
+        color: #7b887f;
+        margin: 0;
+    }
+
+    .return-back-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 17px;
+        border: 1px solid #e3eae4;
+        border-radius: 10px;
+        background: #fff;
+        color: #365b43;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .return-back-button:hover {
+        background: #f1f7f2;
+        color: #24583d;
+        border-color: #cbdccd;
+    }
+
+    .return-back-button svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .return-alert {
+        padding: 13px 16px;
+        border-radius: 11px;
+        margin-bottom: 18px;
+        font-size: 13px;
+    }
 
     .return-stat-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
-        gap: 15px;
-        margin-bottom: 22px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 25px;
     }
 
     .return-stat {
-        background: white;
-        border: 1px solid #e7ece8;
-        border-radius: 14px;
-        padding: 19px;
-    }
-
-        .return-stat small {
-            color: #78847c;
-        }
-
-        .return-stat strong {
-            display: block;
-            font-size: 27px;
-            margin-top: 5px;
-        }
-
-    .return-panel {
-        background: white;
-        border: 1px solid #e7ece8;
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e8eee9;
         border-radius: 15px;
         padding: 20px;
+        box-shadow: 0 3px 12px rgba(35, 75, 48, .035);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .return-stat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 7px 18px rgba(35, 75, 48, .08);
+    }
+
+    .return-stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 13px;
+    }
+
+    .return-stat-label {
+        font-size: 12px;
+        font-weight: 650;
+        color: #7b887f;
+    }
+
+    .return-stat-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+    }
+
+    .return-stat-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .return-stat strong {
+        display: block;
+        font-size: 29px;
+        line-height: 1.2;
+        font-weight: 800;
+        color: #263d30;
+    }
+
+    .stat-pending .return-stat-icon {
+        color: #a67518;
+        background: #fff3d9;
+    }
+
+    .stat-approved .return-stat-icon {
+        color: #2e7448;
+        background: #e6f3e9;
+    }
+
+    .stat-rejected .return-stat-icon {
+        color: #b64b42;
+        background: #fcebea;
+    }
+
+    .stat-completed .return-stat-icon {
+        color: #416aa3;
+        background: #eaf0fa;
+    }
+
+    .return-panel {
+        background: #fff;
+        border: 1px solid #e7eee8;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 4px 16px rgba(35, 75, 48, .035);
+    }
+
+    .return-panel-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 19px;
+    }
+
+    .return-panel-heading h5 {
+        margin: 0;
+        color: #294534;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .return-panel-heading p {
+        margin: 4px 0 0;
+        color: #89958c;
+        font-size: 12px;
+    }
+
+    .return-total-label {
+        color: #718078;
+        background: #f2f6f2;
+        padding: 7px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .return-filter {
+        display: grid;
+        grid-template-columns: minmax(200px, 1.8fr) minmax(150px, 1fr) auto auto;
+        gap: 10px;
+        margin-bottom: 22px;
+        padding: 15px;
+        background: #f8faf8;
+        border: 1px solid #edf1ed;
+        border-radius: 12px;
+    }
+
+    .return-filter .form-control,
+    .return-filter .form-select {
+        min-height: 42px;
+        border: 1px solid #e1e9e2;
+        border-radius: 9px;
+        background-color: #fff;
+        color: #405247;
+        font-size: 12px;
+        box-shadow: none;
+    }
+
+    .return-filter .form-control:focus,
+    .return-filter .form-select:focus {
+        border-color: #78a888;
+        box-shadow: 0 0 0 3px rgba(65, 125, 83, .1);
+    }
+
+    .return-filter .form-control::placeholder {
+        color: #a0aaa3;
+    }
+
+    .return-filter-button,
+    .return-reset-button {
+        min-height: 42px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 17px;
+        border-radius: 9px;
+        font-size: 12px;
+        font-weight: 750;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .return-filter-button {
+        border: 1px solid #24583d;
+        background: #24583d;
+        color: #fff;
+    }
+
+    .return-filter-button:hover {
+        background: #19452e;
+        border-color: #19452e;
+        color: #fff;
+    }
+
+    .return-reset-button {
+        border: 1px solid #dfe8e0;
+        background: #fff;
+        color: #5e7164;
+    }
+
+    .return-reset-button:hover {
+        background: #edf4ee;
+        color: #24583d;
+    }
+
+    .return-filter-button svg,
+    .return-reset-button svg {
+        width: 15px;
+        height: 15px;
     }
 
     .return-table-wrap {
+        width: 100%;
         overflow-x: auto;
+        border: 1px solid #edf1ed;
+        border-radius: 11px;
     }
 
     .return-table {
         width: 100%;
         min-width: 1250px;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
     }
 
-        .return-table th {
-            background: #f4f7f4;
-            color: #718077;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .return-table th,
-        .return-table td {
-            padding: 13px 12px;
-            border-bottom: 1px solid #edf0ed;
-            text-align: left;
-            vertical-align: middle;
-        }
-
-        .return-table td {
-            font-size: 13px;
-        }
-
-    .return-status {
-        border: 0;
-        border-radius: 8px;
-        padding: 8px;
-        font-size: 12px;
-        background: #f3f5f3;
+    .return-table thead th {
+        padding: 14px 13px;
+        background: #f4f7f4;
+        color: #6e7e72;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .45px;
+        white-space: nowrap;
+        border-bottom: 1px solid #e7eee8;
     }
 
-    .return-action {
-        background: #24583d;
-        color: white;
-        border: 0;
-        border-radius: 8px;
-        padding: 8px 12px;
+    .return-table tbody td {
+        padding: 15px 13px;
+        border-bottom: 1px solid #edf1ed;
+        color: #47574c;
         font-size: 12px;
-        font-weight: 700;
+        vertical-align: middle;
+    }
+
+    .return-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .return-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .return-table tbody tr:hover {
+        background: #fbfdfb;
+    }
+
+    .return-date {
+        color: #52665a;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .return-customer {
+        color: #304c39;
+        font-weight: 750;
+    }
+
+    .return-order {
+        color: #39714b;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .return-product-name {
+        display: block;
+        color: #344d3b;
+        font-size: 12px;
+        font-weight: 750;
+        margin-bottom: 4px;
+    }
+
+    .return-product-code {
+        color: #929e95;
+        font-size: 10px;
+    }
+
+    .return-quantity {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        padding: 5px 9px;
+        background: #f0f5f0;
+        color: #41684b;
+        border-radius: 7px;
+        font-weight: 750;
+    }
+
+    .return-reason {
+        max-width: 230px;
+        min-width: 130px;
+        white-space: normal;
+        line-height: 1.6;
+        color: #647168;
+    }
+
+    .return-photo {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #34734a;
+        font-size: 11px;
+        font-weight: 750;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .return-photo:hover {
+        color: #19452e;
+        text-decoration: underline;
+    }
+
+    .return-photo svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .return-no-photo {
+        color: #a1aaa3;
+        font-size: 11px;
     }
 
     .return-badge {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 20px;
-        padding: 5px 9px;
-        font-size: 11px;
-        font-weight: 700;
+        padding: 6px 10px;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     .status-diajukan {
-        background: #fff2d6;
-        color: #93630a;
+        background: #fff3d9;
+        color: #986b18;
     }
 
     .status-disetujui {
@@ -137,131 +449,418 @@
         color: #315a9a;
     }
 
-    .return-photo {
-        color: #24583d;
-        font-weight: 700;
-        text-decoration: none;
+    .return-status-form {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 185px;
     }
 
-        .return-photo:hover {
-            text-decoration: underline;
-        }
+    .return-status {
+        min-height: 34px;
+        max-width: 110px;
+        border: 1px solid #e0e9e1;
+        border-radius: 8px;
+        padding: 6px 8px;
+        color: #536458;
+        background: #fff;
+        font-size: 11px;
+        outline: none;
+    }
+
+    .return-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-height: 34px;
+        padding: 7px 11px;
+        background: #24583d;
+        color: #fff;
+        border: 1px solid #24583d;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 750;
+        white-space: nowrap;
+        transition: .2s ease;
+    }
+
+    .return-action:hover {
+        background: #19452e;
+        border-color: #19452e;
+    }
+
+    .return-action svg {
+        width: 13px;
+        height: 13px;
+    }
 
     .inspection-form {
         min-width: 245px;
+        max-width: 290px;
         background: #f7faf7;
-        border: 1px solid #e5ece6;
-        border-radius: 10px;
-        padding: 12px;
+        border: 1px solid #e3ece4;
+        border-radius: 11px;
+        padding: 13px;
     }
 
-        .inspection-form label {
-            font-size: 12px;
-            font-weight: 650;
-        }
+    .inspection-form label {
+        color: #53665a;
+        font-size: 11px;
+        font-weight: 700;
+    }
 
-        .inspection-form textarea {
-            font-size: 12px;
-            min-height: 65px;
-        }
+    .inspection-form textarea {
+        min-height: 65px;
+        resize: vertical;
+        border: 1px solid #e0e8e1;
+        border-radius: 8px;
+        font-size: 11px;
+        box-shadow: none;
+    }
 
-        .inspection-form .form-check {
-            margin: 8px 0;
-        }
+    .inspection-form textarea:focus {
+        border-color: #78a888;
+        box-shadow: 0 0 0 3px rgba(65, 125, 83, .08);
+    }
 
-    @@media(max-width:750px) {
+    .inspection-form .form-check {
+        margin: 8px 0;
+    }
+
+    .inspection-form .form-check-input:checked {
+        background-color: #24583d;
+        border-color: #24583d;
+    }
+
+    .inspection-form .form-check-label {
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .inspection-hint {
+        display: block;
+        color: #929d94;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .inspection-result {
+        min-width: 175px;
+        line-height: 1.6;
+    }
+
+    .inspection-result strong {
+        font-size: 11px;
+    }
+
+    .inspection-note {
+        margin-top: 7px;
+        padding: 8px;
+        background: #f5f8f5;
+        border-radius: 7px;
+        color: #6d7a70;
+        font-size: 10px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .inspection-date {
+        display: block;
+        color: #9aa49c;
+        font-size: 10px;
+        margin-top: 6px;
+    }
+
+    .return-empty {
+        padding: 55px 20px !important;
+        text-align: center !important;
+    }
+
+    .return-empty-icon {
+        width: 55px;
+        height: 55px;
+        margin: 0 auto 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: #edf4ee;
+        color: #588064;
+    }
+
+    .return-empty-icon svg {
+        width: 27px;
+        height: 27px;
+    }
+
+    .return-empty strong {
+        display: block;
+        color: #405747;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .return-empty span {
+        color: #929d94;
+        font-size: 11px;
+    }
+
+    @@media (max-width: 900px) {
         .return-stat-grid {
-            grid-template-columns: repeat(2,minmax(0,1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .return-filter {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .return-filter .return-search {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .admin-return-page {
+            margin-top: 20px;
+            padding: 0 13px;
+        }
+
+        .return-heading {
+            align-items: flex-start;
+        }
+
+        .return-heading h2 {
+            font-size: 20px;
+        }
+
+        .return-heading-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+        }
+
+        .return-back-button {
+            width: 100%;
+        }
+
+        .return-stat-grid {
+            gap: 10px;
+        }
+
+        .return-stat {
+            padding: 14px;
+        }
+
+        .return-stat strong {
+            font-size: 24px;
+        }
+
+        .return-stat-label {
+            font-size: 10px;
+        }
+
+        .return-stat-icon {
+            width: 31px;
+            height: 31px;
+        }
+
+        .return-panel {
+            padding: 14px;
+        }
+
+        .return-filter {
+            grid-template-columns: 1fr;
+            padding: 11px;
+        }
+
+        .return-filter .return-search {
+            grid-column: auto;
+        }
+
+        .return-filter-button,
+        .return-reset-button {
+            width: 100%;
+        }
+
+        .return-panel-heading {
+            align-items: flex-start;
         }
     }
 </style>
 
 <div class="admin-return-page">
-    <div class="admin-return-heading">
-        <div>
-            <h2>Manajemen Retur</h2>
-            <p class="text-muted mb-0">
-                Kelola pengajuan pengembalian dan pemeriksaan barang retur pelanggan.
-            </p>
+
+    <div class="return-heading">
+        <div class="return-heading-content">
+            <div class="return-heading-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 14 4 9l5-5" />
+                    <path d="M4 9h10a6 6 0 0 1 0 12h-2" />
+                </svg>
+            </div>
+
+            <div>
+                <h2>Manajemen Retur</h2>
+                <p>Kelola pengajuan pengembalian dan pemeriksaan barang retur pelanggan.</p>
+            </div>
         </div>
 
-        <a asp-controller="AdminDashboard"
+        <a asp-controller="Admin"
            asp-action="Index"
-           class="btn btn-light">
+           class="return-back-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6" />
+            </svg>
             Kembali ke Dashboard
         </a>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="alert alert-success return-alert">
+            @TempData["Success"]
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="alert alert-danger return-alert">
+            @TempData["Error"]
+        </div>
     }
 
     <div class="return-stat-grid">
-        <div class="return-stat">
-            <small>Menunggu Tindakan</small>
+
+        <div class="return-stat stat-pending">
+            <div class="return-stat-top">
+                <span class="return-stat-label">Menunggu Tindakan</span>
+                <span class="return-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" />
+                    </svg>
+                </span>
+            </div>
             <strong>@totalDiajukan</strong>
         </div>
-        <div class="return-stat">
-            <small>Disetujui</small>
+
+        <div class="return-stat stat-approved">
+            <div class="return-stat-top">
+                <span class="return-stat-label">Disetujui</span>
+                <span class="return-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m5 12 4 4L19 6" />
+                        <circle cx="12" cy="12" r="10" />
+                    </svg>
+                </span>
+            </div>
             <strong>@totalDisetujui</strong>
         </div>
-        <div class="return-stat">
-            <small>Ditolak</small>
+
+        <div class="return-stat stat-rejected">
+            <div class="return-stat-top">
+                <span class="return-stat-label">Ditolak</span>
+                <span class="return-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="m15 9-6 6m0-6 6 6" />
+                    </svg>
+                </span>
+            </div>
             <strong>@totalDitolak</strong>
         </div>
-        <div class="return-stat">
-            <small>Selesai</small>
+
+        <div class="return-stat stat-completed">
+            <div class="return-stat-top">
+                <span class="return-stat-label">Selesai</span>
+                <span class="return-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12.5 9.5 18 20 6" />
+                        <path d="M12 22a10 10 0 1 0-10-10" />
+                    </svg>
+                </span>
+            </div>
             <strong>@totalSelesai</strong>
         </div>
+
     </div>
 
     <div class="return-panel">
-        <form method="get" class="row g-2 mb-4">
-            <div class="col-md-5">
+
+        <div class="return-panel-heading">
+            <div>
+                <h5>Daftar Pengajuan Retur</h5>
+                <p>Pantau dan kelola seluruh pengajuan pengembalian barang pelanggan.</p>
+            </div>
+
+            <span class="return-total-label">
+                @daftarRetur.Count Data Retur
+            </span>
+        </div>
+
+        <form method="get" class="return-filter">
+
+            <div class="return-search">
                 <input type="text"
                        name="cari"
-                       value="@ViewBag.KataKunci"
+                       value="@kataKunci"
                        class="form-control"
                        placeholder="Cari produk, kode, pelanggan, atau nomor pesanan..." />
             </div>
 
-            <div class="col-md-3">
+            <div>
                 <select name="status" class="form-select">
-                    <option value="semua" selected="@(ViewBag.StatusFilter == "semua")">
+                    <option value="semua" selected="@(statusFilter == "semua")">
                         Semua Status
                     </option>
-                    <option value="diajukan" selected="@(ViewBag.StatusFilter == "diajukan")">
+                    <option value="diajukan" selected="@(statusFilter == "diajukan")">
                         Diajukan
                     </option>
-                    <option value="disetujui" selected="@(ViewBag.StatusFilter == "disetujui")">
+                    <option value="disetujui" selected="@(statusFilter == "disetujui")">
                         Disetujui
                     </option>
-                    <option value="ditolak" selected="@(ViewBag.StatusFilter == "ditolak")">
+                    <option value="ditolak" selected="@(statusFilter == "ditolak")">
                         Ditolak
                     </option>
-                    <option value="selesai" selected="@(ViewBag.StatusFilter == "selesai")">
+                    <option value="selesai" selected="@(statusFilter == "selesai")">
                         Selesai
                     </option>
                 </select>
             </div>
 
-            <div class="col-md-2">
-                <button class="btn btn-success w-100" type="submit">Filter</button>
+            <div>
+                <button type="submit" class="return-filter-button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 5h16M7 12h10m-7 7h4" />
+                    </svg>
+                    Terapkan
+                </button>
             </div>
 
-            <div class="col-md-2">
-                <a asp-action="Index" class="btn btn-light w-100">Reset</a>
+            <div>
+                <a asp-action="Index" class="return-reset-button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                        <path d="M3 3v5h5" />
+                    </svg>
+                    Reset
+                </a>
             </div>
+
         </form>
 
         <div class="return-table-wrap">
             <table class="return-table">
+
                 <thead>
                     <tr>
                         <th>Tanggal Pengajuan</th>
@@ -277,28 +876,50 @@
                 </thead>
 
                 <tbody>
-                    @if (Model.Any())
+                    @if (daftarRetur.Any())
                     {
-                        @foreach (var item in Model)
+                        @foreach (var item in daftarRetur)
                         {
                             <tr>
-                                <td>
-                                    @(item.TanggalPengajuan?.ToString("dd/MM/yyyy HH:mm")
-                                        ?? item.TanggalReturn.ToString("dd/MM/yyyy"))
-                                </td>
-
-                                <td>@item.NamaCustomer</td>
-                                <td>#@item.IdPemesanan</td>
 
                                 <td>
-                                    <strong>@item.NamaProduk</strong><br />
-                                    <small class="text-muted">@item.KodeProduk</small>
+                                    <span class="return-date">
+                                        @(item.TanggalPengajuan?.ToString("dd/MM/yyyy HH:mm")
+                                            ?? item.TanggalReturn.ToString("dd/MM/yyyy"))
+                                    </span>
                                 </td>
 
-                                <td>@item.Jumlah</td>
+                                <td>
+                                    <span class="return-customer">
+                                        @item.NamaCustomer
+                                    </span>
+                                </td>
 
-                                <td style="max-width:230px;white-space:normal;">
-                                    @item.Alasan
+                                <td>
+                                    <span class="return-order">
+                                        #@item.IdPemesanan
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="return-product-name">
+                                        @item.NamaProduk
+                                    </span>
+                                    <span class="return-product-code">
+                                        @item.KodeProduk
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="return-quantity">
+                                        @item.Jumlah
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="return-reason">
+                                        @item.Alasan
+                                    </div>
                                 </td>
 
                                 <td>
@@ -308,12 +929,21 @@
                                            target="_blank"
                                            rel="noopener"
                                            class="return-photo">
+                                            <svg viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" stroke-width="2"
+                                                 stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="3" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <path d="m21 15-5-5L5 21" />
+                                            </svg>
                                             Lihat Foto
                                         </a>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">Tidak ada foto</span>
+                                        <span class="return-no-photo">
+                                            Tidak ada foto
+                                        </span>
                                     }
                                 </td>
 
@@ -328,7 +958,8 @@
                                     {
                                         <form asp-action="UbahStatus"
                                               method="post"
-                                              class="d-flex gap-1">
+                                              class="return-status-form">
+
                                             @Html.AntiForgeryToken()
 
                                             <input type="hidden"
@@ -343,6 +974,7 @@
                                             <button type="submit" class="return-action">
                                                 Simpan
                                             </button>
+
                                         </form>
                                     }
                                     else if (item.Status == "disetujui")
@@ -350,6 +982,7 @@
                                         <form asp-action="SelesaikanPemeriksaan"
                                               method="post"
                                               class="inspection-form">
+
                                             @Html.AntiForgeryToken()
 
                                             <input type="hidden"
@@ -378,7 +1011,7 @@
                                                     </label>
                                                 </div>
 
-                                                <small class="text-muted">
+                                                <small class="inspection-hint">
                                                     Jika tidak dicentang, barang dianggap tidak layak jual.
                                                 </small>
                                             </div>
@@ -387,6 +1020,7 @@
                                                 <label class="form-label">
                                                     Catatan pemeriksaan
                                                 </label>
+
                                                 <textarea name="catatanAdmin"
                                                           class="form-control"
                                                           maxlength="2000"
@@ -398,66 +1032,87 @@
                                                     onclick="return confirm('Pastikan barang retur sudah diterima dan diperiksa. Lanjutkan?');">
                                                 Konfirmasi Pemeriksaan
                                             </button>
+
                                         </form>
                                     }
                                     else if (item.Status == "selesai")
                                     {
-                                        <div>
+                                        <div class="inspection-result">
+
                                             @if (item.LayakJual == true)
                                             {
-                                                <span class="text-success fw-bold">
+                                                <strong class="text-success">
                                                     Layak jual
-                                                </span>
+                                                </strong>
 
                                                 @if (item.StokDitambahkan)
                                                 {
-                                                    <br />
-                                                    <small class="text-success">
+                                                    <span class="inspection-date">
                                                         Stok sudah ditambahkan
-                                                    </small>
+                                                    </span>
                                                 }
                                             }
                                             else
                                             {
-                                                <span class="text-danger fw-bold">
+                                                <strong class="text-danger">
                                                     Tidak layak jual
-                                                </span>
-                                                <br />
-                                                <small class="text-muted">
+                                                </strong>
+
+                                                <span class="inspection-date">
                                                     Stok tidak ditambahkan
-                                                </small>
+                                                </span>
                                             }
 
                                             @if (!string.IsNullOrWhiteSpace(item.CatatanAdmin))
                                             {
-                                                <div class="small mt-1">
-                                                    Catatan: @item.CatatanAdmin
+                                                <div class="inspection-note">
+                                                    <strong>Catatan:</strong>
+                                                    @item.CatatanAdmin
                                                 </div>
                                             }
 
-                                            <small class="text-muted d-block mt-1">
+                                            <small class="inspection-date">
                                                 @(item.TanggalPemeriksaan?.ToString("dd/MM/yyyy HH:mm") ?? "")
                                             </small>
+
                                         </div>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">Pengajuan ditolak</span>
+                                        <span class="text-muted">
+                                            Pengajuan ditolak
+                                        </span>
                                     }
                                 </td>
+
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
-                                Belum ada data retur.
+                            <td colspan="9" class="return-empty">
+                                <div class="return-empty-icon">
+                                    <svg viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="1.7"
+                                         stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 14 4 9l5-5" />
+                                        <path d="M4 9h10a6 6 0 0 1 0 12h-2" />
+                                    </svg>
+                                </div>
+
+                                <strong>Belum Ada Data Retur</strong>
+                                <span>
+                                    Pengajuan retur pelanggan akan ditampilkan di bagian ini.
+                                </span>
                             </td>
                         </tr>
                     }
                 </tbody>
+
             </table>
         </div>
+
     </div>
+
 </div>

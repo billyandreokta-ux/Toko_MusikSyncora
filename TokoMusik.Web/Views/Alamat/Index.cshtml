@@ -294,6 +294,8 @@
         font-weight: 800;
         cursor: pointer;
         transition: .2s ease;
+        text-decoration: none;
+        white-space: nowrap;
     }
 
     .sync-address-action-btn:hover {
@@ -385,6 +387,80 @@
     .sync-address-back-btn:hover {
         color: #176b45;
         background: #f3f8f4;
+    }
+
+    /* Pengganti ikon Bootstrap Icons */
+    .sync-address-page i.bi {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Arial, sans-serif;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .sync-address-page .bi-plus-lg::before {
+        content: "+";
+        font-size: 23px;
+    }
+
+    .sync-address-page .bi-check-circle-fill::before {
+        content: "✓";
+        font-size: 17px;
+    }
+
+    .sync-address-page .bi-exclamation-circle-fill::before {
+        content: "!";
+        font-size: 17px;
+    }
+
+    .sync-address-page .bi-geo-alt::before,
+    .sync-address-page .bi-geo-alt-fill::before {
+        content: "⌖";
+        font-size: 22px;
+    }
+
+    .sync-address-page .bi-house::before,
+    .sync-address-page .bi-house-add::before {
+        content: "⌂";
+        font-size: 23px;
+    }
+
+    .sync-address-page .bi-building::before {
+        content: "▥";
+        font-size: 21px;
+    }
+
+    .sync-address-page .bi-star-fill::before {
+        content: "★";
+        font-size: 13px;
+    }
+
+    .sync-address-page .bi-star::before {
+        content: "☆";
+        font-size: 17px;
+    }
+
+    .sync-address-page .bi-telephone::before {
+        content: "☎";
+        font-size: 15px;
+    }
+
+    .sync-address-page .bi-trash3::before {
+        content: "▤";
+        font-size: 16px;
+    }
+
+    .sync-address-page .bi-pencil-square::before {
+        content: "✎";
+        font-size: 17px;
+    }
+
+    .sync-address-page .bi-arrow-left::before {
+        content: "←";
+        font-size: 17px;
     }
 
     @@media (max-width: 700px) {
@@ -555,6 +631,7 @@
 
                     <div class="sync-address-actions">
 
+                        <!-- EDIT ALAMAT -->
                         <a asp-controller="Alamat"
                            asp-action="Edit"
                            asp-route-idAlamat="@alamat.IdAlamat"

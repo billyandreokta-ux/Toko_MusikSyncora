@@ -1,86 +1,559 @@
+
 @model TokoMusik.Web.Models.AlamatCustomer
 
 @{
     ViewData["Title"] = "Edit Alamat";
 }
 
-<div class="container py-4" style="max-width: 900px;">
-    <div class="mb-4">
-        <div class="text-success small fw-bold" style="letter-spacing: 2px;">EDIT DELIVERY ADDRESS</div>
-        <h1 class="h3 fw-bold mt-2">Edit Alamat</h1>
-        <p class="text-muted">Perbarui informasi alamat pengiriman kamu.</p>
+<style>
+    .sync-edit-address-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 34px 18px 65px;
+        color: #20382b;
+    }
+
+    .sync-edit-address-heading {
+        margin-bottom: 25px;
+    }
+
+    .sync-edit-address-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #187347;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+
+    .sync-edit-address-eyebrow::before {
+        content: "";
+        width: 24px;
+        height: 2px;
+        background: #249461;
+        border-radius: 10px;
+    }
+
+    .sync-edit-address-heading h1 {
+        color: #173d2b;
+        font-size: clamp(27px, 4vw, 35px);
+        font-weight: 850;
+        letter-spacing: -1px;
+        margin: 0 0 7px;
+    }
+
+    .sync-edit-address-heading p {
+        color: #7b8b80;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .sync-edit-address-card {
+        overflow: hidden;
+        background: white;
+        border: 1px solid #e5eee7;
+        border-radius: 20px;
+        box-shadow: 0 15px 45px rgba(24, 66, 42, .06);
+    }
+
+    .sync-edit-address-banner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 23px 29px;
+        color: white;
+        background: linear-gradient(110deg, #104a32, #176b45 65%, #27865a);
+    }
+
+    .sync-edit-address-banner-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 13px;
+        background: rgba(255,255,255,.14);
+    }
+
+    .sync-edit-address-banner-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke: white;
+    }
+
+    .sync-edit-address-banner h2 {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0 0 4px;
+    }
+
+    .sync-edit-address-banner p {
+        color: rgba(255,255,255,.76);
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .sync-edit-address-content {
+        padding: 29px;
+    }
+
+    .sync-edit-address-validation {
+        font-size: 13px;
+        border-radius: 11px;
+        margin-bottom: 23px;
+    }
+
+    .sync-edit-address-section {
+        margin-bottom: 25px;
+    }
+
+    .sync-edit-address-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 19px;
+    }
+
+    .sync-edit-address-section-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #176b45;
+        background: #eaf5ed;
+        border-radius: 11px;
+    }
+
+    .sync-edit-address-section-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+    }
+
+    .sync-edit-address-section-heading h3 {
+        color: #20382b;
+        font-size: 16px;
+        font-weight: 850;
+        margin: 0 0 3px;
+    }
+
+    .sync-edit-address-section-heading p {
+        color: #89968c;
+        font-size: 11px;
+        margin: 0;
+    }
+
+    .sync-edit-address-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .sync-edit-address-field {
+        min-width: 0;
+        margin-bottom: 18px;
+    }
+
+    .sync-edit-address-field label {
+        display: block;
+        color: #405447;
+        font-size: 12px;
+        font-weight: 750;
+        margin-bottom: 8px;
+    }
+
+    .sync-edit-address-field .form-control {
+        min-height: 47px;
+        width: 100%;
+        border: 1px solid #dfe9e1;
+        border-radius: 10px;
+        background: #fcfdfc;
+        color: #263c2f;
+        font-size: 13px;
+        padding: 11px 13px;
+        box-shadow: none;
+        transition: .2s ease;
+    }
+
+    .sync-edit-address-field textarea.form-control {
+        min-height: 105px;
+        resize: vertical;
+    }
+
+    .sync-edit-address-field .form-control:focus {
+        border-color: #23905a;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(35, 144, 90, .1);
+    }
+
+    .sync-edit-address-field .form-control::placeholder {
+        color: #a4afa7;
+    }
+
+    .sync-edit-address-field .text-danger {
+        display: block;
+        font-size: 11px;
+        margin-top: 6px;
+    }
+
+    .sync-edit-address-divider {
+        border: 0;
+        border-top: 1px solid #edf1ed;
+        margin: 26px 0;
+    }
+
+    .sync-edit-address-main-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid #dcebe0;
+        border-radius: 12px;
+        background: #f7fbf8;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .sync-edit-address-main-option:hover {
+        border-color: #a9d2b5;
+        background: #f1f8f2;
+    }
+
+    .sync-edit-address-main-option input {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+        margin-top: 2px;
+        accent-color: #176b45;
+    }
+
+    .sync-edit-address-main-option strong {
+        display: block;
+        color: #314638;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .sync-edit-address-main-option span {
+        display: block;
+        color: #87948a;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .sync-edit-address-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-top: 22px;
+        margin-top: 26px;
+        border-top: 1px solid #edf1ed;
+    }
+
+    .sync-edit-address-btn {
+        min-height: 45px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .sync-edit-address-btn svg {
+        width: 17px;
+        height: 17px;
+        stroke: currentColor;
+    }
+
+    .sync-edit-address-btn:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .sync-edit-address-save {
+        color: white;
+        background: #176b45;
+        border: 1px solid #176b45;
+    }
+
+    .sync-edit-address-save:hover {
+        color: white;
+        background: #105536;
+        border-color: #105536;
+    }
+
+    .sync-edit-address-cancel {
+        color: #596b5e;
+        background: white;
+        border: 1px solid #dfe8e1;
+    }
+
+    .sync-edit-address-cancel:hover {
+        color: #176b45;
+        background: #f3f8f4;
+    }
+
+    @@media (max-width: 650px) {
+        .sync-edit-address-page {
+            padding: 25px 13px 45px;
+        }
+
+        .sync-edit-address-content {
+            padding: 21px;
+        }
+
+        .sync-edit-address-banner {
+            padding: 20px;
+        }
+
+        .sync-edit-address-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .sync-edit-address-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .sync-edit-address-btn {
+            padding: 10px;
+            font-size: 12px;
+        }
+    }
+
+    @@media (max-width: 390px) {
+        .sync-edit-address-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="sync-edit-address-page">
+
+    <div class="sync-edit-address-heading">
+        <div class="sync-edit-address-eyebrow">EDIT DELIVERY ADDRESS</div>
+        <h1>Edit Alamat</h1>
+        <p>Perbarui informasi penerima dan alamat tujuan pengiriman kamu.</p>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-4 p-md-5">
-            <form asp-controller="Alamat" asp-action="Edit" method="post">
+    <div class="sync-edit-address-card">
+
+        <div class="sync-edit-address-banner">
+            <div class="sync-edit-address-banner-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                </svg>
+            </div>
+
+            <div>
+                <h2>Perbarui Alamat Pengiriman</h2>
+                <p>Pastikan informasi penerima dan lokasi sudah sesuai.</p>
+            </div>
+        </div>
+
+        <div class="sync-edit-address-content">
+
+            <form asp-controller="Alamat"
+                  asp-action="Edit"
+                  method="post">
+
                 @Html.AntiForgeryToken()
+
                 <input asp-for="IdAlamat" type="hidden" />
 
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger sync-edit-address-validation"></div>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label asp-for="LabelAlamat" class="form-label">Label Alamat</label>
-                        <select asp-for="LabelAlamat" class="form-select">
-                            <option value="Rumah">Rumah</option>
-                            <option value="Kantor">Kantor</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
-                        <span asp-validation-for="LabelAlamat" class="text-danger small"></span>
+                <div class="sync-edit-address-section">
+
+                    <div class="sync-edit-address-section-heading">
+                        <div class="sync-edit-address-section-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="4" />
+                                <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Informasi Penerima</h3>
+                            <p>Identitas orang yang menerima pesanan.</p>
+                        </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <label asp-for="Penerima" class="form-label">Nama Penerima</label>
-                        <input asp-for="Penerima" class="form-control" autocomplete="name" />
-                        <span asp-validation-for="Penerima" class="text-danger small"></span>
-                    </div>
+                    <div class="sync-edit-address-grid">
 
-                    <div class="col-md-6">
-                        <label asp-for="Telepon" class="form-label">Nomor Telepon</label>
-                        <input asp-for="Telepon" type="tel" class="form-control" autocomplete="tel" />
-                        <span asp-validation-for="Telepon" class="text-danger small"></span>
-                    </div>
+                        <div class="sync-edit-address-field">
+                            <label asp-for="LabelAlamat">Label Alamat</label>
 
-                    <div class="col-12">
-                        <label asp-for="AlamatLengkap" class="form-label">Alamat Lengkap</label>
-                        <textarea asp-for="AlamatLengkap" class="form-control" rows="4"></textarea>
-                        <span asp-validation-for="AlamatLengkap" class="text-danger small"></span>
-                    </div>
+                            <select asp-for="LabelAlamat" class="form-control">
+                                <option value="Rumah">Rumah</option>
+                                <option value="Kantor">Kantor</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
 
-                    <div class="col-md-5">
-                        <label asp-for="Kota" class="form-label">Kota/Kabupaten</label>
-                        <input asp-for="Kota" class="form-control" autocomplete="address-level2" />
-                        <span asp-validation-for="Kota" class="text-danger small"></span>
-                    </div>
+                            <span asp-validation-for="LabelAlamat"
+                                  class="text-danger"></span>
+                        </div>
 
-                    <div class="col-md-5">
-                        <label asp-for="Provinsi" class="form-label">Provinsi</label>
-                        <input asp-for="Provinsi" class="form-control" autocomplete="address-level1" />
-                        <span asp-validation-for="Provinsi" class="text-danger small"></span>
-                    </div>
+                        <div class="sync-edit-address-field">
+                            <label asp-for="Penerima">Nama Penerima</label>
 
-                    <div class="col-md-2">
-                        <label asp-for="KodePos" class="form-label">Kode Pos</label>
-                        <input asp-for="KodePos" class="form-control" autocomplete="postal-code" />
-                        <span asp-validation-for="KodePos" class="text-danger small"></span>
+                            <input asp-for="Penerima"
+                                   class="form-control"
+                                   placeholder="Nama penerima barang"
+                                   autocomplete="name" />
+
+                            <span asp-validation-for="Penerima"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="sync-edit-address-field">
+                            <label asp-for="Telepon">Nomor Telepon</label>
+
+                            <input asp-for="Telepon"
+                                   type="tel"
+                                   class="form-control"
+                                   placeholder="08xxxxxxxxxx"
+                                   autocomplete="tel" />
+
+                            <span asp-validation-for="Telepon"
+                                  class="text-danger"></span>
+                        </div>
+
                     </div>
                 </div>
 
-                <div class="form-check mt-4">
-                    <input asp-for="IsUtama" class="form-check-input" />
-                    <label asp-for="IsUtama" class="form-check-label">Jadikan sebagai alamat utama</label>
+                <hr class="sync-edit-address-divider" />
+
+                <div class="sync-edit-address-section">
+
+                    <div class="sync-edit-address-section-heading">
+                        <div class="sync-edit-address-section-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m3 10 9-7 9 7" />
+                                <path d="M5 9v12h14V9" />
+                                <path d="M9 21v-7h6v7" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Detail Lokasi</h3>
+                            <p>Masukkan alamat lengkap tujuan pengiriman.</p>
+                        </div>
+                    </div>
+
+                    <div class="sync-edit-address-field">
+                        <label asp-for="AlamatLengkap">Alamat Lengkap</label>
+
+                        <textarea asp-for="AlamatLengkap"
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, dan kecamatan"></textarea>
+
+                        <span asp-validation-for="AlamatLengkap"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="sync-edit-address-grid">
+
+                        <div class="sync-edit-address-field">
+                            <label asp-for="Kota">Kota/Kabupaten</label>
+
+                            <input asp-for="Kota"
+                                   class="form-control"
+                                   placeholder="Nama kota atau kabupaten"
+                                   autocomplete="address-level2" />
+
+                            <span asp-validation-for="Kota"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="sync-edit-address-field">
+                            <label asp-for="Provinsi">Provinsi</label>
+
+                            <input asp-for="Provinsi"
+                                   class="form-control"
+                                   placeholder="Nama provinsi"
+                                   autocomplete="address-level1" />
+
+                            <span asp-validation-for="Provinsi"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="sync-edit-address-field">
+                            <label asp-for="KodePos">Kode Pos</label>
+
+                            <input asp-for="KodePos"
+                                   class="form-control"
+                                   placeholder="Kode pos"
+                                   autocomplete="postal-code" />
+
+                            <span asp-validation-for="KodePos"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check2-circle me-1"></i> Simpan Perubahan
+                <hr class="sync-edit-address-divider" />
+
+                <label class="sync-edit-address-main-option">
+                    <input asp-for="IsUtama" type="checkbox" />
+
+                    <span>
+                        <strong>Jadikan sebagai alamat utama</strong>
+                        <span>
+                            Gunakan alamat ini sebagai alamat utama untuk pengiriman pesanan berikutnya.
+                        </span>
+                    </span>
+                </label>
+
+                <div class="sync-edit-address-actions">
+
+                    <button type="submit"
+                            class="sync-edit-address-btn sync-edit-address-save">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l7 7v9a2 2 0 0 1-2 2Z" />
+                            <path d="M17 21v-8H7v8" />
+                            <path d="M7 3v5h8" />
+                        </svg>
+                        Simpan Perubahan
                     </button>
-                    <a asp-controller="Alamat" asp-action="Index" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i> Kembali
+
+                    <a asp-controller="Alamat"
+                       asp-action="Index"
+                       class="sync-edit-address-btn sync-edit-address-cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m15 18-6-6 6-6" />
+                            <path d="M20 12H9" />
+                        </svg>
+                        Kembali
                     </a>
+
                 </div>
+
             </form>
+
         </div>
     </div>
 </div>
