@@ -1,103 +1,842 @@
-﻿@model IEnumerable<TokoMusik.Web.Models.KeranjangViewModel>
+﻿
+@model IEnumerable<TokoMusik.Web.Models.KeranjangViewModel>
 
 @{
     ViewData["Title"] = "Keranjang Belanja";
 
-    var daftar = Model.ToList();
-
-    decimal total = daftar.Sum(x => x.Subtotal);
+    var daftar = Model?.ToList()
+        ?? new List<TokoMusik.Web.Models.KeranjangViewModel>();
 
     var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+
+    decimal total = daftar.Sum(x => x.Subtotal);
+    int totalItem = daftar.Sum(x => x.Jumlah);
+
+    string GetFotoUrl(string? foto)
+    {
+        if (string.IsNullOrWhiteSpace(foto))
+            return Url.Content("~/images/no-image.png");
+
+        foto = foto.Trim();
+
+        if (foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return foto;
+
+        if (foto.StartsWith("/"))
+            return foto;
+
+        if (foto.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return "/" + foto;
+
+        return Url.Content("~/uploads/produk/" + foto);
+    }
 }
 
-<div class="dashboard-container">
-
-    <div class="dashboard-heading">
-
-        <div>
-            <span class="eyebrow">YOUR SHOPPING CART</span>
-
-            <h1>Keranjang Belanja</h1>
-
-            <p>
-                Periksa kembali produk sebelum melanjutkan pembelian.
-            </p>
-        </div>
-
-    </div>
-
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
+<style>
+    .syncora-cart {
+        --cart-green: #244b35;
+        --cart-green-dark: #193b29;
+        --cart-green-soft: #eaf1e9;
+        --cart-cream: #f6f7f2;
+        --cart-text: #26372c;
+        --cart-muted: #839087;
+        --cart-border: #e8ece6;
+        background: var(--cart-cream);
+        min-height: 100vh;
+        padding: 38px 0 75px;
+        color: var(--cart-text);
     }
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
-        </div>
+    .syncora-cart *,
+    .syncora-cart *::before,
+    .syncora-cart *::after {
+        box-sizing: border-box;
     }
 
-
-    @if (!daftar.Any())
-    {
-        <div class="dashboard-section text-center">
-
-            <h2>Keranjang Masih Kosong</h2>
-
-            <p class="text-secondary">
-                Kamu belum menambahkan produk ke keranjang.
-            </p>
-
-            <a asp-controller="Produk"
-               asp-action="Index"
-               class="btn-primary-custom"
-               style="max-width:240px;margin:auto;">
-                Mulai Belanja
-            </a>
-
-        </div>
+    .cart-container {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
     }
-    else
-    {
-        <div class="dashboard-section">
 
-            <div class="table-responsive">
+    .cart-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--cart-muted);
+        font-size: 12px;
+        margin-bottom: 25px;
+    }
 
-                <table class="table-custom">
+    .cart-breadcrumb a {
+        color: var(--cart-green);
+        text-decoration: none;
+        font-weight: 700;
+    }
 
-                    <thead>
-                        <tr>
-                            <th>Produk</th>
-                            <th>Harga</th>
-                            <th>Jumlah</th>
-                            <th>Subtotal</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
+    .cart-breadcrumb a:hover {
+        text-decoration: underline;
+    }
 
-                    <tbody>
+    .cart-hero {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 25px;
+        padding: 34px 38px;
+        margin-bottom: 27px;
+        border-radius: 22px;
+        background: linear-gradient(115deg, #193b29 0%, #315b40 65%, #52765a 100%);
+        color: white;
+        box-shadow: 0 14px 35px rgba(30, 65, 43, .12);
+    }
 
-                        @foreach (var item in daftar)
-                        {
-                            <tr>
+    .cart-hero::before,
+    .cart-hero::after {
+        content: "";
+        position: absolute;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        pointer-events: none;
+    }
 
-                                <td>
-                                    <strong>@item.NamaProduk</strong>
+    .cart-hero::before {
+        width: 260px;
+        height: 260px;
+        right: 90px;
+        top: -170px;
+    }
 
-                                    <br />
+    .cart-hero::after {
+        width: 190px;
+        height: 190px;
+        right: -40px;
+        bottom: -130px;
+    }
 
-                                    <small>@item.KodeProduk</small>
-                                </td>
+    .cart-hero-content {
+        position: relative;
+        z-index: 1;
+    }
 
-                                <td>
+    .cart-eyebrow {
+        display: inline-block;
+        color: #c5d8c6;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2.8px;
+        margin-bottom: 10px;
+    }
+
+    .cart-hero h1 {
+        color: white;
+        font-size: clamp(27px, 4vw, 36px);
+        font-weight: 800;
+        letter-spacing: -.8px;
+        margin: 0 0 9px;
+    }
+
+    .cart-hero p {
+        color: rgba(255,255,255,.78);
+        font-size: 13px;
+        margin: 0;
+        line-height: 1.7;
+    }
+
+    .cart-hero-icon {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 88px;
+        height: 88px;
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 25px;
+        background: rgba(255,255,255,.1);
+        color: white;
+        font-size: 39px;
+    }
+
+    .cart-alert {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 14px 17px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .cart-alert-success {
+        color: #245c37;
+        background: #e9f5eb;
+        border: 1px solid #cfe7d3;
+    }
+
+    .cart-alert-error {
+        color: #a33d36;
+        background: #fff0ee;
+        border: 1px solid #f3d3ce;
+    }
+
+    .cart-content {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        align-items: start;
+        gap: 23px;
+    }
+
+    .cart-main-card,
+    .cart-summary-card {
+        background: #fff;
+        border: 1px solid var(--cart-border);
+        border-radius: 17px;
+        box-shadow: 0 5px 20px rgba(35, 59, 40, .035);
+    }
+
+    .cart-main-card {
+        overflow: hidden;
+    }
+
+    .cart-card-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 22px 24px;
+        border-bottom: 1px solid var(--cart-border);
+    }
+
+    .cart-card-heading h2 {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0;
+        color: var(--cart-text);
+    }
+
+    .cart-item-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 11px;
+        border-radius: 30px;
+        background: var(--cart-green-soft);
+        color: var(--cart-green);
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .cart-select-all {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 15px 24px;
+        background: #fbfcfa;
+        border-bottom: 1px solid var(--cart-border);
+        color: #58675b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .cart-select-all input,
+    .cart-product-check input {
+        width: 17px;
+        height: 17px;
+        accent-color: var(--cart-green);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .cart-product {
+        display: grid;
+        grid-template-columns: 22px 100px minmax(0, 1fr);
+        align-items: center;
+        gap: 17px;
+        padding: 22px 24px;
+        border-bottom: 1px solid var(--cart-border);
+        transition: background .2s ease;
+    }
+
+    .cart-product:last-child {
+        border-bottom: 0;
+    }
+
+    .cart-product:hover {
+        background: #fcfdfb;
+    }
+
+    .cart-product-check {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .cart-product-image {
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 13px;
+        background: #f3f5f0;
+        border: 1px solid #edf0e9;
+    }
+
+    .cart-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 8px;
+    }
+
+    .cart-product-placeholder {
+        color: #91a18f;
+        font-size: 34px;
+    }
+
+    .cart-product-info {
+        min-width: 0;
+    }
+
+    .cart-product-code {
+        display: inline-block;
+        color: #819181;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+    }
+
+    .cart-product-name {
+        display: block;
+        color: var(--cart-text);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.45;
+        margin-bottom: 8px;
+    }
+
+    .cart-product-name:hover {
+        color: #47724e;
+    }
+
+    .cart-product-price {
+        color: var(--cart-green);
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .cart-product-stock {
+        color: #8a968b;
+        font-size: 11px;
+        margin-top: 7px;
+    }
+
+    .cart-product-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .cart-quantity-form {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .cart-quantity-form input {
+        width: 65px;
+        height: 35px;
+        border: 1px solid #dfe6dd;
+        border-radius: 8px;
+        padding: 0 7px;
+        text-align: center;
+        color: var(--cart-text);
+        font-size: 12px;
+        font-weight: 700;
+        outline: none;
+    }
+
+    .cart-quantity-form input:focus {
+        border-color: #60866a;
+        box-shadow: 0 0 0 3px rgba(72, 117, 79, .1);
+    }
+
+    .cart-update-button {
+        height: 35px;
+        border: 1px solid #dce6db;
+        border-radius: 8px;
+        padding: 0 12px;
+        background: white;
+        color: var(--cart-green);
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .cart-update-button:hover {
+        background: var(--cart-green);
+        border-color: var(--cart-green);
+        color: white;
+    }
+
+    .cart-remove-form {
+        margin: 0;
+    }
+
+    .cart-remove-button {
+        border: 0;
+        background: transparent;
+        color: #b45b53;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 7px 0;
+    }
+
+    .cart-remove-button:hover {
+        color: #8f3028;
+        text-decoration: underline;
+    }
+
+    .cart-line-subtotal {
+        margin-top: 11px;
+        color: #657267;
+        font-size: 11px;
+    }
+
+    .cart-line-subtotal strong {
+        color: var(--cart-text);
+        font-size: 13px;
+    }
+
+    .cart-summary-card {
+        position: sticky;
+        top: 20px;
+        padding: 23px;
+    }
+
+    .cart-summary-title {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0 0 20px;
+        color: var(--cart-text);
+    }
+
+    .cart-summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+        color: #78847a;
+        font-size: 12px;
+    }
+
+    .cart-summary-row strong {
+        color: var(--cart-text);
+        font-size: 13px;
+    }
+
+    .cart-summary-divider {
+        border: 0;
+        border-top: 1px dashed #dfe6dd;
+        margin: 19px 0;
+    }
+
+    .cart-total-label {
+        color: var(--cart-text);
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .cart-total-price {
+        display: block;
+        color: var(--cart-green);
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -.5px;
+        margin-top: 5px;
+    }
+
+    .cart-selected-total {
+        padding: 14px;
+        margin: 17px 0;
+        border-radius: 11px;
+        background: #f2f6f0;
+    }
+
+    .cart-selected-total span {
+        display: block;
+        color: #718274;
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .cart-selected-total strong {
+        display: block;
+        color: var(--cart-green);
+        font-size: 19px;
+        font-weight: 900;
+    }
+
+    .cart-checkout-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 47px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--cart-green);
+        color: white;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .cart-checkout-button:hover:not(:disabled) {
+        background: var(--cart-green-dark);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 7px 15px rgba(36, 75, 53, .16);
+    }
+
+    .cart-checkout-button:disabled {
+        background: #aeb9af;
+        cursor: not-allowed;
+        opacity: .75;
+    }
+
+    .cart-continue-link {
+        display: block;
+        text-align: center;
+        margin-top: 14px;
+        color: var(--cart-green);
+        font-size: 11px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .cart-continue-link:hover {
+        text-decoration: underline;
+    }
+
+    .cart-clear-form {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--cart-border);
+    }
+
+    .cart-clear-button {
+        width: 100%;
+        border: 1px solid #f0d9d6;
+        border-radius: 9px;
+        background: white;
+        color: #b45b53;
+        padding: 11px;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .cart-clear-button:hover {
+        background: #fff4f2;
+        border-color: #e9c1bc;
+    }
+
+    .cart-summary-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 12px;
+        margin-top: 17px;
+        border-radius: 9px;
+        background: #fafbf8;
+        color: #7b887c;
+        font-size: 10px;
+        line-height: 1.6;
+    }
+
+    .cart-empty {
+        padding: 65px 25px;
+        text-align: center;
+    }
+
+    .cart-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 105px;
+        height: 105px;
+        margin: 0 auto 22px;
+        border-radius: 30px;
+        background: #edf3eb;
+        color: var(--cart-green);
+        font-size: 47px;
+    }
+
+    .cart-empty h2 {
+        color: var(--cart-text);
+        font-size: 22px;
+        font-weight: 900;
+        margin: 0 0 10px;
+    }
+
+    .cart-empty p {
+        max-width: 380px;
+        margin: 0 auto 23px;
+        color: #849087;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .cart-empty-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 190px;
+        min-height: 44px;
+        padding: 0 20px;
+        border-radius: 9px;
+        background: var(--cart-green);
+        color: white;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        transition: .2s ease;
+    }
+
+    .cart-empty-button:hover {
+        background: var(--cart-green-dark);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    @@media (max-width: 900px) {
+        .cart-content {
+            grid-template-columns: 1fr;
+        }
+
+        .cart-summary-card {
+            position: static;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .syncora-cart {
+            padding-top: 25px;
+        }
+
+        .cart-container {
+            width: min(100% - 24px, 1180px);
+        }
+
+        .cart-hero {
+            padding: 25px 21px;
+            border-radius: 16px;
+        }
+
+        .cart-hero-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 17px;
+            font-size: 29px;
+        }
+
+        .cart-hero p {
+            font-size: 11px;
+        }
+
+        .cart-product {
+            grid-template-columns: 19px 75px minmax(0, 1fr);
+            gap: 10px;
+            padding: 17px 13px;
+        }
+
+        .cart-product-image {
+            width: 75px;
+            height: 80px;
+        }
+
+        .cart-product-name {
+            font-size: 13px;
+        }
+
+        .cart-product-price {
+            font-size: 12px;
+        }
+
+        .cart-product-bottom {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .cart-card-heading {
+            padding: 18px 15px;
+        }
+
+        .cart-select-all {
+            padding: 13px 15px;
+        }
+
+        .cart-summary-card {
+            padding: 19px;
+        }
+    }
+</style>
+
+<div class="syncora-cart">
+    <div class="cart-container">
+
+        <div class="cart-breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Beranda</a>
+            <span>/</span>
+            <span>Keranjang Belanja</span>
+        </div>
+
+        <section class="cart-hero">
+            <div class="cart-hero-content">
+                <span class="cart-eyebrow">YOUR MUSIC, YOUR CHOICE</span>
+                <h1>Keranjang Belanja</h1>
+                <p>
+                    Produk pilihanmu sudah menunggu.
+                    Periksa kembali sebelum melanjutkan pembelian.
+                </p>
+            </div>
+
+            <div class="cart-hero-icon" aria-hidden="true">
+                ♫
+            </div>
+        </section>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="cart-alert cart-alert-success">
+                <span>✓</span>
+                <span>@TempData["Success"]</span>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="cart-alert cart-alert-error">
+                <span>!</span>
+                <span>@TempData["Error"]</span>
+            </div>
+        }
+
+        @if (!daftar.Any())
+        {
+            <section class="cart-main-card">
+                <div class="cart-empty">
+                    <div class="cart-empty-icon">♫</div>
+
+                    <h2>Keranjangmu Masih Kosong</h2>
+
+                    <p>
+                        Sepertinya belum ada instrumen musik yang kamu pilih.
+                        Temukan produk favoritmu dan mulai lengkapi kebutuhan bermusikmu.
+                    </p>
+
+                    <a asp-controller="Produk"
+                       asp-action="Index"
+                       class="cart-empty-button">
+                        Jelajahi Katalog Produk
+                    </a>
+                </div>
+            </section>
+        }
+        else
+        {
+            <div class="cart-content">
+
+                <section class="cart-main-card">
+
+                    <div class="cart-card-heading">
+                        <h2>Produk Pilihanmu</h2>
+
+                        <span class="cart-item-count">
+                            @totalItem item
+                        </span>
+                    </div>
+
+                    <label class="cart-select-all">
+                        <input type="checkbox"
+                               id="selectAllCart"
+                               checked />
+
+                        <span>Pilih semua produk</span>
+                    </label>
+
+                    @foreach (var item in daftar)
+                    {
+                        var fotoUrl = GetFotoUrl(item.Foto);
+
+                        <article class="cart-product">
+
+                            <div class="cart-product-check">
+                                <input type="checkbox"
+                                       class="cart-item-checkbox"
+                                       name="selectedIds"
+                                       value="@item.IdProduk"
+                                       form="formCheckoutPilihan"
+                                       data-subtotal="@item.Subtotal.ToString(
+                                           System.Globalization.CultureInfo.InvariantCulture
+                                       )"
+                                       checked
+                                       aria-label="Pilih @item.NamaProduk" />
+                            </div>
+
+                            <a asp-controller="Produk"
+                               asp-action="Detail"
+                               asp-route-id="@item.IdProduk"
+                               class="cart-product-image">
+
+                                <img src="@fotoUrl"
+                                     alt="@item.NamaProduk"
+                                     loading="lazy"
+                                     onerror="this.onerror=null;this.src='@Url.Content("~/images/no-image.png")';" />
+                            </a>
+
+                            <div class="cart-product-info">
+
+                                <span class="cart-product-code">
+                                    KODE PRODUK · @item.KodeProduk
+                                </span>
+
+                                <a asp-controller="Produk"
+                                   asp-action="Detail"
+                                   asp-route-id="@item.IdProduk"
+                                   class="cart-product-name">
+                                    @item.NamaProduk
+                                </a>
+
+                                <div class="cart-product-price">
                                     @item.HargaJual.ToString("C0", rupiah)
-                                </td>
+                                </div>
 
-                                <td>
+                                <div class="cart-product-stock">
+                                    Stok tersedia: @item.Stok unit
+                                </div>
+
+                                <div class="cart-product-bottom">
 
                                     <form asp-controller="Keranjang"
                                           asp-action="UbahJumlah"
@@ -115,32 +854,20 @@
                                                value="@item.Jumlah"
                                                min="1"
                                                max="@item.Stok"
-                                               required />
+                                               required
+                                               aria-label="Jumlah @item.NamaProduk" />
 
                                         <button type="submit"
-                                                class="btn-outline-custom">
-                                            Ubah
+                                                class="cart-update-button">
+                                            Ubah Jumlah
                                         </button>
-
                                     </form>
-
-                                    <small>
-                                        Stok tersedia: @item.Stok
-                                    </small>
-
-                                </td>
-
-                                <td>
-                                    <strong>
-                                        @item.Subtotal.ToString("C0", rupiah)
-                                    </strong>
-                                </td>
-
-                                <td>
 
                                     <form asp-controller="Keranjang"
                                           asp-action="Hapus"
-                                          method="post">
+                                          method="post"
+                                          class="cart-remove-form"
+                                          onsubmit="return confirm('Hapus produk ini dari keranjang?');">
 
                                         @Html.AntiForgeryToken()
 
@@ -149,64 +876,178 @@
                                                value="@item.IdProduk" />
 
                                         <button type="submit"
-                                                class="btn-danger-custom">
-                                            Hapus
+                                                class="cart-remove-button">
+                                            Hapus produk
                                         </button>
-
                                     </form>
 
-                                </td>
+                                </div>
 
-                            </tr>
-                        }
+                                <div class="cart-line-subtotal">
+                                    Subtotal produk:
+                                    <strong>
+                                        @item.Subtotal.ToString("C0", rupiah)
+                                    </strong>
+                                </div>
 
-                    </tbody>
+                            </div>
+                        </article>
+                    }
 
-                </table>
+                </section>
 
-            </div>
+                <aside class="cart-summary-card">
 
-
-            <div class="cart-summary">
-
-                <div>
-
-                    <span>Total Belanja</span>
-
-                    <h2>
-                        @total.ToString("C0", rupiah)
+                    <h2 class="cart-summary-title">
+                        Ringkasan Belanja
                     </h2>
 
-                </div>
+                    <div class="cart-summary-row">
+                        <span>Total jenis produk</span>
+                        <strong>@daftar.Count produk</strong>
+                    </div>
 
+                    <div class="cart-summary-row">
+                        <span>Total seluruh item</span>
+                        <strong>@totalItem item</strong>
+                    </div>
 
-                <div class="cart-actions">
+                    <div class="cart-summary-row">
+                        <span>Total semua produk</span>
+                        <strong>@total.ToString("C0", rupiah)</strong>
+                    </div>
 
-                    <form asp-controller="Keranjang"
-                          asp-action="Kosongkan"
+                    <hr class="cart-summary-divider" />
+
+                    <div>
+                        <span class="cart-total-label">
+                            Total seluruh keranjang
+                        </span>
+
+                        <strong class="cart-total-price">
+                            @total.ToString("C0", rupiah)
+                        </strong>
+                    </div>
+
+                    <div class="cart-selected-total">
+                        <span>Total produk yang dipilih untuk checkout</span>
+                        <strong id="selectedCartTotal">
+                            @total.ToString("C0", rupiah)
+                        </strong>
+                    </div>
+
+                    <form id="formCheckoutPilihan"
+                          asp-controller="Checkout"
+                          asp-action="Mulai"
                           method="post">
 
                         @Html.AntiForgeryToken()
 
                         <button type="submit"
-                                class="btn-outline-custom">
-                            Kosongkan Keranjang
+                                class="cart-checkout-button"
+                                id="checkoutSelectedButton">
+                            Checkout Produk Dipilih →
                         </button>
 
                     </form>
 
-
-                    <a asp-controller="Checkout"
+                    <a asp-controller="Produk"
                        asp-action="Index"
-                       class="btn-primary-custom">
-                        Lanjut ke Checkout
+                       class="cart-continue-link">
+                        ← Lanjutkan Belanja
                     </a>
 
-                </div>
+                    <form asp-controller="Keranjang"
+                          asp-action="Kosongkan"
+                          method="post"
+                          class="cart-clear-form"
+                          onsubmit="return confirm('Apakah kamu yakin ingin mengosongkan seluruh keranjang?');">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="cart-clear-button">
+                            Kosongkan Seluruh Keranjang
+                        </button>
+                    </form>
+
+                    <div class="cart-summary-note">
+                        <span>ⓘ</span>
+                        <span>
+                            Pilih produk yang ingin dibeli. Produk yang tidak
+                            dipilih akan tetap tersimpan di keranjang.
+                        </span>
+                    </div>
+
+                </aside>
 
             </div>
+        }
 
-        </div>
-    }
-
+    </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectAll = document.getElementById("selectAllCart");
+        const checkboxes = Array.from(
+            document.querySelectorAll(".cart-item-checkbox")
+        );
+
+        const selectedTotal = document.getElementById("selectedCartTotal");
+        const checkoutButton = document.getElementById("checkoutSelectedButton");
+
+        if (!selectAll || !selectedTotal || !checkoutButton) {
+            return;
+        }
+
+        const formatRupiah = function (value) {
+            return new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                maximumFractionDigits: 0
+            }).format(value);
+        };
+
+        function updateCartSelection() {
+            let totalDipilih = 0;
+            let jumlahDipilih = 0;
+
+            checkboxes.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    totalDipilih += Number(checkbox.dataset.subtotal || 0);
+                    jumlahDipilih++;
+                }
+            });
+
+            selectedTotal.textContent = formatRupiah(totalDipilih);
+
+            selectAll.checked =
+                checkboxes.length > 0 &&
+                jumlahDipilih === checkboxes.length;
+
+            selectAll.indeterminate =
+                jumlahDipilih > 0 &&
+                jumlahDipilih < checkboxes.length;
+
+            checkoutButton.disabled = jumlahDipilih === 0;
+
+            checkoutButton.textContent = jumlahDipilih > 0
+                ? "Checkout " + jumlahDipilih + " Produk Dipilih →"
+                : "Pilih Produk untuk Checkout";
+        }
+
+        selectAll.addEventListener("change", function () {
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAll.checked;
+            });
+
+            updateCartSelection();
+        });
+
+        checkboxes.forEach(function (checkbox) {
+            checkbox.addEventListener("change", updateCartSelection);
+        });
+
+        updateCartSelection();
+    });
+</script>

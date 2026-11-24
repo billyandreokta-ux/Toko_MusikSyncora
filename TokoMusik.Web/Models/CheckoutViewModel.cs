@@ -1,4 +1,6 @@
 ﻿
+using System.ComponentModel.DataAnnotations;
+
 namespace TokoMusik.Web.Models
 {
     public class CheckoutViewModel
@@ -13,6 +15,10 @@ namespace TokoMusik.Web.Models
 
         public int IdMetode { get; set; }
 
+        public string? KodePromo { get; set; }
+
+        public int? IdPromo { get; set; }
+
         public decimal Subtotal { get; set; }
 
         public decimal Ongkir { get; set; }
@@ -20,6 +26,12 @@ namespace TokoMusik.Web.Models
         public decimal Diskon { get; set; }
 
         public decimal TotalBayar => Subtotal + Ongkir - Diskon;
+
+        public string? PesanPromo { get; set; }
+
+        public bool TarifPengirimanTersedia { get; set; }
+
+        public string? EstimasiPengiriman { get; set; }
     }
 
     public class CheckoutItemViewModel

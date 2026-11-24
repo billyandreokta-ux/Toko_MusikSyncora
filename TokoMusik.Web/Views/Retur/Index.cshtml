@@ -1,0 +1,344 @@
+﻿@model TokoMusik.Web.Models.ReturViewModel
+
+@{
+    ViewData["Title"] = "Retur Produk";
+}
+
+<style>
+    .syncora-page {
+        max-width: 1180px;
+        margin: 35px auto 65px;
+        padding: 0 18px;
+        color: #263a30;
+    }
+
+    .syncora-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+
+        .syncora-heading h2 {
+            font-weight: 800;
+            margin: 0 0 7px;
+        }
+
+    .syncora-muted {
+        color: #77847c;
+    }
+
+    .syncora-card {
+        background: #fff;
+        border: 1px solid #e7ece8;
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 22px;
+        box-shadow: 0 5px 20px rgba(20,50,30,.04);
+    }
+
+    .syncora-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 760px;
+    }
+
+        .syncora-table th {
+            color: #6b786f;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            background: #f5f8f5;
+        }
+
+        .syncora-table th,
+        .syncora-table td {
+            padding: 14px 13px;
+            border-bottom: 1px solid #edf0ed;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .syncora-table td {
+            font-size: 14px;
+        }
+
+    .syncora-table-wrap {
+        overflow-x: auto;
+    }
+
+    .syncora-btn {
+        display: inline-block;
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 15px;
+        background: #24583d;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 650;
+        font-size: 13px;
+    }
+
+        .syncora-btn:hover {
+            background: #19452e;
+            color: #fff;
+        }
+
+    .syncora-btn-light {
+        background: #edf4ef;
+        color: #24583d;
+    }
+
+        .syncora-btn-light:hover {
+            background: #dfece2;
+            color: #19452e;
+        }
+
+    .syncora-badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #edf1ed;
+        color: #59665e;
+    }
+
+    .status-diajukan {
+        background: #fff3d9;
+        color: #95650b;
+    }
+
+    .status-disetujui {
+        background: #e4f2e8;
+        color: #24643d;
+    }
+
+    .status-ditolak {
+        background: #fde9e7;
+        color: #a33c32;
+    }
+
+    .status-selesai {
+        background: #e7eefb;
+        color: #315a9a;
+    }
+
+    .syncora-alert {
+        padding: 13px 16px;
+        border-radius: 10px;
+        margin-bottom: 16px;
+    }
+
+    .syncora-success {
+        background: #e8f5eb;
+        color: #24643d;
+    }
+
+    .syncora-error {
+        background: #fdebea;
+        color: #a33c32;
+    }
+
+    .return-photo-link {
+        color: #24583d;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+        .return-photo-link:hover {
+            text-decoration: underline;
+        }
+</style>
+
+<div class="syncora-page">
+    <div class="syncora-heading">
+        <div>
+            <h2>Retur Produk</h2>
+            <div class="syncora-muted">
+                Pantau pengajuan retur dan ajukan retur untuk pesanan yang telah diterima.
+            </div>
+        </div>
+
+        <a asp-controller="PesananSaya"
+           asp-action="Index"
+           class="syncora-btn syncora-btn-light">
+            Riwayat Pesanan
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="syncora-alert syncora-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="syncora-alert syncora-error">@TempData["Error"]</div>
+    }
+
+    <div class="syncora-card">
+        <h5 style="font-weight:800;margin-bottom:5px;">Produk yang Dapat Diretur</h5>
+        <p class="syncora-muted" style="font-size:13px;">
+            Retur hanya dapat diajukan maksimal 3 × 24 jam sejak barang diterima.
+        </p>
+
+        @if (Model.ProdukDapatDiretur.Any())
+        {
+            <div class="syncora-table-wrap">
+                <table class="syncora-table">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>No. Pesanan</th>
+                            <th>Barang Diterima</th>
+                            <th>Jumlah Dibeli</th>
+                            <th>Sisa Retur</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ProdukDapatDiretur)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.NamaProduk</strong><br />
+                                    <small class="syncora-muted">@item.KodeProduk</small>
+                                </td>
+                                <td>#@item.IdPemesanan</td>
+                                <td>
+                                    @(item.WaktuTerima?.ToString("dd MMM yyyy HH:mm") ?? "-")
+                                </td>
+                                <td>@item.JumlahDibeli</td>
+                                <td><strong>@item.SisaJumlah</strong></td>
+                                <td>
+                                    <a asp-action="Ajukan"
+                                       asp-route-id="@item.IdDetailPesanan"
+                                       class="syncora-btn">
+                                        Ajukan Retur
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="syncora-muted mb-0">
+                Belum ada produk yang memenuhi syarat retur dalam batas waktu 3 × 24 jam.
+            </p>
+        }
+    </div>
+
+    <div class="syncora-card">
+        <h5 style="font-weight:800;margin-bottom:18px;">Riwayat Pengajuan Retur</h5>
+
+        @if (Model.DaftarRetur.Any())
+        {
+            <div class="syncora-table-wrap">
+                <table class="syncora-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal Pengajuan</th>
+                            <th>Produk</th>
+                            <th>Pesanan</th>
+                            <th>Jumlah</th>
+                            <th>Alasan</th>
+                            <th>Foto Bukti</th>
+                            <th>Status</th>
+                            <th>Hasil Pemeriksaan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.DaftarRetur)
+                        {
+                            <tr>
+                                <td>
+                                    @(item.TanggalPengajuan?.ToString("dd MMM yyyy HH:mm")
+                                        ?? item.TanggalReturn.ToString("dd MMM yyyy"))
+                                </td>
+                                <td>
+                                    <strong>@item.NamaProduk</strong><br />
+                                    <small class="syncora-muted">@item.KodeProduk</small>
+                                </td>
+                                <td>#@item.IdPemesanan</td>
+                                <td>@item.Jumlah</td>
+                                <td style="min-width:180px;white-space:normal;">
+                                    @item.Alasan
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.FotoBukti))
+                                    {
+                                        <a href="@item.FotoBukti"
+                                           target="_blank"
+                                           rel="noopener"
+                                           class="return-photo-link">
+                                            Lihat Foto
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="syncora-badge status-@item.Status">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td style="min-width:190px;white-space:normal;">
+                                    @if (item.Status == "selesai")
+                                    {
+                                        if (item.LayakJual == true)
+                                        {
+                                            <span class="text-success">
+                                                Layak jual
+                                                @if (item.StokDitambahkan)
+                                                {
+                                                    <br /><small>Stok telah ditambahkan</small>
+                                                }
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">Tidak layak jual</span>
+                                        }
+                                    }
+                                    else if (item.Status == "disetujui")
+                                    {
+                                        <span class="text-muted">Menunggu barang diperiksa admin</span>
+                                    }
+                                    else if (item.Status == "ditolak")
+                                    {
+                                        <span class="text-muted">Pengajuan ditolak</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Menunggu keputusan admin</span>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(item.CatatanAdmin))
+                                    {
+                                        <div class="small mt-1">
+                                            Catatan: @item.CatatanAdmin
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="syncora-muted mb-0">
+                Kamu belum memiliki pengajuan retur.
+            </p>
+        }
+    </div>
+</div>

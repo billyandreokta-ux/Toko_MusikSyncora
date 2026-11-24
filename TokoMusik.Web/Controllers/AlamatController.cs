@@ -57,6 +57,7 @@ namespace TokoMusik.Web.Controllers
                     is_utama AS IsUtama
                 FROM alamat_customer
                 WHERE id_customer = @IdCustomer
+                  AND is_aktif = 1
                 ORDER BY is_utama DESC, id_alamat DESC
                 ",
                 new { IdCustomer = idCustomer }
@@ -93,6 +94,7 @@ namespace TokoMusik.Web.Controllers
                 SELECT COUNT(*)
                 FROM alamat_customer
                 WHERE id_customer = @IdCustomer
+                  AND is_aktif = 1
                 ",
                 new { IdCustomer = idCustomer }
             );
@@ -110,6 +112,7 @@ namespace TokoMusik.Web.Controllers
                         UPDATE alamat_customer
                         SET is_utama = 0
                         WHERE id_customer = @IdCustomer
+                          AND is_aktif = 1
                         ",
                         new { IdCustomer = idCustomer },
                         transaction
@@ -128,7 +131,8 @@ namespace TokoMusik.Web.Controllers
                         kota,
                         provinsi,
                         kode_pos,
-                        is_utama
+                        is_utama,
+                        is_aktif
                     )
                     VALUES
                     (
@@ -140,7 +144,8 @@ namespace TokoMusik.Web.Controllers
                         @Kota,
                         @Provinsi,
                         @KodePos,
-                        @IsUtama
+                        @IsUtama,
+                        1
                     )
                     ",
                     new
@@ -176,6 +181,160 @@ namespace TokoMusik.Web.Controllers
             }
         }
 
+        // GET: /Alamat/Edit/5
+        [HttpGet]
+        public async Task<IActionResult> Edit(int idAlamat)
+        {
+            using var connection = _koneksi.GetConnection();
+            await connection.OpenAsync();
+
+            int? idCustomer = await AmbilIdCustomer(connection);
+
+            if (idCustomer == null)
+                return RedirectToAction("Index", "User");
+
+            var alamat = await connection.QueryFirstOrDefaultAsync<AlamatCustomer>(
+                @"
+                SELECT
+                    id_alamat AS IdAlamat,
+                    id_customer AS IdCustomer,
+                    label_alamat AS LabelAlamat,
+                    penerima AS Penerima,
+                    telepon AS Telepon,
+                    alamat_lengkap AS AlamatLengkap,
+                    kota AS Kota,
+                    provinsi AS Provinsi,
+                    kode_pos AS KodePos,
+                    is_utama AS IsUtama
+                FROM alamat_customer
+                WHERE id_alamat = @IdAlamat
+                  AND id_customer = @IdCustomer
+                  AND is_aktif = 1
+                ",
+                new
+                {
+                    IdAlamat = idAlamat,
+                    IdCustomer = idCustomer
+                }
+            );
+
+            if (alamat == null)
+                return NotFound();
+
+            return View(alamat);
+        }
+
+        // POST: /Alamat/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(AlamatCustomer model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            using var connection = _koneksi.GetConnection();
+            await connection.OpenAsync();
+
+            int? idCustomer = await AmbilIdCustomer(connection);
+
+            if (idCustomer == null)
+                return RedirectToAction("Index", "User");
+
+            using var transaction = await connection.BeginTransactionAsync();
+
+            try
+            {
+                var alamatLama = await connection.QueryFirstOrDefaultAsync<AlamatCustomer>(
+                    @"
+                    SELECT
+                        id_alamat AS IdAlamat,
+                        is_utama AS IsUtama
+                    FROM alamat_customer
+                    WHERE id_alamat = @IdAlamat
+                      AND id_customer = @IdCustomer
+                      AND is_aktif = 1
+                    ",
+                    new
+                    {
+                        model.IdAlamat,
+                        IdCustomer = idCustomer
+                    },
+                    transaction
+                );
+
+                if (alamatLama == null)
+                {
+                    await transaction.RollbackAsync();
+                    return NotFound();
+                }
+
+                // Alamat utama tidak boleh hilang tanpa memilih alamat utama yang baru.
+                bool jadikanUtama = model.IsUtama || alamatLama.IsUtama;
+
+                if (jadikanUtama)
+                {
+                    await connection.ExecuteAsync(
+                        @"
+                        UPDATE alamat_customer
+                        SET is_utama = 0
+                        WHERE id_customer = @IdCustomer
+                          AND is_aktif = 1
+                        ",
+                        new { IdCustomer = idCustomer },
+                        transaction
+                    );
+                }
+
+                await connection.ExecuteAsync(
+                    @"
+                    UPDATE alamat_customer
+                    SET
+                        label_alamat = @LabelAlamat,
+                        penerima = @Penerima,
+                        telepon = @Telepon,
+                        alamat_lengkap = @AlamatLengkap,
+                        kota = @Kota,
+                        provinsi = @Provinsi,
+                        kode_pos = @KodePos,
+                        is_utama = @IsUtama
+                    WHERE id_alamat = @IdAlamat
+                      AND id_customer = @IdCustomer
+                      AND is_aktif = 1
+                    ",
+                    new
+                    {
+                        model.IdAlamat,
+                        IdCustomer = idCustomer,
+                        model.LabelAlamat,
+                        model.Penerima,
+                        model.Telepon,
+                        model.AlamatLengkap,
+                        model.Kota,
+                        model.Provinsi,
+                        model.KodePos,
+                        IsUtama = jadikanUtama
+                    },
+                    transaction
+                );
+
+                await transaction.CommitAsync();
+
+                TempData["Success"] = "Alamat berhasil diperbarui.";
+                return RedirectToAction("Index");
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+
+                ModelState.AddModelError(
+                    "",
+                    "Alamat gagal diperbarui. Silakan coba kembali."
+                );
+
+                return View(model);
+            }
+        }
+
         // POST: /Alamat/JadikanUtama
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -199,8 +358,13 @@ namespace TokoMusik.Web.Controllers
                     FROM alamat_customer
                     WHERE id_alamat = @IdAlamat
                       AND id_customer = @IdCustomer
+                      AND is_aktif = 1
                     ",
-                    new { IdAlamat = idAlamat, IdCustomer = idCustomer },
+                    new
+                    {
+                        IdAlamat = idAlamat,
+                        IdCustomer = idCustomer
+                    },
                     transaction
                 );
 
@@ -215,6 +379,7 @@ namespace TokoMusik.Web.Controllers
                     UPDATE alamat_customer
                     SET is_utama = 0
                     WHERE id_customer = @IdCustomer
+                      AND is_aktif = 1
                     ",
                     new { IdCustomer = idCustomer },
                     transaction
@@ -226,8 +391,13 @@ namespace TokoMusik.Web.Controllers
                     SET is_utama = 1
                     WHERE id_alamat = @IdAlamat
                       AND id_customer = @IdCustomer
+                      AND is_aktif = 1
                     ",
-                    new { IdAlamat = idAlamat, IdCustomer = idCustomer },
+                    new
+                    {
+                        IdAlamat = idAlamat,
+                        IdCustomer = idCustomer
+                    },
                     transaction
                 );
 
@@ -270,47 +440,46 @@ namespace TokoMusik.Web.Controllers
                     FROM alamat_customer
                     WHERE id_alamat = @IdAlamat
                       AND id_customer = @IdCustomer
+                      AND is_aktif = 1
                     ",
-                    new { IdAlamat = idAlamat, IdCustomer = idCustomer },
+                    new
+                    {
+                        IdAlamat = idAlamat,
+                        IdCustomer = idCustomer
+                    },
                     transaction
                 );
 
                 if (alamat == null)
                 {
                     await transaction.RollbackAsync();
-                    return NotFound();
-                }
 
-                int dipakaiPesanan = await connection.ExecuteScalarAsync<int>(
-                    @"
-                    SELECT COUNT(*)
-                    FROM pemesanan
-                    WHERE id_alamat = @IdAlamat
-                    ",
-                    new { IdAlamat = idAlamat },
-                    transaction
-                );
-
-                if (dipakaiPesanan > 0)
-                {
-                    await transaction.RollbackAsync();
-
-                    TempData["Error"] =
-                        "Alamat tidak dapat dihapus karena sudah digunakan pada riwayat pesanan.";
-
+                    TempData["Error"] = "Alamat tidak ditemukan atau sudah dihapus.";
                     return RedirectToAction("Index");
                 }
 
+                // Soft delete: alamat dinonaktifkan, bukan dihapus permanen.
+                // Dengan demikian, relasi pada riwayat pesanan tetap terjaga.
                 await connection.ExecuteAsync(
                     @"
-                    DELETE FROM alamat_customer
+                    UPDATE alamat_customer
+                    SET
+                        is_aktif = 0,
+                        is_utama = 0
                     WHERE id_alamat = @IdAlamat
                       AND id_customer = @IdCustomer
+                      AND is_aktif = 1
                     ",
-                    new { IdAlamat = idAlamat, IdCustomer = idCustomer },
+                    new
+                    {
+                        IdAlamat = idAlamat,
+                        IdCustomer = idCustomer
+                    },
                     transaction
                 );
 
+                // Jika alamat yang dihapus merupakan alamat utama,
+                // pilih alamat aktif terbaru sebagai alamat utama.
                 if (alamat.IsUtama)
                 {
                     int? alamatBerikutnya =
@@ -319,6 +488,7 @@ namespace TokoMusik.Web.Controllers
                             SELECT id_alamat
                             FROM alamat_customer
                             WHERE id_customer = @IdCustomer
+                              AND is_aktif = 1
                             ORDER BY id_alamat DESC
                             LIMIT 1
                             ",
@@ -334,6 +504,7 @@ namespace TokoMusik.Web.Controllers
                             SET is_utama = 1
                             WHERE id_alamat = @IdAlamat
                               AND id_customer = @IdCustomer
+                              AND is_aktif = 1
                             ",
                             new
                             {
@@ -352,7 +523,8 @@ namespace TokoMusik.Web.Controllers
             catch
             {
                 await transaction.RollbackAsync();
-                TempData["Error"] = "Gagal menghapus alamat.";
+
+                TempData["Error"] = "Gagal menghapus alamat. Silakan coba kembali.";
             }
 
             return RedirectToAction("Index");

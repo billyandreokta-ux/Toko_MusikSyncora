@@ -1,0 +1,320 @@
+﻿@model TokoMusik.Web.Models.BatalkanPesananViewModel
+
+@{
+    ViewData["Title"] = "Pembatalan Pesanan";
+
+    var alasan = new[]
+    {
+        "Berubah pikiran",
+        "Salah memilih produk atau jumlah",
+        "Ingin mengganti alamat pengiriman",
+        "Menemukan harga yang lebih murah",
+        "Pesanan dibuat tidak sengaja",
+        "Alasan lainnya"
+    };
+}
+
+<style>
+    .cancel-page {
+        max-width: 760px;
+        margin: 32px auto;
+        padding: 0 15px;
+    }
+
+    .cancel-card {
+        background: var(--bs-body-bg, #fff);
+        border: 1px solid rgba(120, 130, 140, .2);
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 8px 28px rgba(20, 35, 30, .06);
+    }
+
+    .cancel-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .cancel-heading-icon {
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: #fff1f1;
+        color: #c0392b;
+    }
+
+    .cancel-heading-icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .cancel-summary {
+        background: rgba(20, 120, 78, .06);
+        border: 1px solid rgba(20, 120, 78, .13);
+        border-radius: 13px;
+        padding: 18px;
+        margin-bottom: 25px;
+    }
+
+    .cancel-summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 8px;
+    }
+
+    .cancel-summary-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .cancel-form label {
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .cancel-form .form-select,
+    .cancel-form .form-control {
+        min-height: 48px;
+        border-radius: 10px;
+    }
+
+    .cancel-form textarea.form-control {
+        min-height: 115px;
+    }
+
+    .cancel-warning {
+        padding: 15px 17px;
+        border-radius: 12px;
+        background: #fff8e8;
+        border: 1px solid #f1dfb6;
+        color: #75551b;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .cancel-actions {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .cancel-actions .btn {
+        min-height: 45px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    @@media (max-width: 576px) {
+        .cancel-card {
+            padding: 20px;
+        }
+
+        .cancel-actions {
+            flex-direction: column-reverse;
+        }
+
+        .cancel-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="cancel-page">
+
+    <div class="cancel-card">
+
+        <div class="cancel-heading">
+            <div class="cancel-heading-icon">
+                <svg viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"></path>
+                    <path d="M8 6V4h8v2"></path>
+                    <path d="m19 6-1 14H6L5 6"></path>
+                    <path d="M10 11v5"></path>
+                    <path d="M14 11v5"></path>
+                </svg>
+            </div>
+
+            <div>
+                <h2 class="h4 fw-bold mb-1">Batalkan Pesanan</h2>
+                <p class="text-secondary mb-0">
+                    Pastikan Anda sudah memeriksa informasi pesanan
+                    sebelum melanjutkan pembatalan.
+                </p>
+            </div>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="cancel-summary">
+            <div class="cancel-summary-row">
+                <span class="text-secondary">Nomor pesanan</span>
+                <strong>#@Model.IdPemesanan</strong>
+            </div>
+
+            <div class="cancel-summary-row">
+                <span class="text-secondary">Tanggal pesanan</span>
+                <strong>
+                    @Model.TglPesan.ToString("dd MMM yyyy, HH:mm")
+                </strong>
+            </div>
+
+            <div class="cancel-summary-row">
+                <span class="text-secondary">Status pesanan</span>
+                <strong>@Model.StatusPesanan</strong>
+            </div>
+
+            <div class="cancel-summary-row">
+                <span class="text-secondary">Total pembayaran</span>
+                <strong class="text-success">
+                    Rp @Model.TotalBayar.ToString("N0")
+                </strong>
+            </div>
+        </div>
+
+        <form asp-controller="PesananSaya"
+              asp-action="Batalkan"
+              asp-route-id="@Model.IdPemesanan"
+              method="post"
+              class="cancel-form"
+              id="formPembatalan">
+
+            @Html.AntiForgeryToken()
+
+            <div class="mb-4">
+                <label for="AlasanPembatalan" class="form-label">
+                    Alasan pembatalan
+                    <span class="text-danger">*</span>
+                </label>
+
+                <select asp-for="AlasanPembatalan"
+                        class="form-select"
+                        id="AlasanPembatalan"
+                        required>
+
+                    <option value="">Pilih alasan pembatalan</option>
+
+                    @foreach (var item in alasan)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-4" id="bagianKeterangan">
+                <label asp-for="KeteranganTambahan" class="form-label">
+                    Keterangan tambahan
+                    <span id="tandaWajib" class="text-danger d-none">*</span>
+                    <span id="tandaOpsional"
+                          class="text-secondary fw-normal">(opsional)</span>
+                </label>
+
+                <textarea asp-for="KeteranganTambahan"
+                          class="form-control"
+                          id="KeteranganTambahan"
+                          maxlength="500"
+                          placeholder="Tuliskan keterangan tambahan jika diperlukan..."></textarea>
+
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-secondary">
+                        Maksimal 500 karakter.
+                    </small>
+                    <small class="text-secondary">
+                        <span id="jumlahKarakter">0</span>/500
+                    </small>
+                </div>
+            </div>
+
+            @if (Model.StatusPembayaran == "berhasil")
+            {
+                <div class="cancel-warning mb-3">
+                    <strong>Informasi pengembalian dana</strong><br />
+                    Pembayaran pesanan ini telah berhasil diverifikasi.
+                    Pembatalan pesanan tidak otomatis menyelesaikan
+                    pengembalian dana. Silakan menghubungi admin untuk
+                    informasi proses pengembalian dana.
+                </div>
+            }
+            else
+            {
+                <div class="cancel-warning mb-3">
+                    Setelah pembatalan berhasil, stok produk akan
+                    dikembalikan. Pesanan yang sudah dibatalkan tidak
+                    dapat diproses kembali.
+                </div>
+            }
+
+            <div class="cancel-actions">
+                <a asp-controller="PesananSaya"
+                   asp-action="Detail"
+                   asp-route-id="@Model.IdPemesanan"
+                   class="btn btn-outline-secondary">
+                    Kembali
+                </a>
+
+                <button type="submit"
+                        class="btn btn-danger"
+                        id="btnKonfirmasi">
+                    Konfirmasi Pembatalan
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const alasan = document.getElementById("AlasanPembatalan");
+        const keterangan = document.getElementById("KeteranganTambahan");
+        const tandaWajib = document.getElementById("tandaWajib");
+        const tandaOpsional = document.getElementById("tandaOpsional");
+        const jumlahKarakter = document.getElementById("jumlahKarakter");
+        const form = document.getElementById("formPembatalan");
+
+        function perbaruiKeterangan() {
+            const alasanLainnya = alasan.value === "Alasan lainnya";
+
+            keterangan.required = alasanLainnya;
+            tandaWajib.classList.toggle("d-none", !alasanLainnya);
+            tandaOpsional.classList.toggle("d-none", alasanLainnya);
+        }
+
+        function perbaruiJumlahKarakter() {
+            jumlahKarakter.textContent = keterangan.value.length;
+        }
+
+        alasan.addEventListener("change", perbaruiKeterangan);
+        keterangan.addEventListener("input", perbaruiJumlahKarakter);
+
+        form.addEventListener("submit", function (event) {
+            const yakin = confirm(
+                "Apakah Anda yakin ingin membatalkan pesanan ini? " +
+                "Stok produk akan dikembalikan setelah pembatalan berhasil."
+            );
+
+            if (!yakin) {
+                event.preventDefault();
+            }
+        });
+
+        perbaruiKeterangan();
+        perbaruiJumlahKarakter();
+    });
+</script>

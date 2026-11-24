@@ -1,0 +1,463 @@
+﻿@model List<TokoMusik.Web.Models.ReturItemViewModel>
+
+@{
+    ViewData["Title"] = "Manajemen Retur";
+
+    var totalDiajukan = Model.Count(x => x.Status == "diajukan");
+    var totalDisetujui = Model.Count(x => x.Status == "disetujui");
+    var totalDitolak = Model.Count(x => x.Status == "ditolak");
+    var totalSelesai = Model.Count(x => x.Status == "selesai");
+}
+
+<style>
+    .admin-return-page {
+        max-width: 1400px;
+        margin: 30px auto 60px;
+        padding: 0 18px;
+        color: #263a30;
+    }
+
+    .admin-return-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+        .admin-return-heading h2 {
+            font-weight: 800;
+            margin: 0;
+        }
+
+    .return-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(0,1fr));
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .return-stat {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 14px;
+        padding: 19px;
+    }
+
+        .return-stat small {
+            color: #78847c;
+        }
+
+        .return-stat strong {
+            display: block;
+            font-size: 27px;
+            margin-top: 5px;
+        }
+
+    .return-panel {
+        background: white;
+        border: 1px solid #e7ece8;
+        border-radius: 15px;
+        padding: 20px;
+    }
+
+    .return-table-wrap {
+        overflow-x: auto;
+    }
+
+    .return-table {
+        width: 100%;
+        min-width: 1250px;
+        border-collapse: collapse;
+    }
+
+        .return-table th {
+            background: #f4f7f4;
+            color: #718077;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .return-table th,
+        .return-table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid #edf0ed;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .return-table td {
+            font-size: 13px;
+        }
+
+    .return-status {
+        border: 0;
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 12px;
+        background: #f3f5f3;
+    }
+
+    .return-action {
+        background: #24583d;
+        color: white;
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .return-badge {
+        display: inline-block;
+        border-radius: 20px;
+        padding: 5px 9px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .status-diajukan {
+        background: #fff2d6;
+        color: #93630a;
+    }
+
+    .status-disetujui {
+        background: #e5f3e9;
+        color: #28613d;
+    }
+
+    .status-ditolak {
+        background: #fde9e7;
+        color: #a33c32;
+    }
+
+    .status-selesai {
+        background: #e7eefb;
+        color: #315a9a;
+    }
+
+    .return-photo {
+        color: #24583d;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+        .return-photo:hover {
+            text-decoration: underline;
+        }
+
+    .inspection-form {
+        min-width: 245px;
+        background: #f7faf7;
+        border: 1px solid #e5ece6;
+        border-radius: 10px;
+        padding: 12px;
+    }
+
+        .inspection-form label {
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .inspection-form textarea {
+            font-size: 12px;
+            min-height: 65px;
+        }
+
+        .inspection-form .form-check {
+            margin: 8px 0;
+        }
+
+    @@media(max-width:750px) {
+        .return-stat-grid {
+            grid-template-columns: repeat(2,minmax(0,1fr));
+        }
+    }
+</style>
+
+<div class="admin-return-page">
+    <div class="admin-return-heading">
+        <div>
+            <h2>Manajemen Retur</h2>
+            <p class="text-muted mb-0">
+                Kelola pengajuan pengembalian dan pemeriksaan barang retur pelanggan.
+            </p>
+        </div>
+
+        <a asp-controller="AdminDashboard"
+           asp-action="Index"
+           class="btn btn-light">
+            Kembali ke Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="return-stat-grid">
+        <div class="return-stat">
+            <small>Menunggu Tindakan</small>
+            <strong>@totalDiajukan</strong>
+        </div>
+        <div class="return-stat">
+            <small>Disetujui</small>
+            <strong>@totalDisetujui</strong>
+        </div>
+        <div class="return-stat">
+            <small>Ditolak</small>
+            <strong>@totalDitolak</strong>
+        </div>
+        <div class="return-stat">
+            <small>Selesai</small>
+            <strong>@totalSelesai</strong>
+        </div>
+    </div>
+
+    <div class="return-panel">
+        <form method="get" class="row g-2 mb-4">
+            <div class="col-md-5">
+                <input type="text"
+                       name="cari"
+                       value="@ViewBag.KataKunci"
+                       class="form-control"
+                       placeholder="Cari produk, kode, pelanggan, atau nomor pesanan..." />
+            </div>
+
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="semua" selected="@(ViewBag.StatusFilter == "semua")">
+                        Semua Status
+                    </option>
+                    <option value="diajukan" selected="@(ViewBag.StatusFilter == "diajukan")">
+                        Diajukan
+                    </option>
+                    <option value="disetujui" selected="@(ViewBag.StatusFilter == "disetujui")">
+                        Disetujui
+                    </option>
+                    <option value="ditolak" selected="@(ViewBag.StatusFilter == "ditolak")">
+                        Ditolak
+                    </option>
+                    <option value="selesai" selected="@(ViewBag.StatusFilter == "selesai")">
+                        Selesai
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button class="btn btn-success w-100" type="submit">Filter</button>
+            </div>
+
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-light w-100">Reset</a>
+            </div>
+        </form>
+
+        <div class="return-table-wrap">
+            <table class="return-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal Pengajuan</th>
+                        <th>Pelanggan</th>
+                        <th>Pesanan</th>
+                        <th>Produk</th>
+                        <th>Jumlah</th>
+                        <th>Alasan</th>
+                        <th>Foto Bukti</th>
+                        <th>Status</th>
+                        <th>Tindakan / Pemeriksaan</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @(item.TanggalPengajuan?.ToString("dd/MM/yyyy HH:mm")
+                                        ?? item.TanggalReturn.ToString("dd/MM/yyyy"))
+                                </td>
+
+                                <td>@item.NamaCustomer</td>
+                                <td>#@item.IdPemesanan</td>
+
+                                <td>
+                                    <strong>@item.NamaProduk</strong><br />
+                                    <small class="text-muted">@item.KodeProduk</small>
+                                </td>
+
+                                <td>@item.Jumlah</td>
+
+                                <td style="max-width:230px;white-space:normal;">
+                                    @item.Alasan
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.FotoBukti))
+                                    {
+                                        <a href="@item.FotoBukti"
+                                           target="_blank"
+                                           rel="noopener"
+                                           class="return-photo">
+                                            Lihat Foto
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Tidak ada foto</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="return-badge status-@item.Status">
+                                        @item.Status
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @if (item.Status == "diajukan")
+                                    {
+                                        <form asp-action="UbahStatus"
+                                              method="post"
+                                              class="d-flex gap-1">
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="idReturn"
+                                                   value="@item.IdReturn" />
+
+                                            <select name="status" class="return-status">
+                                                <option value="disetujui">Setujui</option>
+                                                <option value="ditolak">Tolak</option>
+                                            </select>
+
+                                            <button type="submit" class="return-action">
+                                                Simpan
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (item.Status == "disetujui")
+                                    {
+                                        <form asp-action="SelesaikanPemeriksaan"
+                                              method="post"
+                                              class="inspection-form">
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="idReturn"
+                                                   value="@item.IdReturn" />
+
+                                            <input type="hidden"
+                                                   name="barangDiterima"
+                                                   value="true" />
+
+                                            <div class="mb-2">
+                                                <label class="form-label">
+                                                    Kondisi barang setelah diterima
+                                                </label>
+
+                                                <div class="form-check">
+                                                    <input class="form-check-input"
+                                                           type="checkbox"
+                                                           name="layakJual"
+                                                           value="true"
+                                                           id="layak-@item.IdReturn" />
+
+                                                    <label class="form-check-label"
+                                                           for="layak-@item.IdReturn">
+                                                        Layak dijual kembali
+                                                    </label>
+                                                </div>
+
+                                                <small class="text-muted">
+                                                    Jika tidak dicentang, barang dianggap tidak layak jual.
+                                                </small>
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <label class="form-label">
+                                                    Catatan pemeriksaan
+                                                </label>
+                                                <textarea name="catatanAdmin"
+                                                          class="form-control"
+                                                          maxlength="2000"
+                                                          placeholder="Catatan kondisi barang..."></textarea>
+                                            </div>
+
+                                            <button type="submit"
+                                                    class="return-action"
+                                                    onclick="return confirm('Pastikan barang retur sudah diterima dan diperiksa. Lanjutkan?');">
+                                                Konfirmasi Pemeriksaan
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (item.Status == "selesai")
+                                    {
+                                        <div>
+                                            @if (item.LayakJual == true)
+                                            {
+                                                <span class="text-success fw-bold">
+                                                    Layak jual
+                                                </span>
+
+                                                @if (item.StokDitambahkan)
+                                                {
+                                                    <br />
+                                                    <small class="text-success">
+                                                        Stok sudah ditambahkan
+                                                    </small>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger fw-bold">
+                                                    Tidak layak jual
+                                                </span>
+                                                <br />
+                                                <small class="text-muted">
+                                                    Stok tidak ditambahkan
+                                                </small>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(item.CatatanAdmin))
+                                            {
+                                                <div class="small mt-1">
+                                                    Catatan: @item.CatatanAdmin
+                                                </div>
+                                            }
+
+                                            <small class="text-muted d-block mt-1">
+                                                @(item.TanggalPemeriksaan?.ToString("dd/MM/yyyy HH:mm") ?? "")
+                                            </small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Pengajuan ditolak</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                Belum ada data retur.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

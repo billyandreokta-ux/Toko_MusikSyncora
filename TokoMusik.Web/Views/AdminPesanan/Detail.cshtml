@@ -1,194 +1,737 @@
 ﻿
-@model TokoMusik.Web.Models.AdminPesananDetailViewModel
+@model TokoMusik.Web.Models.AdminPesananGabunganDetailViewModel
 
 @{
     ViewData["Title"] = "Detail Pesanan";
 
-    string? statusBerikutnya = Model.Status switch
+    bool dapatDiverifikasi =
+        Model.Status == "menunggu_bayar" &&
+        Model.StatusPembayaran == "pending" &&
+        !string.IsNullOrWhiteSpace(Model.BuktiBayar);
+
+    string StatusLabel(string? status)
     {
-        "dibayar" => "diproses",
-        "diproses" => "dikirim",
-        "dikirim" => "selesai",
-        _ => null
-    };
+        return status switch
+        {
+            "menunggu_bayar" => "Menunggu Pembayaran",
+            "diproses" => "Diproses",
+            "dikirim" => "Dikirim",
+            "selesai" => "Selesai",
+            "dibatalkan" => "Dibatalkan",
+            "pending" => "Menunggu Verifikasi",
+            "berhasil" => "Berhasil",
+            "gagal" => "Ditolak",
+            "belum_bayar" => "Belum Dibayar",
+            _ => status ?? "-"
+        };
+    }
 }
 
-<div class="dashboard-container">
-    <div class="dashboard-heading">
+<style>
+    .admin-detail-page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 35px 20px 65px;
+        color: #293d30;
+    }
+
+    .admin-detail-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .admin-detail-heading small {
+        color: #78917d;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .admin-detail-heading h1 {
+        font-size: clamp(25px, 4vw, 34px);
+        font-weight: 800;
+        margin: 8px 0;
+    }
+
+    .admin-detail-heading p {
+        color: #87938a;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .admin-detail-back {
+        display: inline-flex;
+        padding: 10px 15px;
+        border: 1px solid #dce5dc;
+        border-radius: 7px;
+        color: #42624b;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .admin-detail-back:hover {
+        background: #f2f6f1;
+        color: #174c35;
+    }
+
+    .admin-detail-alert {
+        padding: 13px 16px;
+        border-radius: 8px;
+        margin-bottom: 17px;
+        font-size: 12px;
+    }
+
+    .admin-detail-alert.success {
+        color: #236b43;
+        background: #e9f6ed;
+    }
+
+    .admin-detail-alert.error {
+        color: #a13e38;
+        background: #fcebea;
+    }
+
+    .admin-detail-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+    }
+
+    .admin-detail-card {
+        background: #fff;
+        border: 1px solid #e7ece6;
+        border-radius: 12px;
+        padding: 22px;
+        margin-bottom: 18px;
+    }
+
+    .admin-detail-card h3 {
+        font-size: 15px;
+        font-weight: 800;
+        margin: 0 0 20px;
+        color: #2d4936;
+    }
+
+    .admin-detail-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 15px;
+    }
+
+    .admin-detail-info .full {
+        grid-column: 1 / -1;
+    }
+
+    .admin-detail-info span {
+        display: block;
+        color: #929d94;
+        font-size: 10px;
+        margin-bottom: 5px;
+    }
+
+    .admin-detail-info strong,
+    .admin-detail-info div.value {
+        display: block;
+        color: #3b4e40;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-detail-divider {
+        border: 0;
+        border-top: 1px solid #edf0eb;
+        margin: 21px 0;
+    }
+
+    .admin-detail-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: #f2f7f1;
+        border-radius: 8px;
+        margin-top: 18px;
+    }
+
+    .admin-detail-total span {
+        color: #64756a;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .admin-detail-total strong {
+        color: #1b6941;
+        font-size: 20px;
+        font-weight: 850;
+    }
+
+    .admin-detail-proof {
+        width: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        background: #f7f9f6;
+        border: 1px solid #edf0eb;
+        border-radius: 9px;
+        padding: 8px;
+    }
+
+    .admin-detail-proof-link {
+        display: block;
+    }
+
+    .admin-detail-no-proof {
+        padding: 35px 18px;
+        border: 1px dashed #d8e1d8;
+        background: #f8faf7;
+        color: #89958b;
+        text-align: center;
+        border-radius: 9px;
+        font-size: 12px;
+    }
+
+    .admin-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 18px;
+    }
+
+    .admin-detail-button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 11px 16px;
+        border: 0;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .admin-detail-button.accept {
+        background: #1d7548;
+        color: #fff;
+    }
+
+    .admin-detail-button.reject {
+        background: #b74d46;
+        color: #fff;
+    }
+
+    .admin-detail-button.primary {
+        background: #174c35;
+        color: #fff;
+    }
+
+    .admin-detail-button.secondary {
+        background: #edf2ed;
+        color: #506454;
+    }
+
+    .admin-detail-button:hover {
+        filter: brightness(.95);
+        color: #fff;
+    }
+
+    .admin-detail-form {
+        margin-top: 17px;
+        padding-top: 17px;
+        border-top: 1px solid #edf0eb;
+    }
+
+    .admin-detail-form label {
+        display: block;
+        color: #66756a;
+        font-size: 11px;
+        font-weight: 750;
+        margin-bottom: 7px;
+    }
+
+    .admin-detail-form input {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid #dce5dc;
+        border-radius: 7px;
+        font-size: 12px;
+        margin-bottom: 13px;
+    }
+
+    .admin-detail-form input:focus {
+        outline: none;
+        border-color: #6b9878;
+    }
+
+    .admin-detail-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-detail-table th {
+        padding: 11px 9px;
+        background: #f7f9f6;
+        color: #829087;
+        font-size: 10px;
+        text-align: left;
+    }
+
+    .admin-detail-table td {
+        padding: 13px 9px;
+        border-top: 1px solid #edf0eb;
+        font-size: 11px;
+        vertical-align: middle;
+    }
+
+    .admin-detail-table td strong {
+        color: #354b3a;
+    }
+
+    .admin-detail-status {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 30px;
+        background: #e8f5ec;
+        color: #237347;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .admin-detail-note {
+        color: #87938a;
+        font-size: 11px;
+        line-height: 1.7;
+        margin: 10px 0 0;
+    }
+
+    @@media(max-width: 760px) {
+        .admin-detail-page {
+            padding: 25px 14px 45px;
+        }
+
+        .admin-detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-detail-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .admin-detail-card {
+            padding: 18px;
+        }
+    }
+
+    @@media(max-width: 480px) {
+        .admin-detail-info {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-detail-info .full {
+            grid-column: auto;
+        }
+
+        .admin-detail-actions {
+            flex-direction: column;
+        }
+
+        .admin-detail-button {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="admin-detail-page">
+
+    <div class="admin-detail-heading">
         <div>
-            <h2>Pesanan #@Model.IdPemesanan</h2>
-            <p class="text-secondary">Detail transaksi, pelanggan, dan pengiriman.</p>
+            <small>Syncora / Pesanan Masuk</small>
+            <h1>Pesanan #@Model.IdPemesanan</h1>
+            <p>Periksa informasi transaksi, pembayaran, dan kelola proses pesanan.</p>
         </div>
 
-        <a asp-action="Index" class="btn btn-outline-custom">Kembali</a>
+        <a asp-controller="AdminPesanan"
+           asp-action="Index"
+           class="admin-detail-back">
+            ← Kembali ke Pesanan Masuk
+        </a>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="admin-detail-alert success">
+            @TempData["Success"]
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="admin-detail-alert error">
+            @TempData["Error"]
+        </div>
     }
 
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="dashboard-section mb-4">
-                <h4>Produk Pesanan</h4>
+    <div class="admin-detail-grid">
 
-                <div class="table-responsive">
-                    <table class="table table-custom">
-                        <thead>
-                            <tr>
-                                <th>Produk</th>
-                                <th>Harga</th>
-                                <th>Jumlah</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.Items)
-                            {
-                                <tr>
-                                    <td>
-                                        <strong>@item.NamaProduk</strong>
-                                        <div class="small text-secondary">@item.KodeProduk</div>
-                                    </td>
-                                    <td>Rp @item.HargaSatuan.ToString("N0")</td>
-                                    <td>@item.Jumlah</td>
-                                    <td>Rp @item.Subtotal.ToString("N0")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+        <div>
+
+            <section class="admin-detail-card">
+                <h3>Informasi Pelanggan</h3>
+
+                <div class="admin-detail-info">
+
+                    <div>
+                        <span>Nama Pelanggan</span>
+                        <strong>@Model.NamaCustomer</strong>
+                    </div>
+
+                    <div>
+                        <span>Username</span>
+                        <strong>@@@Model.Username</strong>
+                    </div>
+
+                    <div>
+                        <span>Nomor Telepon</span>
+                        <strong>@Model.Telepon</strong>
+                    </div>
+
+                    <div>
+                        <span>Tanggal Pesanan</span>
+                        <strong>@Model.TglPesan.ToString("dd MMMM yyyy HH:mm")</strong>
+                    </div>
+
                 </div>
 
-                <hr />
+                <hr class="admin-detail-divider" />
 
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Subtotal</span>
-                    <strong>Rp @Model.Subtotal.ToString("N0")</strong>
+                <h3>Alamat Pengiriman</h3>
+
+                <div class="admin-detail-info">
+
+                    <div>
+                        <span>Nama Penerima</span>
+                        <strong>@Model.NamaPenerima</strong>
+                    </div>
+
+                    <div>
+                        <span>Telepon Penerima</span>
+                        <strong>@Model.TeleponPenerima</strong>
+                    </div>
+
+                    <div class="full">
+                        <span>Alamat Lengkap</span>
+                        <div class="value">
+                            @Model.AlamatLengkap,
+                            @Model.Kota,
+                            @Model.Provinsi,
+                            @Model.KodePos
+                        </div>
+                    </div>
+
                 </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Diskon</span>
-                    <strong>Rp @Model.Diskon.ToString("N0")</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Ongkir</span>
-                    <strong>Rp @Model.Ongkir.ToString("N0")</strong>
-                </div>
-                <hr />
-                <div class="d-flex justify-content-between">
-                    <strong>Total</strong>
-                    <strong class="text-success">Rp @Model.TotalBayar.ToString("N0")</strong>
-                </div>
-            </div>
+            </section>
 
-            <div class="dashboard-section">
-                <h4>Alamat Pengiriman</h4>
-                <p class="mb-1"><strong>@Model.NamaPenerima</strong></p>
-                <p class="mb-1">@Model.TeleponPenerima</p>
-                <p class="mb-0">
-                    @Model.AlamatLengkap, @Model.Kota, @Model.Provinsi, @Model.KodePos
-                </p>
-            </div>
-        </div>
+            <section class="admin-detail-card">
+                <h3>Rincian Produk</h3>
 
-        <div class="col-lg-5">
-            <div class="dashboard-section mb-4">
-                <h4>Informasi Pelanggan</h4>
-                <p class="mb-1"><strong>@Model.NamaCustomer</strong></p>
-                <p class="mb-1">Username: @Model.Username</p>
-                <p class="mb-0">Telepon: @Model.Telepon</p>
-
-                <hr />
-
-                <p class="mb-1">
-                    <small class="text-secondary">Tanggal Pesanan</small>
-                </p>
-                <p>@Model.TglPesan.ToString("dd MMMM yyyy HH:mm")</p>
-
-                <p class="mb-1">
-                    <small class="text-secondary">Status Pembayaran</small>
-                </p>
-                <p><strong>@Model.StatusPembayaran</strong></p>
-
-                <p class="mb-1">
-                    <small class="text-secondary">Status Pesanan</small>
-                </p>
-                <p><strong>@Model.Status</strong></p>
-            </div>
-
-            <div class="dashboard-section">
-                <h4>Informasi Pengiriman</h4>
-
-                @if (!string.IsNullOrWhiteSpace(Model.Kurir))
+                @if (Model.Items == null || !Model.Items.Any())
                 {
-                    <p class="mb-1">Kurir: <strong>@Model.Kurir</strong></p>
-                    <p class="mb-1">Nomor Resi: <strong>@Model.NoResi</strong></p>
-                    <p>Status Pengiriman: @Model.StatusPengiriman</p>
+                    <p class="admin-detail-note">Tidak ada rincian produk.</p>
                 }
                 else
                 {
-                    <p class="text-secondary">Belum ada data pengiriman.</p>
+                    <div style="overflow-x:auto;">
+                        <table class="admin-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Jumlah</th>
+                                    <th>Harga</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.NamaProduk</strong>
+                                            <div style="color:#9aa39b;font-size:10px;margin-top:3px;">
+                                                @item.KodeProduk
+                                            </div>
+                                        </td>
+                                        <td>@item.Jumlah</td>
+                                        <td>Rp @item.HargaSatuan.ToString("N0")</td>
+                                        <td><strong>Rp @item.Subtotal.ToString("N0")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
 
-                @if (statusBerikutnya != null)
+                <div class="admin-detail-info" style="margin-top:20px;">
+                    <div>
+                        <span>Subtotal</span>
+                        <strong>Rp @Model.Subtotal.ToString("N0")</strong>
+                    </div>
+
+                    <div>
+                        <span>Diskon</span>
+                        <strong>Rp @Model.Diskon.ToString("N0")</strong>
+                    </div>
+
+                    <div>
+                        <span>Ongkos Kirim</span>
+                        <strong>Rp @Model.Ongkir.ToString("N0")</strong>
+                    </div>
+                </div>
+
+                <div class="admin-detail-total">
+                    <span>Total Pesanan</span>
+                    <strong>Rp @Model.TotalBayar.ToString("N0")</strong>
+                </div>
+            </section>
+
+        </div>
+
+        <div>
+
+            <section class="admin-detail-card">
+                <h3>Informasi Pembayaran</h3>
+
+                <div class="admin-detail-info">
+
+                    <div>
+                        <span>Metode Pembayaran</span>
+                        <strong>@(Model.NamaMetode ?? "-")</strong>
+                    </div>
+
+                    <div>
+                        <span>Tanggal Pembayaran</span>
+                        <strong>
+                            @(Model.TglBayar?.ToString("dd MMM yyyy HH:mm") ?? "-")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Jumlah Dibayar</span>
+                        <strong>
+                            @(Model.JumlahBayar.HasValue
+                                ? "Rp " + Model.JumlahBayar.Value.ToString("N0")
+                                : "-")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Status Pembayaran</span>
+                        <strong>@StatusLabel(Model.StatusPembayaran)</strong>
+                    </div>
+
+                    <div class="full">
+                        <span>Status Pesanan</span>
+                        <strong class="admin-detail-status">
+                            @StatusLabel(Model.Status)
+                        </strong>
+                    </div>
+
+                </div>
+
+                <hr class="admin-detail-divider" />
+
+                <h3>Bukti Pembayaran</h3>
+
+                @if (!string.IsNullOrWhiteSpace(Model.BuktiBayar))
                 {
-                    <hr />
+                    <a href="@Model.BuktiBayar"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="admin-detail-proof-link">
 
-                    <h5>Perbarui Status</h5>
+                        <img src="@Model.BuktiBayar"
+                             alt="Bukti pembayaran pelanggan"
+                             class="admin-detail-proof" />
+                    </a>
 
+                    <p class="admin-detail-note">
+                        Klik gambar untuk melihat bukti pembayaran dalam ukuran penuh.
+                    </p>
+                }
+                else
+                {
+                    <div class="admin-detail-no-proof">
+                        Pelanggan belum mengunggah bukti pembayaran.
+                    </div>
+                }
+
+                @if (dapatDiverifikasi)
+                {
+                    <hr class="admin-detail-divider" />
+
+                    <h3>Verifikasi Pembayaran</h3>
+
+                    <p class="admin-detail-note">
+                        Pastikan nominal dan bukti pembayaran sesuai dengan total transaksi.
+                        Jika diterima, status pesanan otomatis berubah menjadi diproses.
+                    </p>
+
+                    <div class="admin-detail-actions">
+
+                        <form asp-controller="AdminPesanan"
+                              asp-action="VerifikasiPembayaran"
+                              asp-route-idPayment="@Model.IdPayment"
+                              method="post"
+                              onsubmit="return confirm('Terima pembayaran ini? Status pesanan akan otomatis berubah menjadi diproses.');">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="keputusan" value="berhasil" />
+
+                            <button type="submit"
+                                    class="admin-detail-button accept">
+                                ✓ Terima Pembayaran
+                            </button>
+                        </form>
+
+                        <form asp-controller="AdminPesanan"
+                              asp-action="VerifikasiPembayaran"
+                              asp-route-idPayment="@Model.IdPayment"
+                              method="post"
+                              onsubmit="return confirm('Tolak pembayaran ini? Pelanggan dapat mengunggah bukti pembayaran kembali.');">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="keputusan" value="gagal" />
+
+                            <button type="submit"
+                                    class="admin-detail-button reject">
+                                ✕ Tolak Pembayaran
+                            </button>
+                        </form>
+
+                    </div>
+                }
+                else if (Model.Status == "menunggu_bayar" &&
+                         Model.StatusPembayaran == "pending")
+                {
+                    <div class="admin-detail-note">
+                        Pembayaran belum dapat diverifikasi karena bukti pembayaran belum diunggah.
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-detail-note">
+                        Pembayaran ini sudah diproses atau tidak sedang menunggu verifikasi.
+                    </div>
+                }
+
+            </section>
+
+            <section class="admin-detail-card">
+                <h3>Pengelolaan Pesanan</h3>
+
+                <div class="admin-detail-info">
+                    <div>
+                        <span>Status Pesanan Saat Ini</span>
+                        <strong>@StatusLabel(Model.Status)</strong>
+                    </div>
+
+                    <div>
+                        <span>Status Pengiriman</span>
+                        <strong>@(Model.StatusPengiriman ?? "-")</strong>
+                    </div>
+
+                    <div>
+                        <span>Kurir</span>
+                        <strong>@(Model.Kurir ?? "-")</strong>
+                    </div>
+
+                    <div>
+                        <span>Nomor Resi</span>
+                        <strong>@(Model.NoResi ?? "-")</strong>
+                    </div>
+                </div>
+
+                @if (Model.Status == "diproses")
+                {
                     <form asp-controller="AdminPesanan"
                           asp-action="UbahStatus"
                           asp-route-id="@Model.IdPemesanan"
-                          method="post">
+                          method="post"
+                          class="admin-detail-form"
+                          onsubmit="return confirm('Ubah status pesanan menjadi dikirim?');">
 
                         @Html.AntiForgeryToken()
 
-                        <input type="hidden"
-                               name="statusBaru"
-                               value="@statusBerikutnya" />
+                        <input type="hidden" name="statusBaru" value="dikirim" />
 
-                        @if (statusBerikutnya == "dikirim")
-                        {
-                            <div class="mb-3">
-                                <label class="form-label">Nama Kurir</label>
-                                <input type="text"
-                                       name="kurir"
-                                       class="form-control"
-                                       placeholder="Contoh: JNE, J&T, SiCepat"
-                                       maxlength="100"
-                                       required />
-                            </div>
+                        <label for="kurir">Nama Kurir</label>
+                        <input type="text"
+                               id="kurir"
+                               name="kurir"
+                               placeholder="Contoh: JNE, J&T, SiCepat"
+                               required />
 
-                            <div class="mb-3">
-                                <label class="form-label">Nomor Resi</label>
-                                <input type="text"
-                                       name="noResi"
-                                       class="form-control"
-                                       placeholder="Masukkan nomor resi"
-                                       maxlength="100"
-                                       required />
-                            </div>
-                        }
+                        <label for="noResi">Nomor Resi</label>
+                        <input type="text"
+                               id="noResi"
+                               name="noResi"
+                               placeholder="Masukkan nomor resi"
+                               required />
 
                         <button type="submit"
-                                class="btn btn-primary-custom w-100"
-                                onclick="return confirm('Ubah status pesanan menjadi @statusBerikutnya?')">
-                            Ubah Menjadi @statusBerikutnya
+                                class="admin-detail-button primary">
+                            Tandai Dikirim
                         </button>
                     </form>
                 }
+                else if (Model.Status == "dikirim")
+                {
+                    <form asp-controller="AdminPesanan"
+                          asp-action="UbahStatus"
+                          asp-route-id="@Model.IdPemesanan"
+                          method="post"
+                          class="admin-detail-form"
+                          onsubmit="return confirm('Tandai pesanan ini sebagai selesai?');">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="statusBaru" value="selesai" />
+
+                        <button type="submit"
+                                class="admin-detail-button primary">
+                            Tandai Selesai
+                        </button>
+                    </form>
+                }
+                else if (Model.Status == "menunggu_bayar")
+                {
+                    <p class="admin-detail-note">
+                        Pesanan belum dapat diproses sebelum pembayaran berhasil diverifikasi.
+                    </p>
+                }
                 else
                 {
-                    <div class="alert alert-success mb-0">
-                        Pesanan sudah mencapai status akhir atau belum memenuhi syarat untuk diproses.
-                    </div>
+                    <p class="admin-detail-note">
+                        Tidak ada perubahan status pengiriman yang tersedia untuk pesanan ini.
+                    </p>
                 }
-            </div>
+
+            </section>
+
         </div>
+
     </div>
+
 </div>

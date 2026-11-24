@@ -3,11 +3,8 @@
 <html lang="id">
 <head>
     <meta charset="utf-8" />
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
-    <meta name="theme-color" content="#173f32" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#102d24" />
 
     <title>@ViewData["Title"] - Syncora</title>
 
@@ -17,188 +14,280 @@
 </head>
 
 <body>
+    @{
+        var fotoNavbar = User.FindFirst("FotoProfil")?.Value;
+        var usernameNavbar = User.Identity?.Name ?? "S";
+        var inisialNavbar = string.IsNullOrWhiteSpace(usernameNavbar)
+            ? "S"
+            : usernameNavbar.Substring(0, 1).ToUpper();
 
-    <!-- NAVBAR -->
+        var fotoNavbarUrl = string.IsNullOrWhiteSpace(fotoNavbar)
+            ? null
+            : Url.Content("~/uploads/profil/" + System.IO.Path.GetFileName(fotoNavbar));
+
+        var jenisAkun = User.IsInRole("admin") ? "admin" : "user";
+    }
+
     <header class="navbar">
         <div class="container nav-content">
 
             <a class="brand"
                asp-controller="Home"
                asp-action="Index">
-
                 <span class="brand-icon">♫</span>
-                <span>Syncora</span>
+                <span class="brand-name">Syncora</span>
             </a>
 
-            <nav>
+            <nav class="nav-main">
 
-                <a asp-controller="Home"
-                   asp-action="Index">
-                    Beranda
+                <a asp-controller="Home" asp-action="Index">
+                    <span class="nav-link-icon">⌂</span>
+                    <span>Beranda</span>
                 </a>
 
-                <a asp-controller="Produk"
-                   asp-action="Index">
-                    Produk
+                <a asp-controller="Produk" asp-action="Index">
+                    <span class="nav-link-icon">♫</span>
+                    <span>Produk</span>
                 </a>
 
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     @if (User.IsInRole("user"))
                     {
-                        <a asp-controller="Keranjang"
-                           asp-action="Index">
-                            Keranjang
+                        <a asp-controller="Keranjang" asp-action="Index">
+                            <span class="nav-link-icon">▣</span>
+                            <span>Keranjang</span>
                         </a>
 
-                        <a asp-controller="Alamat"
-                           asp-action="Index">
-                            Alamat Saya
+                        <a asp-controller="Alamat" asp-action="Index">
+                            <span class="nav-link-icon">⌖</span>
+                            <span>Alamat Saya</span>
                         </a>
 
-                        <a asp-controller="PesananSaya"
-                           asp-action="Index">
-                            Pesanan Saya
-                        </a>
-
-                        <a asp-controller="Profil"
-                           asp-action="Index">
-                            Profil Saya
+                        <a asp-controller="PesananSaya" asp-action="Index">
+                            <span class="nav-link-icon">▤</span>
+                            <span>Pesanan Saya</span>
                         </a>
                     }
 
                     @if (User.IsInRole("admin"))
                     {
-                        <a asp-controller="Admin"
-                           asp-action="Index">
-                            Dashboard Admin
+                        <a asp-controller="Admin" asp-action="Index">
+                            <span class="nav-link-icon">▦</span>
+                            <span>Dashboard Admin</span>
+                        </a>
+
+                        <a asp-controller="AdminPesanan" asp-action="Index">
+                            <span class="nav-link-icon">▤</span>
+                            <span>Pesanan Masuk</span>
                         </a>
                     }
+                }
+            </nav>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="nav-account-actions">
 
                     <form asp-controller="Auth"
                           asp-action="Logout"
                           method="post"
-                          style="display:inline;">
+                          onsubmit="return confirm('Apakah Anda yakin ingin keluar dari akun @jenisAkun ini?');">
 
                         @Html.AntiForgeryToken()
 
                         <button type="submit"
-                                class="nav-logout">
-                            Logout
+                                class="nav-logout-icon"
+                                title="Logout"
+                                aria-label="Logout">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 2v10" />
+                                <path d="M7.5 4.8a9 9 0 1 0 9 0" />
+                            </svg>
                         </button>
                     </form>
-                }
-                else
-                {
+
+                    @if (User.IsInRole("user"))
+                    {
+                        <a asp-controller="Profil"
+                           asp-action="Index"
+                           class="nav-profile-avatar"
+                           title="Profil Saya"
+                           aria-label="Buka Profil Saya">
+
+                            @if (fotoNavbarUrl != null)
+                            {
+                                <img src="@fotoNavbarUrl" alt="Foto profil" />
+                            }
+                            else
+                            {
+                                <span>@inisialNavbar</span>
+                            }
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Admin"
+                           asp-action="Index"
+                           class="nav-profile-avatar"
+                           title="Dashboard Admin"
+                           aria-label="Dashboard Admin">
+                            <span>@inisialNavbar</span>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="nav-login-links">
                     <a asp-controller="Auth"
-                       asp-action="Login">
+                       asp-action="Login"
+                       class="nav-login-button">
                         Login
                     </a>
 
                     <a asp-controller="Auth"
-                       asp-action="Register">
+                       asp-action="Register"
+                       class="nav-register-button">
                         Daftar
                     </a>
-                }
-
-            </nav>
+                </div>
+            }
 
         </div>
     </header>
 
-
-    <!-- KONTEN UTAMA -->
     <main>
         @RenderBody()
     </main>
 
-
-    <!-- FOOTER -->
     <footer class="footer">
+
+        <div class="footer-decoration" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+
         <div class="container">
 
             <div class="footer-content">
 
-                <div>
-                    <a class="brand"
+                <div class="footer-brand-section">
+
+                    <a class="footer-brand"
                        asp-controller="Home"
                        asp-action="Index">
-
-                        <span class="brand-icon">♫</span>
-                        <span>Syncora</span>
+                        <span class="footer-brand-icon">♫</span>
+                        <span class="footer-brand-name">Syncora</span>
                     </a>
 
-                    <p>
-                        Temukan alat musik pilihanmu
-                        dan mulai perjalanan bermusik
+                    <p class="footer-description">
+                        Temukan alat musik pilihanmu dan mulailah
+                        menciptakan melodi serta cerita musikmu
                         bersama Syncora.
                     </p>
+
+                    <div class="footer-tagline">
+                        <span class="footer-tagline-icon">♪</span>
+                        <span>Find Your Sound, Create Your Story.</span>
+                    </div>
+
                 </div>
 
                 <div class="footer-links">
-                    <h4>Navigasi</h4>
 
-                    <a asp-controller="Home"
-                       asp-action="Index">
+                    <h4>Jelajahi</h4>
+
+                    <a asp-controller="Home" asp-action="Index">
+                        <span>⌂</span>
                         Beranda
                     </a>
 
-                    <a asp-controller="Produk"
-                       asp-action="Index">
+                    <a asp-controller="Produk" asp-action="Index">
+                        <span>♫</span>
                         Katalog Produk
                     </a>
 
-                    @if (User.Identity?.IsAuthenticated == true
-                         && User.IsInRole("user"))
+                </div>
+
+                <div class="footer-links">
+
+                    @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <a asp-controller="Keranjang"
-                           asp-action="Index">
-                            Keranjang
-                        </a>
+                        @if (User.IsInRole("user"))
+                        {
+                            <h4>Akun Saya</h4>
 
-                        <a asp-controller="PesananSaya"
-                           asp-action="Index">
-                            Pesanan Saya
-                        </a>
+                            <a asp-controller="Keranjang" asp-action="Index">
+                                <span>▣</span>
+                                Keranjang
+                            </a>
 
-                        <a asp-controller="Profil"
-                           asp-action="Index">
-                            Profil Saya
-                        </a>
+                            <a asp-controller="PesananSaya" asp-action="Index">
+                                <span>▤</span>
+                                Pesanan Saya
+                            </a>
+
+                            <a asp-controller="Profil" asp-action="Index">
+                                <span>◉</span>
+                                Profil Saya
+                            </a>
+                        }
+
+                        @if (User.IsInRole("admin"))
+                        {
+                            <h4>Administrasi</h4>
+
+                            <a asp-controller="Admin" asp-action="Index">
+                                <span>▦</span>
+                                Dashboard Admin
+                            </a>
+
+                            <a asp-controller="AdminPesanan" asp-action="Index">
+                                <span>▤</span>
+                                Pesanan Masuk
+                            </a>
+                        }
                     }
-                    else if (User.Identity?.IsAuthenticated != true)
+                    else
                     {
-                        <a asp-controller="Auth"
-                           asp-action="Login">
+                        <h4>Mulai Bersama Kami</h4>
+
+                        <a asp-controller="Auth" asp-action="Login">
+                            <span>→</span>
                             Login
                         </a>
 
-                        <a asp-controller="Auth"
-                           asp-action="Register">
-                            Daftar
+                        <a asp-controller="Auth" asp-action="Register">
+                            <span>＋</span>
+                            Daftar Akun
                         </a>
                     }
-                    else if (User.IsInRole("admin"))
-                    {
-                        <a asp-controller="Admin"
-                           asp-action="Index">
-                            Dashboard Admin
-                        </a>
-                    }
+
                 </div>
 
             </div>
 
+            <div class="footer-divider"></div>
+
             <div class="footer-bottom">
+
                 <p>
-                    © @DateTime.Now.Year Syncora.
+                    © @DateTime.Now.Year
+                    <strong>Syncora</strong>.
                     Sistem Penjualan Alat Musik.
                 </p>
+
+                <div class="footer-bottom-note">
+                    <span class="footer-note-icon">♫</span>
+                    <span>Made for Music Lovers</span>
+                </div>
+
             </div>
 
         </div>
     </footer>
-
 
     @await RenderSectionAsync("Scripts", required: false)
 

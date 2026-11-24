@@ -1,0 +1,100 @@
+﻿
+@model TokoMusik.Web.Models.GaransiViewModel
+
+@{
+    ViewData["Title"] = "Garansi Saya";
+}
+
+<style>
+    .warranty-page { max-width:1180px; margin:35px auto 65px; padding:0 18px; color:#263a30; }
+    .warranty-heading { margin-bottom:25px; }
+    .warranty-heading h2 { font-weight:800; }
+    .warranty-panel { background:white; border:1px solid #e7ece8; border-radius:16px; padding:22px; box-shadow:0 5px 20px rgba(20,50,30,.04); }
+    .warranty-table-wrap { overflow-x:auto; }
+    .warranty-table { width:100%; min-width:800px; border-collapse:collapse; }
+    .warranty-table th { background:#f4f7f4; color:#748077; font-size:12px; text-transform:uppercase; }
+    .warranty-table th,.warranty-table td { padding:14px 12px; border-bottom:1px solid #edf0ed; text-align:left; }
+    .warranty-table td { font-size:14px; }
+    .warranty-badge { display:inline-block; padding:6px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+    .warranty-aktif { background:#e5f3e9; color:#28613d; }
+    .warranty-habis { background:#f0eeee; color:#626262; }
+    .warranty-diklaim { background:#fff2d6; color:#93630a; }
+    .warranty-btn { background:#24583d; color:white; border:0; border-radius:8px; padding:9px 13px; text-decoration:none; font-size:12px; font-weight:700; }
+    .warranty-btn:hover { background:#19452e; color:white; }
+</style>
+
+<div class="warranty-page">
+    <div class="warranty-heading">
+        <h2>Garansi Saya</h2>
+        <p class="text-muted">Informasi masa perlindungan dan status garansi produk yang kamu beli di Syncora.</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="warranty-panel">
+        @if (Model.DaftarGaransi.Any())
+        {
+            <div class="warranty-table-wrap">
+                <table class="warranty-table">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>No. Pesanan</th>
+                            <th>Jumlah</th>
+                            <th>Mulai Garansi</th>
+                            <th>Akhir Garansi</th>
+                            <th>Status</th>
+                            <th>Keterangan</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model.DaftarGaransi)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.NamaProduk</strong><br />
+                                <small class="text-muted">@item.KodeProduk</small>
+                            </td>
+                            <td>#@item.IdPemesanan</td>
+                            <td>@item.Jumlah</td>
+                            <td>@item.TanggalMulai.ToString("dd MMM yyyy")</td>
+                            <td>@item.TanggalBerakhir.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <span class="warranty-badge warranty-@item.Status">@item.Status</span>
+                            </td>
+                            <td style="max-width:200px;white-space:normal;">@(string.IsNullOrWhiteSpace(item.Keterangan) ? "-" : item.Keterangan)</td>
+                            <td>
+                                @if (item.Status == "aktif")
+                                {
+                                    <a asp-action="Klaim" asp-route-id="@item.IdGaransi" class="warranty-btn">
+                                        Ajukan Klaim
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <h5 class="fw-bold">Belum Ada Garansi</h5>
+                <p class="text-muted mb-0">Garansi produk yang sudah diterbitkan akan muncul di halaman ini.</p>
+            </div>
+        }
+    </div>
+</div>

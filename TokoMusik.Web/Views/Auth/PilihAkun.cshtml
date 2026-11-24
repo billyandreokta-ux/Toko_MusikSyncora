@@ -1,0 +1,196 @@
+﻿
+@model List<TokoMusik.Web.Models.AkunTersimpanViewModel>
+
+@{
+    ViewData["Title"] = "Ganti Akun";
+}
+
+<style>
+    .switch-account-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 40px 15px 65px;
+        color: #263b30;
+    }
+
+    .switch-account-heading {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .switch-account-heading h2 {
+        font-weight: 750;
+        margin-bottom: 8px;
+    }
+
+    .switch-account-heading p {
+        color: #78877e;
+    }
+
+    .switch-account-card {
+        background: white;
+        border: 1px solid #e5ebe6;
+        border-radius: 16px;
+        padding: 17px;
+        margin-bottom: 13px;
+        box-shadow: 0 5px 18px rgba(20, 55, 35, .04);
+    }
+
+    .switch-account-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .switch-account-avatar {
+        width: 58px;
+        height: 58px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #e7f3eb;
+        border: 2px solid #dcebe1;
+        color: #176b45;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-size: 21px;
+        font-weight: 750;
+    }
+
+    .switch-account-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .switch-account-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .switch-account-info strong {
+        display: block;
+        font-size: 16px;
+        overflow-wrap: anywhere;
+    }
+
+    .switch-account-info span {
+        color: #78877e;
+        font-size: 13px;
+    }
+
+    .switch-account-button {
+        background: #176b45;
+        color: white;
+        border: 0;
+        border-radius: 8px;
+        padding: 9px 15px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .switch-account-button:hover {
+        background: #105536;
+    }
+
+    .switch-account-footer {
+        text-align: center;
+        margin-top: 25px;
+    }
+
+    .switch-account-footer a {
+        color: #176b45;
+        text-decoration: none;
+        font-weight: 650;
+    }
+
+    @@media (max-width: 520px) {
+        .switch-account-content {
+            flex-wrap: wrap;
+        }
+
+        .switch-account-button {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="switch-account-page">
+
+    <div class="switch-account-heading">
+        <h2>Ganti Akun</h2>
+        <p>Pilih akun yang pernah digunakan pada perangkat ini.</p>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    @foreach (var akun in Model)
+    {
+        var inisial = string.IsNullOrWhiteSpace(akun.Username)
+            ? "S"
+            : akun.Username.Substring(0, 1).ToUpper();
+
+        var foto = string.IsNullOrWhiteSpace(akun.Foto)
+            ? null
+            : Url.Content("~/uploads/profil/" + System.IO.Path.GetFileName(akun.Foto));
+
+        <div class="switch-account-card">
+
+            <div class="switch-account-content">
+
+                <div class="switch-account-avatar">
+                    @if (foto != null)
+                    {
+                        <img src="@foto" alt="Foto akun" />
+                    }
+                    else
+                    {
+                        @inisial
+                    }
+                </div>
+
+                <div class="switch-account-info">
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(akun.NamaCustomer)
+                            ? akun.Username
+                            : akun.NamaCustomer)
+                    </strong>
+
+                    <span>@@@akun.Username · @akun.Role</span>
+                </div>
+
+                <form asp-controller="Auth"
+                      asp-action="GantiAkun"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="idUser"
+                           value="@akun.IdUser" />
+
+                    <button type="submit"
+                            class="switch-account-button">
+                        Masuk
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+    }
+
+    <div class="switch-account-footer">
+        <a asp-controller="Home" asp-action="Index">
+            Kembali
+        </a>
+    </div>
+
+</div>

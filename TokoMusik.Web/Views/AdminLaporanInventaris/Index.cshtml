@@ -4,22 +4,22 @@
 @{
     ViewData["Title"] = "Laporan Inventaris";
 
-    var nilaiMaksimalProduk = Model.ProdukTerlarisRestock.Any()
+    var totalProduk = Model.ProdukTerlarisRestock.Any()
         ? Model.ProdukTerlarisRestock.Max(x => x.TotalUnitMasuk)
-        : 1;
+        : 0;
 
-    var nilaiMaksimalSupplier = Model.PembelianPerSupplier.Any()
+    var totalSupplier = Model.PembelianPerSupplier.Any()
         ? Model.PembelianPerSupplier.Max(x => x.TotalPembelian)
-        : 1;
+        : 0;
 }
 
 <style>
-    .inventory-report-page {
+    .report-page {
         padding: 30px 0 55px;
         color: #293b30;
     }
 
-    .inventory-report-heading {
+    .report-heading {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -28,47 +28,41 @@
         margin-bottom: 25px;
     }
 
-    .inventory-report-heading h1 {
+    .report-heading h1 {
         font-size: 27px;
         font-weight: 750;
         margin-bottom: 5px;
     }
 
-    .inventory-report-heading p {
+    .report-heading p {
         color: #829087;
         margin: 0;
     }
 
-    .inventory-report-actions {
-        display: flex;
-        gap: 9px;
-        flex-wrap: wrap;
-    }
-
-    .inventory-report-button {
+    .report-button {
         display: inline-block;
         padding: 11px 16px;
         border-radius: 9px;
         background: #176b45;
         color: white;
         text-decoration: none;
-        border: 0;
+        border: none;
         font-size: 13px;
         font-weight: 650;
         cursor: pointer;
     }
 
-    .inventory-report-button:hover {
-        color: white;
+    .report-button:hover {
         background: #105638;
+        color: white;
     }
 
-    .inventory-report-button.secondary {
+    .report-button.secondary {
         background: #edf3ef;
         color: #315640;
     }
 
-    .inventory-report-filter {
+    .report-filter {
         display: flex;
         align-items: end;
         flex-wrap: wrap;
@@ -80,19 +74,19 @@
         margin-bottom: 22px;
     }
 
-    .inventory-report-filter-group {
+    .report-filter-group {
         flex: 1;
         min-width: 180px;
     }
 
-    .inventory-report-filter-group label {
+    .report-filter-group label {
         display: block;
         font-size: 12px;
         font-weight: 650;
         margin-bottom: 7px;
     }
 
-    .inventory-report-filter-group input {
+    .report-filter-group input {
         width: 100%;
         min-height: 43px;
         padding: 9px 12px;
@@ -100,20 +94,14 @@
         border-radius: 8px;
     }
 
-    .inventory-report-filter-group input:focus {
-        outline: none;
-        border-color: #24764f;
-        box-shadow: 0 0 0 3px rgba(36, 118, 79, .1);
-    }
-
-    .inventory-report-summary {
+    .report-summary {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 15px;
         margin-bottom: 22px;
     }
 
-    .inventory-report-card {
+    .report-card {
         background: white;
         border: 1px solid #e5ece7;
         border-radius: 13px;
@@ -122,62 +110,63 @@
         min-width: 0;
     }
 
-    .inventory-report-card-label {
+    .report-card-label {
         color: #829087;
         font-size: 12px;
         margin-bottom: 10px;
     }
 
-    .inventory-report-card-value {
+    .report-card-value {
         font-size: 25px;
         font-weight: 750;
         overflow-wrap: anywhere;
     }
 
-    .inventory-report-card-description {
+    .report-card-description {
         color: #87928b;
         font-size: 11px;
         margin-top: 6px;
     }
 
-    .inventory-report-grid {
+    .report-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
         margin-bottom: 20px;
     }
 
-    .inventory-report-section {
+    .report-section {
         background: white;
         border: 1px solid #e5ece7;
         border-radius: 14px;
         padding: 21px;
         min-width: 0;
+        margin-bottom: 20px;
     }
 
-    .inventory-report-section h2 {
+    .report-section h2 {
         font-size: 17px;
         font-weight: 750;
         margin: 0 0 5px;
     }
 
-    .inventory-report-section-description {
+    .report-description {
         color: #87928b;
         font-size: 12px;
         margin-bottom: 21px;
     }
 
-    .inventory-report-ranking {
+    .report-ranking {
         display: flex;
         flex-direction: column;
         gap: 18px;
     }
 
-    .inventory-report-ranking-item {
+    .report-ranking-item {
         min-width: 0;
     }
 
-    .inventory-report-ranking-heading {
+    .report-ranking-heading {
         display: flex;
         justify-content: space-between;
         align-items: start;
@@ -185,84 +174,84 @@
         margin-bottom: 8px;
     }
 
-    .inventory-report-ranking-name {
+    .report-ranking-name {
         font-size: 13px;
         font-weight: 700;
         overflow-wrap: anywhere;
     }
 
-    .inventory-report-ranking-value {
+    .report-ranking-value {
         font-size: 12px;
         font-weight: 700;
         white-space: nowrap;
     }
 
-    .inventory-report-progress {
+    .report-progress {
         height: 8px;
         background: #edf2ee;
         border-radius: 20px;
         overflow: hidden;
     }
 
-    .inventory-report-progress-fill {
+    .report-progress-fill {
         height: 100%;
         background: #24764f;
         border-radius: 20px;
         min-width: 3px;
     }
 
-    .inventory-report-progress-fill.supplier {
+    .report-progress-fill.supplier {
         background: #729b7e;
     }
 
-    .inventory-report-subtext {
+    .report-subtext {
         font-size: 11px;
         color: #87928b;
         margin-top: 6px;
     }
 
-    .inventory-report-movement {
+    .report-movement {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 13px;
     }
 
-    .inventory-report-movement-item {
+    .report-movement-item {
         background: #f7faf8;
         border-radius: 11px;
         padding: 17px;
     }
 
-    .inventory-report-movement-label {
+    .report-movement-label {
         font-size: 12px;
         color: #829087;
         margin-bottom: 8px;
     }
 
-    .inventory-report-movement-value {
+    .report-movement-value {
         font-size: 24px;
         font-weight: 750;
     }
 
-    .inventory-report-movement-value.in {
+    .report-movement-value.in {
         color: #207747;
     }
 
-    .inventory-report-movement-value.out {
+    .report-movement-value.out {
         color: #b33b36;
     }
 
-    .inventory-report-table-wrap {
+    .report-table-wrap {
         overflow-x: auto;
     }
 
-    .inventory-report-table {
+    .report-table {
         width: 100%;
         min-width: 650px;
         border-collapse: collapse;
     }
 
-    .inventory-report-table th {
+    .report-table th {
         text-align: left;
         padding: 12px;
         background: #f6f9f7;
@@ -272,5 +261,402 @@
         letter-spacing: .04em;
     }
 
-    .inventory-report-table td {
-        padding: 13px
+    .report-table td {
+        padding: 13px 12px;
+        border-bottom: 1px solid #edf1ee;
+        font-size: 13px;
+    }
+
+    .report-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .report-empty {
+        text-align: center;
+        color: #87928b;
+        padding: 30px 15px !important;
+    }
+
+    .report-number {
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .report-period {
+        font-size: 12px;
+        color: #829087;
+        margin-top: 5px;
+    }
+
+    @@media (max-width: 992px) {
+        .report-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 700px) {
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .report-heading h1 {
+            font-size: 23px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .report-summary {
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+        }
+
+        .report-card {
+            padding: 14px;
+        }
+
+        .report-card-value {
+            font-size: 20px;
+        }
+
+        .report-section {
+            padding: 15px;
+        }
+
+        .report-movement {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media print {
+        .report-filter,
+        .report-actions,
+        .report-heading .report-button {
+            display: none !important;
+        }
+
+        .report-page {
+            padding: 0;
+        }
+
+        .report-section,
+        .report-card {
+            break-inside: avoid;
+            box-shadow: none;
+        }
+    }
+</style>
+
+<div class="container report-page">
+
+    <div class="report-heading">
+        <div>
+            <h1>Laporan Inventaris</h1>
+            <p>Ringkasan pembelian dan pergerakan stok produk.</p>
+            <div class="report-period">
+                Periode:
+                @Model.TanggalMulai.ToString("dd MMM yyyy")
+                –
+                @Model.TanggalSelesai.ToString("dd MMM yyyy")
+            </div>
+        </div>
+
+        <div class="report-actions">
+            <button type="button" class="report-button secondary"
+                    onclick="window.print()">
+                Cetak Laporan
+            </button>
+
+            <a asp-controller="AdminTransaksiStok"
+               asp-action="Riwayat"
+               class="report-button">
+                Riwayat Stok
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Gagal"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Gagal"]
+        </div>
+    }
+
+    <form method="get"
+          asp-controller="AdminLaporanInventaris"
+          asp-action="Index"
+          class="report-filter">
+
+        <div class="report-filter-group">
+            <label for="tanggalMulai">Tanggal Mulai</label>
+            <input type="date"
+                   id="tanggalMulai"
+                   name="tanggalMulai"
+                   value="@Model.TanggalMulai.ToString("yyyy-MM-dd")"
+                   required />
+        </div>
+
+        <div class="report-filter-group">
+            <label for="tanggalSelesai">Tanggal Selesai</label>
+            <input type="date"
+                   id="tanggalSelesai"
+                   name="tanggalSelesai"
+                   value="@Model.TanggalSelesai.ToString("yyyy-MM-dd")"
+                   required />
+        </div>
+
+        <button type="submit" class="report-button">
+            Terapkan Filter
+        </button>
+
+        <a asp-controller="AdminLaporanInventaris"
+           asp-action="Index"
+           class="report-button secondary">
+            Reset
+        </a>
+    </form>
+
+    <div class="report-summary">
+
+        <div class="report-card">
+            <div class="report-card-label">Total Pembelian Stok</div>
+            <div class="report-card-value">
+                @Model.TotalNilaiPembelian.ToString("C0", new System.Globalization.CultureInfo("id-ID"))
+            </div>
+            <div class="report-card-description">
+                Nilai transaksi pembelian
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-card-label">Total Stok Masuk</div>
+            <div class="report-card-value">
+                @Model.TotalUnitMasuk.ToString("N0")
+            </div>
+            <div class="report-card-description">
+                @Model.TotalTransaksiMasuk transaksi
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-card-label">Total Stok Keluar</div>
+            <div class="report-card-value">
+                @Model.TotalUnitKeluar.ToString("N0")
+            </div>
+            <div class="report-card-description">
+                @Model.TotalTransaksiKeluar transaksi
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-card-label">Produk Direstock</div>
+            <div class="report-card-value">
+                @Model.JumlahProdukDirestock
+            </div>
+            <div class="report-card-description">
+                Produk berbeda yang dibeli
+            </div>
+        </div>
+
+    </div>
+
+    <div class="report-grid">
+
+        <section class="report-section">
+            <h2>Produk Paling Banyak Direstock</h2>
+            <div class="report-description">
+                Maksimal 10 produk berdasarkan jumlah unit masuk.
+            </div>
+
+            @if (Model.ProdukTerlarisRestock.Any())
+            {
+                <div class="report-ranking">
+                    @foreach (var item in Model.ProdukTerlarisRestock)
+                    {
+                        var persentase = totalProduk > 0
+                            ? (double)item.TotalUnitMasuk / totalProduk * 100
+                            : 0;
+
+                        <div class="report-ranking-item">
+                            <div class="report-ranking-heading">
+                                <div>
+                                    <div class="report-ranking-name">
+                                        @item.NamaProduk
+                                    </div>
+                                    <div class="report-subtext">
+                                        @item.KodeProduk · @item.FrekuensiRestock kali restock
+                                    </div>
+                                </div>
+
+                                <div class="report-ranking-value">
+                                    @item.TotalUnitMasuk.ToString("N0") unit
+                                </div>
+                            </div>
+
+                            <div class="report-progress">
+                                <div class="report-progress-fill"
+                                     style="width: @persentase.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
+                                </div>
+                            </div>
+
+                            <div class="report-subtext">
+                                Nilai pembelian:
+                                @item.TotalPembelian.ToString("C0", new System.Globalization.CultureInfo("id-ID"))
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="report-empty">
+                    Belum ada transaksi pembelian pada periode ini.
+                </div>
+            }
+        </section>
+
+        <section class="report-section">
+            <h2>Pembelian per Supplier</h2>
+            <div class="report-description">
+                Maksimal 10 supplier berdasarkan nilai pembelian.
+            </div>
+
+            @if (Model.PembelianPerSupplier.Any())
+            {
+                <div class="report-ranking">
+                    @foreach (var item in Model.PembelianPerSupplier)
+                    {
+                        var persentase = totalSupplier > 0
+                            ? (double)(item.TotalPembelian / totalSupplier) * 100
+                            : 0;
+
+                        <div class="report-ranking-item">
+                            <div class="report-ranking-heading">
+                                <div>
+                                    <div class="report-ranking-name">
+                                        @item.NamaSupplier
+                                    </div>
+                                    <div class="report-subtext">
+                                        @item.TotalTransaksi transaksi ·
+                                        @item.TotalUnit unit
+                                    </div>
+                                </div>
+
+                                <div class="report-ranking-value">
+                                    @item.TotalPembelian.ToString("C0", new System.Globalization.CultureInfo("id-ID"))
+                                </div>
+                            </div>
+
+                            <div class="report-progress">
+                                <div class="report-progress-fill supplier"
+                                     style="width: @persentase.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="report-empty">
+                    Belum ada transaksi supplier pada periode ini.
+                </div>
+            }
+        </section>
+
+    </div>
+
+    <section class="report-section">
+        <h2>Ringkasan Pergerakan Stok</h2>
+        <div class="report-description">
+            Perbandingan stok masuk dan stok keluar pada periode terpilih.
+        </div>
+
+        <div class="report-movement">
+            <div class="report-movement-item">
+                <div class="report-movement-label">Stok Masuk</div>
+                <div class="report-movement-value in">
+                    +@Model.TotalUnitMasuk.ToString("N0") unit
+                </div>
+                <div class="report-subtext">
+                    @Model.TotalTransaksiMasuk transaksi pembelian
+                </div>
+            </div>
+
+            <div class="report-movement-item">
+                <div class="report-movement-label">Stok Keluar</div>
+                <div class="report-movement-value out">
+                    -@Model.TotalUnitKeluar.ToString("N0") unit
+                </div>
+                <div class="report-subtext">
+                    @Model.TotalTransaksiKeluar transaksi stok keluar
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="report-section">
+        <h2>Detail Pembelian per Supplier</h2>
+        <div class="report-description">
+            Rincian transaksi pembelian berdasarkan supplier.
+        </div>
+
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Nama Supplier</th>
+                        <th>Transaksi</th>
+                        <th>Total Unit</th>
+                        <th>Total Pembelian</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model.PembelianPerSupplier.Any())
+                    {
+                        var nomor = 1;
+
+                        @foreach (var item in Model.PembelianPerSupplier)
+                        {
+                            <tr>
+                                <td>@nomor</td>
+                                <td class="report-number">@item.NamaSupplier</td>
+                                <td>@item.TotalTransaksi</td>
+                                <td>@item.TotalUnit.ToString("N0")</td>
+                                <td class="report-number">
+                                    @item.TotalPembelian.ToString("C0", new System.Globalization.CultureInfo("id-ID"))
+                                </td>
+                            </tr>
+
+                            nomor++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="report-empty">
+                                Tidak ada data pembelian.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="report-actions" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button"
+                class="report-button secondary"
+                onclick="window.print()">
+            Cetak Laporan
+        </button>
+
+        <a asp-controller="AdminDashboard"
+           asp-action="Index"
+           class="report-button">
+            Kembali ke Dashboard
+        </a>
+    </div>
+
+</div>

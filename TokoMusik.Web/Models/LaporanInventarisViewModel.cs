@@ -23,7 +23,9 @@ namespace TokoMusik.Web.Models
         public int JumlahSupplierAktifTransaksi { get; set; }
 
         public List<LaporanProdukRestockViewModel> ProdukTerlarisRestock { get; set; } = new();
+
         public List<LaporanSupplierViewModel> PembelianPerSupplier { get; set; } = new();
+
         public List<LaporanPergerakanStokViewModel> PergerakanStok { get; set; } = new();
     }
 
@@ -34,15 +36,6 @@ namespace TokoMusik.Web.Models
         public string NamaProduk { get; set; } = "";
         public int TotalUnitMasuk { get; set; }
         public int FrekuensiRestock { get; set; }
-        public decimal TotalPembelian { get; set; }
-    }
-
-    public class LaporanSupplierViewModel
-    {
-        public int IdSupplier { get; set; }
-        public string NamaSupplier { get; set; } = "";
-        public int TotalTransaksi { get; set; }
-        public int TotalUnit { get; set; }
         public decimal TotalPembelian { get; set; }
     }
 

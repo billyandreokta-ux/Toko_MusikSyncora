@@ -2,7 +2,6 @@
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using TokoMusik.Web.Data;
 using TokoMusik.Web.Models;
 
@@ -48,9 +47,11 @@ namespace TokoMusik.Web.Controllers
                     ON mp.id_metode = pay.id_metode
                 ORDER BY
                     CASE WHEN pay.status = 'pending' THEN 0 ELSE 1 END,
-                    pay.tgl_bayar DESC";
+                    pay.tgl_bayar DESC,
+                    pay.id_payment DESC";
 
-            var data = await connection.QueryAsync<AdminPembayaranViewModel>(sql);
+            var data =
+                await connection.QueryAsync<AdminPembayaranViewModel>(sql);
 
             return View(data.ToList());
         }
@@ -87,12 +88,15 @@ namespace TokoMusik.Web.Controllers
                 WHERE pay.id_payment = @IdPayment
                 LIMIT 1";
 
-            var data = await connection.QueryFirstOrDefaultAsync<AdminPembayaranDetailViewModel>(
-                sql,
-                new { IdPayment = id });
+            var data =
+                await connection.QueryFirstOrDefaultAsync<AdminPembayaranDetailViewModel>(
+                    sql,
+                    new { IdPayment = id });
 
             if (data == null)
+            {
                 return NotFound();
+            }
 
             return View(data);
         }
@@ -122,7 +126,9 @@ namespace TokoMusik.Web.Controllers
                         pay.id_pemesanan AS IdPemesanan,
                         pay.status AS StatusPembayaran,
                         p.status AS StatusPesanan,
-                        pay.bukti_bayar AS BuktiBayar
+                        pay.bukti_bayar AS BuktiBayar,
+                        pay.jumlah_bayar AS JumlahBayar,
+                        p.total_bayar AS TotalPesanan
                     FROM payments pay
                     INNER JOIN pemesanan p
                         ON p.id_pemesanan = pay.id_pemesanan
@@ -130,10 +136,11 @@ namespace TokoMusik.Web.Controllers
                     LIMIT 1
                     FOR UPDATE";
 
-                var data = await connection.QueryFirstOrDefaultAsync<VerifikasiData>(
-                    sqlCek,
-                    new { IdPayment = id },
-                    transaction);
+                var data =
+                    await connection.QueryFirstOrDefaultAsync<VerifikasiData>(
+                        sqlCek,
+                        new { IdPayment = id },
+                        transaction);
 
                 if (data == null)
                 {
@@ -153,12 +160,24 @@ namespace TokoMusik.Web.Controllers
                     return RedirectToAction(nameof(Detail), new { id });
                 }
 
+                if (keputusan == "berhasil" &&
+                    data.JumlahBayar != data.TotalPesanan)
+                {
+                    await transaction.RollbackAsync();
+
+                    TempData["Error"] =
+                        "Nominal pembayaran tidak sama dengan total pesanan. Pembayaran belum dapat diterima.";
+
+                    return RedirectToAction(nameof(Detail), new { id });
+                }
+
                 const string sqlUpdatePayment = @"
                     UPDATE payments
                     SET status = @Status
-                    WHERE id_payment = @IdPayment";
+                    WHERE id_payment = @IdPayment
+                      AND status = 'pending'";
 
-                await connection.ExecuteAsync(
+                int pembayaranDiubah = await connection.ExecuteAsync(
                     sqlUpdatePayment,
                     new
                     {
@@ -166,6 +185,16 @@ namespace TokoMusik.Web.Controllers
                         IdPayment = id
                     },
                     transaction);
+
+                if (pembayaranDiubah == 0)
+                {
+                    await transaction.RollbackAsync();
+
+                    TempData["Error"] =
+                        "Status pembayaran sudah berubah. Muat ulang halaman dan periksa kembali.";
+
+                    return RedirectToAction(nameof(Detail), new { id });
+                }
 
                 if (keputusan == "berhasil")
                 {
@@ -175,10 +204,16 @@ namespace TokoMusik.Web.Controllers
                         WHERE id_pemesanan = @IdPemesanan
                           AND status = 'menunggu_bayar'";
 
-                    await connection.ExecuteAsync(
+                    int pesananDiubah = await connection.ExecuteAsync(
                         sqlUpdatePesanan,
                         new { data.IdPemesanan },
                         transaction);
+
+                    if (pesananDiubah == 0)
+                    {
+                        throw new InvalidOperationException(
+                            "Status pesanan tidak dapat diperbarui.");
+                    }
                 }
 
                 await transaction.CommitAsync();
@@ -206,6 +241,8 @@ namespace TokoMusik.Web.Controllers
             public string StatusPembayaran { get; set; } = "";
             public string StatusPesanan { get; set; } = "";
             public string? BuktiBayar { get; set; }
+            public decimal JumlahBayar { get; set; }
+            public decimal TotalPesanan { get; set; }
         }
     }
 }

@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TokoMusik.Web.Data;
+using TokoMusik.Web.Models;
 
 namespace TokoMusik.Web.Controllers
 {
@@ -17,12 +18,28 @@ namespace TokoMusik.Web.Controllers
         }
 
         // GET: /Produk
-        public async Task<IActionResult> Index(string? cari, int? kategori)
+        public async Task<IActionResult> Index(
+            string? cari,
+            int? kategori,
+            decimal? hargaMin,
+            decimal? hargaMax,
+            string? urutkan,
+            string? stok)
         {
             using var connection = _koneksi.GetConnection();
             await connection.OpenAsync();
 
-            const string sqlDasar = @"
+            // Pastikan rentang harga valid.
+            if (hargaMin.HasValue &&
+                hargaMax.HasValue &&
+                hargaMin.Value > hargaMax.Value)
+            {
+                (hargaMin, hargaMax) = (hargaMax, hargaMin);
+            }
+
+            var parameters = new DynamicParameters();
+
+            var sql = @"
                 SELECT
                     p.id_produk AS IdProduk,
                     p.id_category AS IdCategory,
@@ -50,9 +67,7 @@ namespace TokoMusik.Web.Controllers
                 WHERE p.status = 'aktif'
             ";
 
-            var sql = sqlDasar;
-            var parameters = new DynamicParameters();
-
+            // Pencarian produk.
             if (!string.IsNullOrWhiteSpace(cari))
             {
                 sql += @"
@@ -67,16 +82,71 @@ namespace TokoMusik.Web.Controllers
                 parameters.Add("Cari", $"%{cari.Trim()}%");
             }
 
+            // Filter kategori.
             if (kategori.HasValue && kategori.Value > 0)
             {
                 sql += " AND p.id_category = @Kategori ";
                 parameters.Add("Kategori", kategori.Value);
             }
 
-            sql += " ORDER BY p.nama_produk ASC;";
+            // Filter harga minimum.
+            if (hargaMin.HasValue && hargaMin.Value >= 0)
+            {
+                sql += " AND p.harga_jual >= @HargaMin ";
+                parameters.Add("HargaMin", hargaMin.Value);
+            }
 
-            var produk = await connection.QueryAsync(sql, parameters);
+            // Filter harga maksimum.
+            if (hargaMax.HasValue && hargaMax.Value >= 0)
+            {
+                sql += " AND p.harga_jual <= @HargaMax ";
+                parameters.Add("HargaMax", hargaMax.Value);
+            }
 
+            // Filter ketersediaan stok.
+            if (stok == "tersedia")
+            {
+                sql += @"
+                    AND COALESCE(
+                        (
+                            SELECT SUM(s.jumlah)
+                            FROM stock s
+                            WHERE s.id_produk = p.id_produk
+                        ), 0
+                    ) > 0
+                ";
+            }
+            else if (stok == "habis")
+            {
+                sql += @"
+                    AND COALESCE(
+                        (
+                            SELECT SUM(s.jumlah)
+                            FROM stock s
+                            WHERE s.id_produk = p.id_produk
+                        ), 0
+                    ) <= 0
+                ";
+            }
+
+            // Pengurutan menggunakan pilihan yang diizinkan.
+            string orderBy = urutkan switch
+            {
+                "harga_terendah" => "p.harga_jual ASC",
+                "harga_tertinggi" => "p.harga_jual DESC",
+                "nama" => "p.nama_produk ASC",
+                "terbaru" => "p.id_produk DESC",
+                _ => "p.nama_produk ASC"
+            };
+
+            sql += $" ORDER BY {orderBy}, p.id_produk DESC;";
+
+            var produk = (await connection.QueryAsync<Produk>(
+                sql,
+                parameters
+            )).ToList();
+
+            // Daftar kategori untuk dropdown.
             var daftarKategori = await connection.QueryAsync(@"
                 SELECT
                     id_category AS IdCategory,
@@ -88,6 +158,10 @@ namespace TokoMusik.Web.Controllers
             ViewBag.Kategori = daftarKategori;
             ViewBag.Cari = cari;
             ViewBag.KategoriTerpilih = kategori;
+            ViewBag.HargaMin = hargaMin;
+            ViewBag.HargaMax = hargaMax;
+            ViewBag.Urutkan = urutkan ?? "nama";
+            ViewBag.Stok = stok ?? "semua";
 
             return View(produk);
         }
@@ -96,7 +170,9 @@ namespace TokoMusik.Web.Controllers
         public async Task<IActionResult> Detail(int id)
         {
             if (id <= 0)
+            {
                 return NotFound();
+            }
 
             using var connection = _koneksi.GetConnection();
             await connection.OpenAsync();
@@ -144,7 +220,9 @@ namespace TokoMusik.Web.Controllers
             );
 
             if (produk == null)
+            {
                 return NotFound();
+            }
 
             return View(produk);
         }

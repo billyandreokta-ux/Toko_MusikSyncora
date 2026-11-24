@@ -1,105 +1,623 @@
-﻿@model IEnumerable<TokoMusik.Web.Models.AlamatCustomer>
+﻿
+@model IEnumerable<TokoMusik.Web.Models.AlamatCustomer>
 
 @{
     ViewData["Title"] = "Alamat Saya";
+
+    var daftarAlamat = Model?.ToList() ?? new List<TokoMusik.Web.Models.AlamatCustomer>();
+    var jumlahAlamatUtama = daftarAlamat.Count(x => x.IsUtama);
 }
 
-<div class="dashboard-container">
-    <div class="dashboard-heading">
+<style>
+    .sync-address-page {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 34px 18px 65px;
+        color: #20382b;
+    }
+
+    .sync-address-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .sync-address-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #187347;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+
+    .sync-address-eyebrow::before {
+        content: "";
+        width: 24px;
+        height: 2px;
+        background: #249461;
+        border-radius: 10px;
+    }
+
+    .sync-address-heading h1 {
+        color: #173d2b;
+        font-size: clamp(27px, 4vw, 36px);
+        font-weight: 850;
+        letter-spacing: -1px;
+        margin: 0 0 7px;
+    }
+
+    .sync-address-heading p {
+        color: #7b8b80;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .sync-address-add-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 12px 17px;
+        border-radius: 10px;
+        color: white;
+        background: #176b45;
+        border: 1px solid #176b45;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: .2s ease;
+    }
+
+    .sync-address-add-btn:hover {
+        color: white;
+        background: #105536;
+        transform: translateY(-2px);
+    }
+
+    .sync-address-alert {
+        border-radius: 12px;
+        font-size: 13px;
+        margin-bottom: 17px;
+    }
+
+    .sync-address-overview {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 19px 21px;
+        border: 1px solid #e5eee7;
+        border-radius: 15px;
+        background: white;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 20px rgba(24, 66, 42, .035);
+    }
+
+    .sync-address-overview-icon {
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        color: #176b45;
+        background: #eaf5ed;
+        font-size: 20px;
+    }
+
+    .sync-address-overview span {
+        display: block;
+        color: #839187;
+        font-size: 11px;
+        font-weight: 650;
+        margin-bottom: 4px;
+    }
+
+    .sync-address-overview strong {
+        display: block;
+        color: #20382b;
+        font-size: 19px;
+        font-weight: 850;
+    }
+
+    .sync-address-section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .sync-address-section-heading h3 {
+        color: #20382b;
+        font-size: 17px;
+        font-weight: 850;
+        margin: 0;
+    }
+
+    .sync-address-section-heading span {
+        color: #8b998f;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .sync-address-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px;
+    }
+
+    .sync-address-card {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 21px;
+        background: white;
+        border: 1px solid #e5eee7;
+        border-radius: 17px;
+        box-shadow: 0 6px 22px rgba(24, 66, 42, .035);
+        transition: .2s ease;
+    }
+
+    .sync-address-card:hover {
+        border-color: #c5ddcb;
+        box-shadow: 0 10px 28px rgba(24, 66, 42, .07);
+        transform: translateY(-2px);
+    }
+
+    .sync-address-card.is-primary {
+        border-color: #a9d3b6;
+        background: linear-gradient(145deg, #ffffff 55%, #f5fbf6);
+    }
+
+    .sync-address-card.is-primary::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: #218353;
+    }
+
+    .sync-address-card-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 19px;
+    }
+
+    .sync-address-label {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #20382b;
+        font-size: 15px;
+        font-weight: 850;
+        min-width: 0;
+    }
+
+    .sync-address-label-icon {
+        width: 37px;
+        height: 37px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: #eaf5ed;
+        color: #176b45;
+        font-size: 17px;
+    }
+
+    .sync-address-primary-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 9px;
+        border-radius: 30px;
+        color: #187347;
+        background: #e8f6ec;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .sync-address-recipient {
+        color: #263c2f;
+        font-size: 14px;
+        font-weight: 850;
+        margin-bottom: 5px;
+    }
+
+    .sync-address-phone {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #738378;
+        font-size: 12px;
+        margin-bottom: 15px;
+    }
+
+    .sync-address-detail {
+        display: flex;
+        gap: 10px;
+        padding: 13px;
+        border-radius: 11px;
+        background: #f8fbf8;
+        border: 1px solid #edf2ee;
+        margin-bottom: 18px;
+    }
+
+    .sync-address-detail i {
+        color: #218353;
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .sync-address-detail p {
+        color: #56685b;
+        font-size: 12px;
+        line-height: 1.7;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .sync-address-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 9px;
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid #edf2ee;
+    }
+
+    .sync-address-action-btn {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 9px 12px;
+        border-radius: 9px;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .sync-address-action-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .sync-address-action-primary {
+        color: #176b45;
+        background: #fff;
+        border: 1px solid #b9d8c3;
+    }
+
+    .sync-address-action-primary:hover {
+        color: #105536;
+        background: #eaf5ed;
+    }
+
+    .sync-address-action-delete {
+        color: #c43f48;
+        background: white;
+        border: 1px solid #f0d5d5;
+    }
+
+    .sync-address-action-delete:hover {
+        color: #a92d37;
+        background: #fff2f2;
+    }
+
+    .sync-address-actions form {
+        margin: 0;
+    }
+
+    .sync-address-empty {
+        padding: 55px 20px;
+        text-align: center;
+        border: 1px dashed #cbdccf;
+        border-radius: 18px;
+        background: #fbfdfb;
+    }
+
+    .sync-address-empty-icon {
+        width: 75px;
+        height: 75px;
+        margin: 0 auto 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 22px;
+        color: #176b45;
+        background: #eaf5ed;
+        font-size: 31px;
+    }
+
+    .sync-address-empty h3 {
+        color: #20382b;
+        font-size: 19px;
+        font-weight: 850;
+        margin-bottom: 8px;
+    }
+
+    .sync-address-empty p {
+        color: #849287;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .sync-address-bottom {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 25px;
+    }
+
+    .sync-address-back-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 16px;
+        border-radius: 10px;
+        border: 1px solid #dfe8e1;
+        background: white;
+        color: #53665a;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 750;
+        transition: .2s ease;
+    }
+
+    .sync-address-back-btn:hover {
+        color: #176b45;
+        background: #f3f8f4;
+    }
+
+    @@media (max-width: 700px) {
+        .sync-address-page {
+            padding: 25px 13px 45px;
+        }
+
+        .sync-address-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sync-address-add-btn {
+            width: 100%;
+        }
+
+        .sync-address-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 390px) {
+        .sync-address-card {
+            padding: 16px;
+        }
+
+        .sync-address-card-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sync-address-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .sync-address-action-btn {
+            width: 100%;
+        }
+
+        .sync-address-actions form {
+            display: flex;
+        }
+    }
+</style>
+
+<div class="sync-address-page">
+
+    <div class="sync-address-heading">
         <div>
-            <span class="eyebrow">DELIVERY ADDRESS</span>
+            <div class="sync-address-eyebrow">DELIVERY MANAGEMENT</div>
             <h1>Alamat Saya</h1>
-            <p>Kelola alamat tujuan pengiriman pesanan.</p>
+            <p>Kelola alamat pengiriman untuk setiap pesanan Syncora kamu.</p>
         </div>
+
+        <a asp-controller="Alamat"
+           asp-action="Tambah"
+           class="sync-address-add-btn">
+            <i class="bi bi-plus-lg"></i>
+            Tambah Alamat
+        </a>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="alert alert-success sync-address-alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["Success"]
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="alert alert-danger sync-address-alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            @TempData["Error"]
+        </div>
     }
 
-    <div style="margin-bottom:20px;">
-        <a asp-action="Tambah" class="btn-primary-custom"
-           style="max-width:220px;">
-            + Tambah Alamat
-        </a>
+    <div class="sync-address-overview">
+        <div class="sync-address-overview-icon">
+            <i class="bi bi-geo-alt"></i>
+        </div>
+
+        <div>
+            <span>Total Alamat Tersimpan</span>
+            <strong>@daftarAlamat.Count</strong>
+        </div>
     </div>
 
-    @if (!Model.Any())
+    <div class="sync-address-section-heading">
+        <h3>Daftar Alamat Pengiriman</h3>
+        <span>@daftarAlamat.Count ALAMAT</span>
+    </div>
+
+    @if (!daftarAlamat.Any())
     {
-        <div class="dashboard-section text-center">
+        <div class="sync-address-empty">
+            <div class="sync-address-empty-icon">
+                <i class="bi bi-house-add"></i>
+            </div>
+
             <h3>Belum Ada Alamat</h3>
-            <p class="text-secondary">
-                Tambahkan alamat sebelum melakukan checkout.
-            </p>
+            <p>Tambahkan alamat pengiriman agar kamu bisa melanjutkan checkout.</p>
+
+            <a asp-controller="Alamat"
+               asp-action="Tambah"
+               class="sync-address-add-btn">
+                <i class="bi bi-plus-lg"></i>
+                Tambahkan Alamat Pertama
+            </a>
         </div>
     }
     else
     {
-        <div class="address-grid">
-            @foreach (var alamat in Model)
+        <div class="sync-address-grid">
+
+            @foreach (var alamat in daftarAlamat)
             {
-                <div class="address-card">
-                    <div class="address-card-heading">
-                        <h3>@alamat.LabelAlamat</h3>
+                <article class="sync-address-card @(alamat.IsUtama ? "is-primary" : "")">
+
+                    <div class="sync-address-card-heading">
+
+                        <div class="sync-address-label">
+                            <div class="sync-address-label-icon">
+                                @if (alamat.LabelAlamat?.Equals("Kantor", StringComparison.OrdinalIgnoreCase) == true)
+                                {
+                                    <i class="bi bi-building"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-house"></i>
+                                }
+                            </div>
+
+                            @alamat.LabelAlamat
+                        </div>
 
                         @if (alamat.IsUtama)
                         {
-                            <span class="status-badge">Alamat Utama</span>
+                            <span class="sync-address-primary-badge">
+                                <i class="bi bi-star-fill"></i>
+                                Alamat Utama
+                            </span>
                         }
+
                     </div>
 
-                    <strong>@alamat.Penerima</strong>
-                    <p>@alamat.Telepon</p>
-                    <p>
-                        @alamat.AlamatLengkap,
-                        @alamat.Kota,
-                        @alamat.Provinsi,
-                        @alamat.KodePos
-                    </p>
+                    <div class="sync-address-recipient">
+                        @alamat.Penerima
+                    </div>
 
-                    <div class="address-actions">
+                    <div class="sync-address-phone">
+                        <i class="bi bi-telephone"></i>
+                        @alamat.Telepon
+                    </div>
+
+                    <div class="sync-address-detail">
+                        <i class="bi bi-geo-alt-fill"></i>
+
+                        <p>
+                            @alamat.AlamatLengkap,
+                            @alamat.Kota,
+                            @alamat.Provinsi,
+                            @alamat.KodePos
+                        </p>
+                    </div>
+
+                    <div class="sync-address-actions">
+
+                        <a asp-controller="Alamat"
+                           asp-action="Edit"
+                           asp-route-idAlamat="@alamat.IdAlamat"
+                           class="sync-address-action-btn sync-address-action-primary">
+                            <i class="bi bi-pencil-square"></i>
+                            Edit Alamat
+                        </a>
+
                         @if (!alamat.IsUtama)
                         {
-                            <form asp-action="JadikanUtama" method="post">
+                            <form asp-controller="Alamat"
+                                  asp-action="JadikanUtama"
+                                  method="post">
+
                                 @Html.AntiForgeryToken()
+
                                 <input type="hidden"
                                        name="idAlamat"
                                        value="@alamat.IdAlamat" />
+
                                 <button type="submit"
-                                        class="btn-outline-custom">
+                                        class="sync-address-action-btn sync-address-action-primary">
+                                    <i class="bi bi-star"></i>
                                     Jadikan Utama
                                 </button>
+
                             </form>
                         }
 
-                        <form asp-action="Hapus" method="post"
+                        <form asp-controller="Alamat"
+                              asp-action="Hapus"
+                              method="post"
                               onsubmit="return confirm('Yakin ingin menghapus alamat ini?');">
+
                             @Html.AntiForgeryToken()
+
                             <input type="hidden"
                                    name="idAlamat"
                                    value="@alamat.IdAlamat" />
+
                             <button type="submit"
-                                    class="btn-danger-custom">
-                                Hapus
+                                    class="sync-address-action-btn sync-address-action-delete">
+                                <i class="bi bi-trash3"></i>
+                                Hapus Alamat
                             </button>
+
                         </form>
+
                     </div>
-                </div>
+
+                </article>
             }
+
         </div>
     }
 
-    <div style="margin-top:25px;">
+    <div class="sync-address-bottom">
         <a asp-controller="Keranjang"
            asp-action="Index"
-           class="btn-outline-custom">
+           class="sync-address-back-btn">
+            <i class="bi bi-arrow-left"></i>
             Kembali ke Keranjang
         </a>
     </div>
+
 </div>

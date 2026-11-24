@@ -1,0 +1,60 @@
+﻿
+@model TokoMusik.Web.Models.KlaimGaransiViewModel
+
+@{
+    ViewData["Title"] = "Klaim Garansi";
+}
+
+<style>
+    .claim-page { max-width:700px; margin:45px auto 70px; padding:0 18px; color:#263a30; }
+    .claim-card { background:white; border:1px solid #e6ece7; border-radius:18px; padding:28px; box-shadow:0 8px 28px rgba(20,50,30,.06); }
+    .claim-card h2 { font-weight:800; }
+    .claim-info { background:#f2f7f3; padding:16px; border-radius:12px; margin:20px 0; }
+    .claim-card label { font-weight:650; margin-bottom:8px; }
+    .claim-card .form-control { border-radius:9px; padding:11px 13px; }
+    .claim-submit { background:#24583d; color:white; border:0; border-radius:9px; padding:12px 20px; font-weight:700; }
+</style>
+
+<div class="claim-page">
+    <a asp-action="Index" class="text-decoration-none" style="color:#24583d;font-weight:650;">← Kembali ke Garansi Saya</a>
+
+    <div class="claim-card mt-3">
+        <h2>Ajukan Klaim Garansi</h2>
+        <p class="text-muted">Jelaskan kendala atau kerusakan yang dialami pada produk.</p>
+
+        <div class="claim-info">
+            <small class="text-muted">Produk</small>
+            <div class="fw-bold">@Model.NamaProduk</div>
+            <small class="text-muted">@Model.KodeProduk</small>
+            <hr />
+            <div class="d-flex justify-content-between">
+                <span>Berlaku sampai</span>
+                <strong>@Model.TanggalBerakhir.ToString("dd MMM yyyy")</strong>
+            </div>
+        </div>
+
+        <form asp-action="Klaim" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="IdGaransi" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-4">
+                <label asp-for="KeteranganKlaim">Keterangan Klaim</label>
+                <textarea asp-for="KeteranganKlaim" rows="5" class="form-control"
+                          placeholder="Jelaskan kerusakan atau kendala produk..."></textarea>
+                <span asp-validation-for="KeteranganKlaim" class="text-danger"></span>
+            </div>
+
+            <div class="alert alert-warning small">
+                Setelah dikirim, status garansi akan berubah menjadi diklaim. Hubungi admin Syncora untuk tindak lanjut klaim.
+            </div>
+
+            <button type="submit" class="claim-submit">Kirim Klaim</button>
+            <a asp-action="Index" class="btn btn-light ms-2">Batal</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

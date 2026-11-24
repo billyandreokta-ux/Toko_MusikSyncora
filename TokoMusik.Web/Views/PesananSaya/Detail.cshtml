@@ -1,5 +1,4 @@
-﻿
-@model TokoMusik.Web.Models.PesananSayaDetailViewModel
+﻿@model TokoMusik.Web.Models.PesananSayaDetailViewModel
 
 @{
     ViewData["Title"] = "Detail Pesanan";
@@ -8,174 +7,1180 @@
         Model.StatusPesanan == "menunggu_bayar" &&
         (Model.StatusPembayaran == "pending" ||
          Model.StatusPembayaran == "gagal");
+
+    int tahapAktif = Model.StatusPesanan switch
+    {
+        "menunggu_bayar" => 2,
+        "dibayar" => 3,
+        "diproses" => 3,
+        "dikirim" => 4,
+        "selesai" => 5,
+        _ => 0
+    };
+
+    bool pesananDibatalkan = Model.StatusPesanan == "dibatalkan";
+
+    string StatusText(string status)
+    {
+        return status switch
+        {
+            "menunggu_bayar" => "Menunggu Pembayaran",
+            "dibayar" => "Pembayaran Berhasil",
+            "diproses" => "Sedang Diproses",
+            "dikirim" => "Dalam Pengiriman",
+            "selesai" => "Pesanan Selesai",
+            "dibatalkan" => "Dibatalkan",
+            _ => status
+        };
+    }
+
+    string StatusClass(string status)
+    {
+        return status switch
+        {
+            "menunggu_bayar" => "status-warning",
+            "dibayar" => "status-info",
+            "diproses" => "status-info",
+            "dikirim" => "status-info",
+            "selesai" => "status-success",
+            "dibatalkan" => "status-danger",
+            _ => "status-neutral"
+        };
+    }
+
+    string FotoProduk(string? foto)
+    {
+        if (string.IsNullOrWhiteSpace(foto))
+            return Url.Content("~/images/no-image.png");
+
+        if (foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return foto;
+        }
+
+        if (foto.StartsWith("/", StringComparison.Ordinal))
+            return foto;
+
+        if (foto.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return Url.Content("~/" + foto);
+
+        return Url.Content("~/uploads/produk/" + foto);
+    }
 }
 
-<div class="dashboard-container">
-    <div class="dashboard-heading">
-        <div>
-            <h2>Detail Pesanan #@Model.IdPemesanan</h2>
-            <p class="text-secondary">
-                Informasi lengkap transaksi dan pembayaran Anda.
-            </p>
+<style>
+    .detail-pesanan-page {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 8px 0 45px;
+        color: var(--bs-body-color);
+    }
+
+    /* HEADER */
+
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-bottom: 25px;
+        padding: 22px 25px;
+        background: var(--bs-body-bg, #fff);
+        border: 1px solid rgba(120, 130, 140, .17);
+        border-radius: 17px;
+        box-shadow: 0 5px 18px rgba(20, 35, 30, .035);
+    }
+
+    .detail-header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        min-width: 0;
+    }
+
+    .detail-header-icon {
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 14px;
+        background: #eaf5ee;
+        color: #16804c;
+    }
+
+        .detail-header-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .detail-header h2 {
+        font-size: 23px;
+        font-weight: 800;
+        margin: 0 0 5px;
+        color: var(--bs-emphasis-color, #173b2d);
+        letter-spacing: -.4px;
+    }
+
+    .detail-header p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--bs-secondary-color, #6c757d);
+    }
+
+    .btn-kembali-pesanan {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 43px;
+        padding: 10px 17px;
+        border: 1px solid #d6e3da;
+        border-radius: 10px;
+        background: #fff;
+        color: #245c3d !important;
+        font-size: 13px;
+        font-weight: 750;
+        text-decoration: none !important;
+        white-space: nowrap;
+        transition: all .2s ease;
+    }
+
+        .btn-kembali-pesanan:hover {
+            background: #edf7f0;
+            border-color: #9fc9ad;
+            color: #145c35 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(22, 128, 76, .10);
+        }
+
+        .btn-kembali-pesanan svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    /* CARD UMUM */
+
+    .detail-card {
+        background: var(--bs-body-bg, #fff);
+        border: 1px solid rgba(120, 130, 140, .18);
+        border-radius: 16px;
+        padding: 23px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(20, 35, 30, .035);
+    }
+
+    .detail-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+        .detail-card-title h4 {
+            font-size: 17px;
+            font-weight: 800;
+            margin: 0;
+            color: var(--bs-emphasis-color, #173b2d);
+        }
+
+        .detail-card-title p {
+            margin: 5px 0 0;
+            font-size: 12px;
+            color: var(--bs-secondary-color, #6c757d);
+        }
+
+    .detail-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 30px;
+        font-size: 11px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .status-warning {
+        color: #8a5a00;
+        background: #fff3cd;
+    }
+
+    .status-info {
+        color: #075985;
+        background: #e0f2fe;
+    }
+
+    .status-success {
+        color: #166534;
+        background: #dcfce7;
+    }
+
+    .status-danger {
+        color: #991b1b;
+        background: #fee2e2;
+    }
+
+    .status-neutral {
+        color: #475569;
+        background: #e2e8f0;
+    }
+
+    /* PRODUK */
+
+    .produk-item {
+        padding: 19px 0;
+        border-bottom: 1px solid rgba(120, 130, 140, .17);
+    }
+
+        .produk-item:first-child {
+            padding-top: 0;
+        }
+
+        .produk-item:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+    .produk-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .produk-foto {
+        width: 88px;
+        height: 88px;
+        flex: 0 0 88px;
+        object-fit: contain;
+        padding: 7px;
+        border-radius: 13px;
+        background: #f7f9f7;
+        border: 1px solid #e8eee9;
+    }
+
+    .produk-foto-kosong {
+        width: 88px;
+        height: 88px;
+        flex: 0 0 88px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 13px;
+        background: #f2f5f3;
+        color: #7b8b81;
+    }
+
+    .produk-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+        .produk-info h5 {
+            font-size: 15px;
+            font-weight: 800;
+            margin: 0 0 6px;
+            color: var(--bs-emphasis-color, #173b2d);
+        }
+
+    .produk-kode {
+        font-size: 12px;
+        color: var(--bs-secondary-color, #6c757d);
+        margin-bottom: 7px;
+    }
+
+    .produk-jumlah {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border-radius: 7px;
+        background: #f2f6f3;
+        color: #52705e;
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    .produk-harga {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 17px;
+        padding-top: 14px;
+        border-top: 1px dashed rgba(120, 130, 140, .25);
+    }
+
+    .produk-harga-label {
+        font-size: 11px;
+        color: var(--bs-secondary-color, #6c757d);
+        margin-bottom: 5px;
+    }
+
+    .produk-harga-value {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--bs-emphasis-color, #173b2d);
+    }
+
+    /* TOMBOL RETUR */
+
+    .retur-action {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 7px;
+        min-width: 155px;
+    }
+
+    .btn-retur {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 42px;
+        padding: 10px 16px;
+        border: 1px solid #16804c;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #16804c, #11683d);
+        color: #fff !important;
+        font-size: 12px;
+        font-weight: 750;
+        text-decoration: none !important;
+        box-shadow: 0 4px 11px rgba(22, 128, 76, .18);
+        transition: all .2s ease;
+    }
+
+        .btn-retur:hover {
+            background: linear-gradient(135deg, #11683d, #0d5733);
+            border-color: #0d5733;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 16px rgba(22, 128, 76, .25);
+        }
+
+        .btn-retur svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .retur-action small {
+        font-size: 10px;
+        color: #718078;
+        text-align: right;
+    }
+
+    .retur-info {
+        font-size: 11px;
+        color: var(--bs-secondary-color, #6c757d);
+        margin-top: 12px;
+    }
+
+    /* TIMELINE */
+
+    .timeline-wrapper {
+        margin-top: 21px;
+        margin-bottom: 19px;
+        padding: 20px 17px 17px;
+        border: 1px solid #e5eee8;
+        background: #f8fbf9;
+        border-radius: 14px;
+    }
+
+    .timeline-heading {
+        font-size: 13px;
+        font-weight: 800;
+        color: #315c46;
+        margin-bottom: 21px;
+    }
+
+    .timeline {
+        display: flex;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .timeline-step {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+        position: relative;
+        color: #a0aaa4;
+    }
+
+        .timeline-step:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            height: 3px;
+            background: #dce5df;
+            top: 19px;
+            left: calc(50% + 22px);
+            right: calc(-50% + 22px);
+            border-radius: 5px;
+        }
+
+        .timeline-step.completed:not(:last-child)::after {
+            background: #218653;
+        }
+
+    .timeline-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 10px;
+        background: #e9eeeb;
+        color: #89968e;
+        position: relative;
+        z-index: 1;
+    }
+
+        .timeline-circle svg {
+            width: 19px;
+            height: 19px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .timeline-step.completed .timeline-circle {
+        background: #218653;
+        color: #fff;
+    }
+
+    .timeline-step.active .timeline-circle {
+        background: #fff;
+        color: #218653;
+        border: 2px solid #218653;
+        box-shadow: 0 0 0 4px rgba(33, 134, 83, .12);
+    }
+
+    .timeline-label {
+        font-size: 11px;
+        line-height: 1.45;
+        font-weight: 650;
+        color: #89968e;
+        min-height: 33px;
+    }
+
+    .timeline-step.completed .timeline-label,
+    .timeline-step.active .timeline-label {
+        color: #205d3c;
+    }
+
+    .timeline-time {
+        display: block;
+        font-size: 10px;
+        color: #77847b;
+        margin-top: 5px;
+        line-height: 1.4;
+    }
+
+    /* RINGKASAN */
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 14px;
+        font-size: 13px;
+    }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+    .summary-total {
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid rgba(120, 130, 140, .22);
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+        .summary-total strong {
+            color: #16804c;
+            font-size: 18px;
+        }
+
+    /* INFORMASI */
+
+    .info-row {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(120, 130, 140, .14);
+    }
+
+        .info-row:first-of-type {
+            padding-top: 0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+    .info-label {
+        display: block;
+        font-size: 11px;
+        color: var(--bs-secondary-color, #6c757d);
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    /* PEMBAYARAN */
+
+    .detail-action-btn {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 10px;
+        font-weight: 750;
+        font-size: 13px;
+    }
+
+    .bukti-preview {
+        display: block;
+        width: 100%;
+        max-height: 280px;
+        object-fit: contain;
+        background: #f6f8f6;
+        border: 1px solid #e5eae6;
+        border-radius: 12px;
+        padding: 8px;
+        margin-bottom: 15px;
+    }
+
+    .bukti-upload {
+        padding: 15px;
+        background: #f8faf9;
+        border: 1px dashed #cbd8cf;
+        border-radius: 12px;
+    }
+
+    /* PEMBATALAN */
+
+    .cancelled-panel {
+        border: 1px solid #fecaca;
+        background: #fff7f7;
+        color: #842029;
+        padding: 18px;
+        border-radius: 13px;
+        margin-bottom: 20px;
+    }
+
+        .cancelled-panel h5 {
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+    /* RESPONSIVE */
+
+    @@media (max-width: 767px) {
+        .detail-pesanan-page {
+            padding-top: 0;
+        }
+
+        .detail-header {
+            padding: 18px;
+            align-items: stretch;
+        }
+
+            .detail-header h2 {
+                font-size: 19px;
+            }
+
+        .detail-header-content {
+            align-items: flex-start;
+        }
+
+        .detail-header-icon {
+            width: 42px;
+            height: 42px;
+            flex-basis: 42px;
+        }
+
+        .btn-kembali-pesanan {
+            width: 100%;
+        }
+
+        .detail-card {
+            padding: 18px;
+        }
+
+        .timeline-wrapper {
+            overflow-x: auto;
+            padding: 18px 10px;
+        }
+
+        .timeline {
+            min-width: 570px;
+        }
+
+        .produk-foto,
+        .produk-foto-kosong {
+            width: 72px;
+            height: 72px;
+            flex-basis: 72px;
+        }
+
+        .retur-action {
+            align-items: flex-start;
+            width: 100%;
+            min-width: 0;
+        }
+
+            .retur-action small {
+                text-align: left;
+            }
+    }
+
+    @@media (max-width: 420px) {
+        .produk-header {
+            align-items: flex-start;
+            gap: 11px;
+        }
+
+        .produk-info h5 {
+            font-size: 14px;
+        }
+
+        .produk-harga {
+            gap: 15px;
+        }
+
+        .btn-retur {
+            width: 100%;
+        }
+
+        .detail-card-title {
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="detail-pesanan-page">
+
+    <!-- HEADER DETAIL PESANAN -->
+    <div class="detail-header">
+
+        <div class="detail-header-content">
+
+            <div class="detail-header-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 5h16v14H4z"></path>
+                    <path d="M8 9h8"></path>
+                    <path d="M8 13h5"></path>
+                    <path d="M8 17h3"></path>
+                </svg>
+            </div>
+
+            <div>
+                <h2>Detail Pesanan #@Model.IdPemesanan</h2>
+                <p>
+                    Lihat informasi produk, pembayaran, dan perjalanan pesanan Anda.
+                </p>
+            </div>
+
         </div>
 
         <a asp-controller="PesananSaya"
            asp-action="Index"
-           class="btn btn-outline-custom">
-            Kembali
+           class="btn-kembali-pesanan">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m15 18-6-6 6-6"></path>
+                <path d="M9 12h12"></path>
+            </svg>
+
+            Kembali ke Pesanan
         </a>
+
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="alert alert-success rounded-3">
+            @TempData["Success"]
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="alert alert-danger rounded-3">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (pesananDibatalkan)
+    {
+        <div class="cancelled-panel">
+            <h5>Pesanan Dibatalkan</h5>
+
+            <div>
+                <strong>Alasan:</strong>
+                @(Model.AlasanPembatalan ?? "-")
+            </div>
+
+            @if (Model.TglDibatalkan.HasValue)
+            {
+                <div class="small mt-2">
+                    Waktu pembatalan:
+                    @Model.TglDibatalkan.Value.ToString("dd MMMM yyyy, HH:mm")
+                </div>
+            }
+        </div>
     }
 
     <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="dashboard-section">
-                <h4>Produk yang Dipesan</h4>
 
-                <div class="table-responsive">
-                    <table class="table table-custom align-middle">
-                        <thead>
-                            <tr>
-                                <th>Produk</th>
-                                <th>Harga</th>
-                                <th>Jumlah</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.Items)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            @if (!string.IsNullOrWhiteSpace(item.Foto))
-                                            {
-                                                <img src="@item.Foto"
-                                                     alt="@item.NamaProduk"
-                                                     style="width:55px;height:55px;object-fit:cover;border-radius:8px;" />
-                                            }
-                                            <div>
-                                                <strong>@item.NamaProduk</strong>
-                                                <div class="text-secondary small">
-                                                    @item.KodeProduk
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Rp @item.HargaSatuan.ToString("N0")</td>
-                                    <td>@item.Jumlah</td>
-                                    <td>Rp @item.Subtotal.ToString("N0")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+        <!-- KOLOM KIRI -->
+        <div class="col-lg-8">
+
+            <!-- PRODUK YANG DIPESAN -->
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    <div>
+                        <h4>Produk yang Dipesan</h4>
+                        <p>
+                            @Model.Items.Count produk dalam pesanan ini
+                        </p>
+                    </div>
+
+                    <span class="detail-status @StatusClass(Model.StatusPesanan)">
+                        @StatusText(Model.StatusPesanan)
+                    </span>
                 </div>
 
-                <hr />
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="text-secondary">
+                        Tidak ada detail produk pada pesanan ini.
+                    </div>
+                }
+                else
+                {
+                    <!-- TIMELINE DITAMPILKAN SATU KALI UNTUK PESANAN -->
+                    @if (!pesananDibatalkan)
+                    {
+                        <div class="timeline-wrapper">
 
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Subtotal</span>
+                            <div class="timeline-heading">
+                                Perjalanan Pesanan
+                            </div>
+
+                            <div class="timeline">
+
+                                <!-- TAHAP 1 -->
+                                <div class="timeline-step completed">
+
+                                    <div class="timeline-circle">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M5 12.5 10 17l9-10"></path>
+                                        </svg>
+                                    </div>
+
+                                    <div class="timeline-label">
+                                        Pesanan berhasil dibuat
+                                    </div>
+
+                                    <span class="timeline-time">
+                                        @Model.TglPesan.ToString("dd/MM/yy HH:mm")
+                                    </span>
+
+                                </div>
+
+                                <!-- TAHAP 2 -->
+                                <div class="timeline-step @(tahapAktif > 2 ? "completed" : tahapAktif == 2 ? "active" : "")">
+
+                                    <div class="timeline-circle">
+                                        <svg viewBox="0 0 24 24">
+                                            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                                            <path d="M3 10h18"></path>
+                                            <path d="M7 15h3"></path>
+                                        </svg>
+                                    </div>
+
+                                    <div class="timeline-label">
+                                        Menunggu pembayaran
+                                    </div>
+
+                                    <span class="timeline-time">
+                                        @Model.TglPesan.ToString("dd/MM/yy HH:mm")
+                                    </span>
+
+                                </div>
+
+                                <!-- TAHAP 3 -->
+                                <div class="timeline-step @(tahapAktif > 3 ? "completed" : tahapAktif == 3 ? "active" : "")">
+
+                                    <div class="timeline-circle">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"></path>
+                                            <path d="m4 7.5 8 4.5 8-4.5"></path>
+                                            <path d="M12 12v9"></path>
+                                        </svg>
+                                    </div>
+
+                                    <div class="timeline-label">
+                                        Diproses
+                                    </div>
+
+                                    @if (Model.WaktuDiproses.HasValue)
+                                    {
+                                        <span class="timeline-time">
+                                            @Model.WaktuDiproses.Value.ToString("dd/MM/yy HH:mm")
+                                        </span>
+                                    }
+
+                                </div>
+
+                                <!-- TAHAP 4 -->
+                                <div class="timeline-step @(tahapAktif > 4 ? "completed" : tahapAktif == 4 ? "active" : "")">
+
+                                    <div class="timeline-circle">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M3 6h11v12H3z"></path>
+                                            <path d="M14 10h4l3 4v4h-7z"></path>
+                                            <circle cx="7.5" cy="18" r="2"></circle>
+                                            <circle cx="18" cy="18" r="2"></circle>
+                                        </svg>
+                                    </div>
+
+                                    <div class="timeline-label">
+                                        Dikirim
+                                    </div>
+
+                                    @if (Model.WaktuKirim.HasValue)
+                                    {
+                                        <span class="timeline-time">
+                                            @Model.WaktuKirim.Value.ToString("dd/MM/yy HH:mm")
+                                        </span>
+                                    }
+
+                                </div>
+
+                                <!-- TAHAP 5 -->
+                                <div class="timeline-step @(tahapAktif >= 5 ? "completed" : "")">
+
+                                    <div class="timeline-circle">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path>
+                                        </svg>
+                                    </div>
+
+                                    <div class="timeline-label">
+                                        Pesanan selesai
+                                    </div>
+
+                                    @if (Model.WaktuTerima.HasValue)
+                                    {
+                                        <span class="timeline-time">
+                                            @Model.WaktuTerima.Value.ToString("dd/MM/yy HH:mm")
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+
+                    <!-- DAFTAR PRODUK -->
+                    @foreach (var item in Model.Items)
+                    {
+                        <div class="produk-item">
+
+                            <div class="produk-header">
+
+                                @if (!string.IsNullOrWhiteSpace(item.Foto))
+                                {
+                                    <img src="@FotoProduk(item.Foto)"
+                                         alt="@item.NamaProduk"
+                                         class="produk-foto" />
+                                }
+                                else
+                                {
+                                    <div class="produk-foto-kosong">
+                                        <span class="small">No Image</span>
+                                    </div>
+                                }
+
+                                <div class="produk-info">
+                                    <h5>@item.NamaProduk</h5>
+
+                                    <div class="produk-kode">
+                                        Kode produk: @item.KodeProduk
+                                    </div>
+
+                                    <span class="produk-jumlah">
+                                        Jumlah pesanan: @item.Jumlah
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <div class="produk-harga">
+
+                                <div>
+                                    <div class="produk-harga-label">
+                                        Harga satuan
+                                    </div>
+
+                                    <div class="produk-harga-value">
+                                        Rp @item.HargaSatuan.ToString("N0")
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="produk-harga-label">
+                                        Subtotal produk
+                                    </div>
+
+                                    <div class="produk-harga-value">
+                                        Rp @item.Subtotal.ToString("N0")
+                                    </div>
+                                </div>
+
+                                @if (Model.DapatRetur)
+                                {
+                                    <div class="retur-action">
+
+                                        <a asp-controller="Retur"
+                                           asp-action="Ajukan"
+                                           asp-route-id="@item.IdDetailPesanan"
+                                           class="btn-retur">
+
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M3 11a9 9 0 1 0 2.6-6.4L3 7"></path>
+                                                <path d="M3 3v4h4"></path>
+                                                <path d="M12 7v5l3 2"></path>
+                                            </svg>
+
+                                            Ajukan Retur
+                                        </a>
+
+                                        <small>
+                                            Ajukan pengembalian produk ini
+                                        </small>
+
+                                    </div>
+                                }
+
+                            </div>
+
+                            @if (Model.StatusPesanan == "selesai" &&
+                                 Model.WaktuTerima.HasValue)
+                            {
+                                <div class="retur-info">
+                                    @if (Model.DapatRetur)
+                                    {
+                                        <span>
+                                            <i class="bi bi-clock me-1"></i>
+                                            Batas pengajuan retur:
+                                            @Model.BatasRetur?.ToString("dd MMMM yyyy, HH:mm")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Masa pengajuan retur 3 × 24 jam telah berakhir.
+                                        </span>
+                                    }
+                                </div>
+                            }
+
+                        </div>
+                    }
+                }
+
+            </div>
+
+            <!-- RINGKASAN PEMBAYARAN -->
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    <h4>Ringkasan Pembayaran</h4>
+                </div>
+
+                <div class="summary-row">
+                    <span class="text-secondary">Subtotal produk</span>
                     <strong>Rp @Model.Subtotal.ToString("N0")</strong>
                 </div>
 
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Diskon</span>
+                <div class="summary-row">
+                    <span class="text-secondary">Diskon</span>
                     <strong>Rp @Model.Diskon.ToString("N0")</strong>
                 </div>
 
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Ongkir</span>
+                <div class="summary-row">
+                    <span class="text-secondary">Ongkos kirim</span>
                     <strong>Rp @Model.Ongkir.ToString("N0")</strong>
                 </div>
 
-                <hr />
-
-                <div class="d-flex justify-content-between">
-                    <strong>Total Pembayaran</strong>
-                    <strong class="text-success">
-                        Rp @Model.TotalBayar.ToString("N0")
-                    </strong>
+                <div class="summary-row summary-total">
+                    <span>Total pembayaran</span>
+                    <strong>Rp @Model.TotalBayar.ToString("N0")</strong>
                 </div>
+
             </div>
+
         </div>
 
-        <div class="col-lg-5">
-            <div class="dashboard-section mb-4">
-                <h4>Informasi Pesanan</h4>
+        <!-- KOLOM KANAN -->
+        <div class="col-lg-4">
 
-                <div class="mb-3">
-                    <small class="text-secondary">Tanggal Pesanan</small>
-                    <div>@Model.TglPesan.ToString("dd MMMM yyyy HH:mm")</div>
+            <!-- INFORMASI PESANAN -->
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    <h4>Informasi Pesanan</h4>
                 </div>
 
-                <div class="mb-3">
-                    <small class="text-secondary">Status Pesanan</small>
-                    <div><strong>@Model.StatusPesanan</strong></div>
+                <div class="info-row">
+                    <span class="info-label">Nomor pesanan</span>
+                    <div class="info-value">#@Model.IdPemesanan</div>
                 </div>
 
-                <div class="mb-3">
-                    <small class="text-secondary">Status Pembayaran</small>
-                    <div><strong>@Model.StatusPembayaran</strong></div>
+                <div class="info-row">
+                    <span class="info-label">Tanggal pesanan</span>
+                    <div class="info-value">
+                        @Model.TglPesan.ToString("dd MMMM yyyy, HH:mm")
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <small class="text-secondary">Metode Pembayaran</small>
-                    <div><strong>@Model.NamaMetode</strong></div>
-                </div>
-
-                <div class="mb-3">
-                    <small class="text-secondary">Nama Penerima</small>
-                    <div>@Model.NamaPenerima</div>
-                </div>
-
-                <div class="mb-3">
-                    <small class="text-secondary">Nomor Telepon</small>
-                    <div>@Model.Telepon</div>
-                </div>
-
-                <div>
-                    <small class="text-secondary">Alamat Pengiriman</small>
+                <div class="info-row">
+                    <span class="info-label">Status pesanan</span>
                     <div>
+                        <span class="detail-status @StatusClass(Model.StatusPesanan)">
+                            @StatusText(Model.StatusPesanan)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Status pembayaran</span>
+                    <div class="info-value">
+                        @Model.StatusPembayaran
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Metode pembayaran</span>
+                    <div class="info-value">
+                        @Model.NamaMetode
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ALAMAT PENGIRIMAN -->
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    <h4>Alamat Pengiriman</h4>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Nama penerima</span>
+                    <div class="info-value">@Model.NamaPenerima</div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Nomor telepon</span>
+                    <div class="info-value">@Model.Telepon</div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Alamat lengkap</span>
+                    <div class="info-value">
                         @Model.AlamatLengkap,
                         @Model.Kota,
                         @Model.Provinsi,
                         @Model.KodePos
                     </div>
                 </div>
+
             </div>
 
-            <div class="dashboard-section">
-                <h4>Bukti Pembayaran</h4>
+            <!-- PEMBATALAN -->
+            @if (Model.DapatDibatalkan)
+            {
+                <div class="detail-card">
+
+                    <div class="detail-card-title">
+                        <div>
+                            <h4>Batalkan Pesanan</h4>
+                            <p>
+                                Pesanan masih memenuhi syarat pembatalan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <a asp-controller="PesananSaya"
+                       asp-action="Batalkan"
+                       asp-route-id="@Model.IdPemesanan"
+                       class="btn btn-outline-danger detail-action-btn">
+                        Batalkan Pesanan
+                    </a>
+
+                </div>
+            }
+
+            <!-- BUKTI PEMBAYARAN -->
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    <h4>Bukti Pembayaran</h4>
+                </div>
 
                 @if (!string.IsNullOrWhiteSpace(Model.BuktiBayar))
                 {
-                    <div class="mb-3">
+                    <a href="@Model.BuktiBayar" target="_blank">
                         <img src="@Model.BuktiBayar"
                              alt="Bukti pembayaran"
-                             class="img-fluid rounded"
-                             style="max-height:300px;object-fit:contain;" />
-                    </div>
+                             class="bukti-preview" />
+                    </a>
                 }
                 else
                 {
-                    <p class="text-secondary">
+                    <p class="text-secondary small">
                         Belum ada bukti pembayaran yang diunggah.
                     </p>
                 }
 
                 @if (dapatUpload)
                 {
-                    <hr />
-
                     <form asp-controller="PesananSaya"
                           asp-action="UploadBukti"
                           asp-route-id="@Model.IdPemesanan"
@@ -184,36 +1189,50 @@
 
                         @Html.AntiForgeryToken()
 
-                        <div class="mb-3">
-                            <label class="form-label">Unggah Bukti Pembayaran</label>
+                        <div class="bukti-upload">
+
+                            <label class="form-label fw-semibold">
+                                Unggah bukti pembayaran
+                            </label>
+
                             <input type="file"
                                    name="file"
-                                   class="form-control"
+                                   class="form-control mb-2"
                                    accept=".jpg,.jpeg,.png,.webp"
                                    required />
+
                             <small class="text-secondary">
-                                Format JPG, JPEG, PNG, atau WEBP. Maksimal 5 MB.
+                                Format JPG, JPEG, PNG, atau WEBP.
+                                Maksimal 5 MB.
                             </small>
+
                         </div>
 
-                        <button type="submit" class="btn btn-primary-custom w-100">
+                        <button type="submit"
+                                class="btn btn-success detail-action-btn mt-3">
                             Kirim Bukti Pembayaran
                         </button>
+
                     </form>
                 }
                 else if (Model.StatusPembayaran == "berhasil")
                 {
-                    <div class="alert alert-success mb-0">
+                    <div class="alert alert-success mb-0 small">
                         Pembayaran telah diverifikasi oleh admin.
                     </div>
                 }
                 else
                 {
-                    <div class="alert alert-secondary mb-0">
-                        Upload bukti pembayaran tidak tersedia untuk status pesanan ini.
+                    <div class="text-secondary small">
+                        Upload bukti pembayaran tidak tersedia untuk
+                        status pesanan ini.
                     </div>
                 }
+
             </div>
+
         </div>
+
     </div>
+
 </div>

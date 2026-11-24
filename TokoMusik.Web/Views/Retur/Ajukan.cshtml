@@ -1,0 +1,151 @@
+﻿@model TokoMusik.Web.Models.AjukanReturViewModel
+
+@{
+    ViewData["Title"] = "Ajukan Retur";
+}
+
+<style>
+    .return-form-page {
+        max-width: 720px;
+        margin: 45px auto 70px;
+        padding: 0 18px;
+        color: #263a30;
+    }
+
+    .return-form-card {
+        background: #fff;
+        border: 1px solid #e6ece7;
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 8px 28px rgba(20,50,30,.06);
+    }
+
+    .return-form-page h2 {
+        font-weight: 800;
+    }
+
+    .return-form-page label {
+        font-weight: 650;
+        margin-bottom: 8px;
+    }
+
+    .return-form-page .form-control {
+        border-radius: 9px;
+        padding: 11px 13px;
+    }
+
+    .return-info {
+        background: #f2f7f3;
+        padding: 16px;
+        border-radius: 12px;
+        margin: 20px 0;
+    }
+
+    .return-submit {
+        background: #24583d;
+        color: white;
+        border: 0;
+        border-radius: 9px;
+        padding: 12px 20px;
+        font-weight: 700;
+    }
+
+        .return-submit:hover {
+            background: #19452e;
+        }
+
+    .return-back {
+        color: #24583d;
+        text-decoration: none;
+        font-weight: 650;
+    }
+
+    .field-validation-error {
+        color: #b42318;
+        font-size: 13px;
+    }
+
+    .return-help {
+        color: #77847c;
+        font-size: 13px;
+        margin-top: 7px;
+    }
+</style>
+
+<div class="return-form-page">
+    <a asp-action="Index" class="return-back">← Kembali ke Retur Produk</a>
+
+    <div class="return-form-card mt-3">
+        <h2>Ajukan Retur</h2>
+        <p class="text-muted">
+            Lengkapi informasi berikut untuk mengajukan pengembalian produk.
+        </p>
+
+        <div class="return-info">
+            <div class="text-muted small">Produk</div>
+            <strong>@Model.NamaProduk</strong>
+            <div class="text-muted small">@Model.KodeProduk</div>
+            <hr />
+            <div class="d-flex justify-content-between">
+                <span>Jumlah maksimal yang dapat diretur</span>
+                <strong>@Model.SisaJumlah unit</strong>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            Pengajuan retur hanya dapat dilakukan maksimal 3 × 24 jam
+            setelah barang diterima. Foto bukti kerusakan atau ketidaksesuaian
+            wajib disertakan.
+        </div>
+
+        <form asp-action="Ajukan" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <input asp-for="IdDetailPesanan" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Jumlah">Jumlah Produk</label>
+                <input asp-for="Jumlah"
+                       type="number"
+                       min="1"
+                       max="@Model.SisaJumlah"
+                       class="form-control" />
+                <span asp-validation-for="Jumlah"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Alasan">Alasan Retur</label>
+                <textarea asp-for="Alasan"
+                          class="form-control"
+                          rows="5"
+                          placeholder="Contoh: produk rusak saat diterima, barang yang dikirim salah, bagian produk kurang, atau tidak sesuai deskripsi."></textarea>
+                <span asp-validation-for="Alasan"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="FotoBukti">Foto Bukti Retur</label>
+                <input asp-for="FotoBukti"
+                       type="file"
+                       class="form-control"
+                       accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                <span asp-validation-for="FotoBukti"></span>
+                <div class="return-help">
+                    Format JPG, JPEG, PNG, atau WEBP. Ukuran maksimal 5 MB.
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="return-submit">
+                    Kirim Pengajuan
+                </button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

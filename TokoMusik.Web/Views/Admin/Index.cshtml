@@ -1,55 +1,706 @@
-﻿@{
+﻿
+@using System.Globalization
+@using System.Collections.Generic
+
+@{
     ViewData["Title"] = "Dashboard Admin";
+
+    var budaya = CultureInfo.GetCultureInfo("id-ID");
+    var totalPendapatan = Convert.ToDecimal(ViewBag.TotalPendapatan ?? 0);
+    var pesananTerbaru = ViewBag.PesananTerbaru as IEnumerable<dynamic>;
+    var daftarPesanan = pesananTerbaru?.ToList() ?? new List<dynamic>();
+
+    string FormatRupiah(decimal nilai)
+    {
+        return nilai.ToString("C0", budaya);
+    }
+
+    string StatusClass(string? status)
+    {
+        var nilai = (status ?? "").ToLowerInvariant();
+
+        return nilai switch
+        {
+            "menunggu_bayar" => "status-waiting",
+            "menunggu pembayaran" => "status-waiting",
+            "diproses" => "status-process",
+            "dibayar" => "status-paid",
+            "dikirim" => "status-shipping",
+            "selesai" => "status-complete",
+            "dibatalkan" => "status-cancelled",
+            "batal" => "status-cancelled",
+            _ => "status-default"
+        };
+    }
 }
 
-<div class="dashboard-container">
-    <div class="dashboard-heading">
-        <div>
-            <span class="eyebrow">ADMINISTRATION</span>
+<style>
+    .admin-dashboard {
+        --syncora-green: #176b50;
+        --syncora-dark: #123d32;
+        --syncora-light: #eaf5ef;
+        --syncora-muted: #7b8b85;
+        --syncora-border: #e8eee9;
+        color: #24352f;
+        padding: 28px 0 50px;
+    }
+
+    .admin-dashboard * {
+        box-sizing: border-box;
+    }
+
+    .dashboard-welcome {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 34px 38px;
+        margin-bottom: 28px;
+        border-radius: 22px;
+        color: #fff;
+        background: linear-gradient(115deg, #123d32 0%, #176b50 65%, #25825f 100%);
+        box-shadow: 0 12px 30px rgba(18, 61, 50, .13);
+    }
+
+    .dashboard-welcome::before,
+    .dashboard-welcome::after {
+        content: "";
+        position: absolute;
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .dashboard-welcome::before {
+        width: 280px;
+        height: 280px;
+        right: 65px;
+        top: -175px;
+    }
+
+    .dashboard-welcome::after {
+        width: 210px;
+        height: 210px;
+        right: -55px;
+        bottom: -145px;
+    }
+
+    .welcome-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        color: #bce8d0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+
+    .welcome-eyebrow::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #8ee0b2;
+        box-shadow: 0 0 12px rgba(142,224,178,.7);
+    }
+
+    .welcome-content h1 {
+        margin: 0 0 9px;
+        color: #fff;
+        font-size: clamp(25px, 3vw, 34px);
+        font-weight: 800;
+        letter-spacing: -.8px;
+    }
+
+    .welcome-content p {
+        margin: 0;
+        color: rgba(255,255,255,.77);
+        font-size: 14px;
+    }
+
+    .welcome-decoration {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 90px;
+        height: 90px;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 24px;
+        background: rgba(255,255,255,.10);
+        color: #d9f5e5;
+        font-size: 38px;
+        backdrop-filter: blur(5px);
+    }
+
+    .dashboard-section-label {
+        margin: 0 0 15px;
+        color: #71827a;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 17px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+        min-width: 0;
+        padding: 23px;
+        border: 1px solid var(--syncora-border);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(27, 55, 43, .035);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(27, 55, 43, .08);
+    }
+
+    .stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .stat-label {
+        color: #77877f;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 43px;
+        height: 43px;
+        flex-shrink: 0;
+        border-radius: 13px;
+        background: #eaf5ef;
+        color: #176b50;
+        font-size: 19px;
+    }
+
+    .stat-card:nth-child(2) .stat-icon {
+        background: #eef2ff;
+        color: #5869bd;
+    }
+
+    .stat-card:nth-child(3) .stat-icon {
+        background: #fff4e8;
+        color: #c17a32;
+    }
+
+    .stat-card:nth-child(4) .stat-icon {
+        background: #f3edff;
+        color: #8061b5;
+    }
+
+    .stat-value {
+        display: block;
+        overflow-wrap: anywhere;
+        margin-bottom: 7px;
+        color: #1d352b;
+        font-size: clamp(23px, 2.2vw, 29px);
+        font-weight: 800;
+        letter-spacing: -.8px;
+    }
+
+    .stat-card:nth-child(4) .stat-value {
+        font-size: clamp(19px, 1.8vw, 24px);
+    }
+
+    .stat-description {
+        color: #94a199;
+        font-size: 12px;
+    }
+
+    /* MENU MANAJEMEN PRODUK */
+
+    .product-management {
+        margin-bottom: 30px;
+    }
+
+    .management-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 23px 25px;
+        border: 1px solid var(--syncora-border);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(27, 55, 43, .035);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .management-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(27, 55, 43, .08);
+    }
+
+    .management-info {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        min-width: 0;
+    }
+
+    .management-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 55px;
+        height: 55px;
+        flex-shrink: 0;
+        border-radius: 16px;
+        background: #eaf5ef;
+        color: #176b50;
+        font-size: 24px;
+    }
+
+    .management-info h3 {
+        margin: 0 0 6px;
+        color: #1d352b;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .management-info p {
+        margin: 0;
+        color: #89978f;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .management-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        flex-shrink: 0;
+        padding: 12px 19px;
+        border: none;
+        border-radius: 11px;
+        background: #176b50;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s ease, transform .2s ease;
+    }
+
+    .management-button:hover {
+        background: #123d32;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .orders-panel {
+        overflow: hidden;
+        border: 1px solid var(--syncora-border);
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(27, 55, 43, .035);
+    }
+
+    .orders-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 23px 25px;
+        border-bottom: 1px solid #edf1ee;
+    }
+
+    .orders-heading h2 {
+        margin: 0 0 6px;
+        color: #1d352b;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .orders-heading p {
+        margin: 0;
+        color: #8a9991;
+        font-size: 12px;
+    }
+
+    .orders-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 30px;
+        background: #eaf5ef;
+        color: #176b50;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .orders-count i {
+        font-size: 12px;
+    }
+
+    .orders-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .orders-table {
+        width: 100%;
+        min-width: 650px;
+        margin: 0;
+        border-collapse: collapse;
+    }
+
+    .orders-table thead th {
+        padding: 15px 24px;
+        background: #f8faf8;
+        color: #87958e;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .orders-table tbody td {
+        padding: 18px 24px;
+        border-bottom: 1px solid #f0f3f1;
+        color: #53645b;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .orders-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .orders-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .orders-table tbody tr:hover {
+        background: #fbfdfb;
+    }
+
+    .order-id {
+        color: #176b50 !important;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .customer-name {
+        color: #30453a;
+        font-weight: 700;
+    }
+
+    .order-date {
+        color: #84928a;
+        white-space: nowrap;
+    }
+
+    .order-total {
+        color: #30453a !important;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 11px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+        background: #f0f2f1;
+        color: #68766e;
+    }
+
+    .status-waiting {
+        background: #fff4df;
+        color: #a66c16;
+    }
+
+    .status-process {
+        background: #e8f1ff;
+        color: #426bb1;
+    }
+
+    .status-paid {
+        background: #e4f5ec;
+        color: #218052;
+    }
+
+    .status-shipping {
+        background: #f0eaff;
+        color: #7958b5;
+    }
+
+    .status-complete {
+        background: #e2f5e9;
+        color: #187344;
+    }
+
+    .status-cancelled {
+        background: #ffebeb;
+        color: #bd4b4b;
+    }
+
+    .status-default {
+        background: #f0f2f1;
+        color: #68766e;
+    }
+
+    .empty-orders {
+        padding: 55px 20px !important;
+        text-align: center;
+    }
+
+    .empty-orders-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 14px;
+        border-radius: 18px;
+        background: #eef5f0;
+        color: #6b9a7e;
+        font-size: 24px;
+    }
+
+    .empty-orders strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #43574b;
+        font-size: 14px;
+    }
+
+    .empty-orders span {
+        color: #98a49d;
+        font-size: 12px;
+    }
+
+    @@media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .admin-dashboard {
+            padding-top: 18px;
+        }
+
+        .dashboard-welcome {
+            padding: 25px 22px;
+            border-radius: 18px;
+        }
+
+        .welcome-decoration {
+            width: 58px;
+            height: 58px;
+            border-radius: 17px;
+            font-size: 25px;
+        }
+
+        .welcome-content p {
+            max-width: 230px;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            gap: 11px;
+        }
+
+        .stat-card {
+            padding: 16px;
+            border-radius: 15px;
+        }
+
+        .stat-top {
+            margin-bottom: 14px;
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+        }
+
+        .stat-description {
+            font-size: 10px;
+        }
+
+        .orders-panel-header {
+            padding: 19px 17px;
+        }
+
+        .orders-table thead th,
+        .orders-table tbody td {
+            padding-right: 17px;
+            padding-left: 17px;
+        }
+
+        .management-card {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 19px;
+        }
+
+        .management-button {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="admin-dashboard">
+
+    <section class="dashboard-welcome">
+        <div class="welcome-content">
+            <span class="welcome-eyebrow">SYNCORA ADMINISTRATION</span>
             <h1>Dashboard Admin</h1>
-            <p>Selamat datang di panel pengelolaan TokoMusik.</p>
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span>Total Produk</span>
-            <h2>@ViewBag.TotalProduk</h2>
-            <small>Produk aktif</small>
+            <p>Selamat datang di panel pengelolaan Syncora. Pantau aktivitas toko dan transaksi terbaru di sini.</p>
         </div>
 
-        <div class="stat-card">
-            <span>Total Pelanggan</span>
-            <h2>@ViewBag.TotalCustomer</h2>
-            <small>Customer terdaftar</small>
+        <div class="welcome-decoration">
+            <i class="bi bi-music-note-beamed"></i>
         </div>
+    </section>
+
+    <div class="dashboard-section-label">Ringkasan Toko</div>
+
+    <section class="stats-grid">
 
         <div class="stat-card">
-            <span>Total Pesanan</span>
-            <h2>@ViewBag.TotalPesanan</h2>
-            <small>Seluruh transaksi</small>
-        </div>
-
-        <div class="stat-card">
-            <span>Total Pendapatan</span>
-            <h2>
-                @(((decimal)ViewBag.TotalPendapatan).ToString("C0",
-                    System.Globalization.CultureInfo.GetCultureInfo("id-ID")))
-            </h2>
-            <small>Pesanan yang telah dibayar</small>
-        </div>
-    </div>
-
-    <section class="dashboard-section">
-        <div class="section-heading">
-            <div>
-                <h2>Pesanan Terbaru</h2>
-                <p>Daftar transaksi terbaru pelanggan.</p>
+            <div class="stat-top">
+                <span class="stat-label">Total Produk</span>
+                <div class="stat-icon">
+                    <i class="bi bi-music-note-list"></i>
+                </div>
             </div>
+            <strong class="stat-value">@ViewBag.TotalProduk</strong>
+            <span class="stat-description">Produk aktif di katalog</span>
         </div>
 
-        <div class="table-responsive">
-            <table class="table-custom">
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">Total Pelanggan</span>
+                <div class="stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+            <strong class="stat-value">@ViewBag.TotalCustomer</strong>
+            <span class="stat-description">Customer terdaftar</span>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">Total Pesanan</span>
+                <div class="stat-icon">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+            </div>
+            <strong class="stat-value">@ViewBag.TotalPesanan</strong>
+            <span class="stat-description">Seluruh transaksi pelanggan</span>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">Total Pendapatan</span>
+                <div class="stat-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+            <strong class="stat-value">@FormatRupiah(totalPendapatan)</strong>
+            <span class="stat-description">Dari pesanan yang telah dibayar</span>
+        </div>
+
+    </section>
+
+    <!-- MENU MANAJEMEN PRODUK -->
+
+    <div class="dashboard-section-label">Pengelolaan Toko</div>
+
+    <section class="product-management">
+
+        <div class="management-card">
+
+            <div class="management-info">
+                <div class="management-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+
+                <div>
+                    <h3>Manajemen Produk</h3>
+                    <p>
+                        Tambahkan produk baru, lihat daftar produk,
+                        ubah informasi, dan kelola produk di katalog Syncora.
+                    </p>
+                </div>
+            </div>
+
+            <a asp-controller="AdminProduk"
+               asp-action="Index"
+               class="management-button">
+                <i class="bi bi-gear"></i>
+                Kelola Produk
+                <i class="bi bi-arrow-right"></i>
+            </a>
+
+        </div>
+
+    </section>
+
+    <!-- PESANAN TERBARU -->
+
+    <section class="orders-panel">
+
+        <div class="orders-panel-header">
+            <div class="orders-heading">
+                <h2>Pesanan Terbaru</h2>
+                <p>Pantau transaksi terbaru dari pelanggan Syncora.</p>
+            </div>
+
+            <span class="orders-count">
+                <i class="bi bi-receipt"></i>
+                @daftarPesanan.Count Pesanan
+            </span>
+        </div>
+
+        <div class="orders-table-wrapper">
+            <table class="orders-table">
                 <thead>
                     <tr>
                         <th>ID Pesanan</th>
@@ -59,38 +710,56 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var item in ViewBag.PesananTerbaru)
-                    {
-                        <tr>
-                            <td>#@item.IdPesanan</td>
-                            <td>@item.NamaCustomer</td>
-                            <td>
-                                @(((DateTime)item.TanggalPesan).ToString("dd MMM yyyy"))
-                            </td>
-                            <td>
-                                @(((decimal)item.TotalBayar).ToString("C0",
-                                    System.Globalization.CultureInfo.GetCultureInfo("id-ID")))
-                            </td>
-                            <td>
-                                <span class="status-badge">
-                                    @item.Status
-                                </span>
-                            </td>
-                        </tr>
-                    }
 
-                    @if (ViewBag.PesananTerbaru == null ||
-                         !((IEnumerable<dynamic>)ViewBag.PesananTerbaru).Any())
+                <tbody>
+                    @if (daftarPesanan.Any())
+                    {
+                        foreach (var item in daftarPesanan)
+                        {
+                            var status = Convert.ToString(item.Status) ?? "";
+                            var tanggal = Convert.ToDateTime(item.TanggalPesan);
+
+                            <tr>
+                                <td class="order-id">#@item.IdPesanan</td>
+
+                                <td>
+                                    <span class="customer-name">
+                                        @item.NamaCustomer
+                                    </span>
+                                </td>
+
+                                <td class="order-date">
+                                    @tanggal.ToString("dd MMM yyyy", budaya)
+                                </td>
+
+                                <td class="order-total">
+                                    @FormatRupiah(Convert.ToDecimal(item.TotalBayar))
+                                </td>
+
+                                <td>
+                                    <span class="status-badge @StatusClass(status)">
+                                        @status.Replace("_", " ")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td colspan="5" class="empty-state">
-                                Belum ada pesanan.
+                            <td colspan="5" class="empty-orders">
+                                <div class="empty-orders-icon">
+                                    <i class="bi bi-inbox"></i>
+                                </div>
+                                <strong>Belum ada pesanan</strong>
+                                <span>Pesanan pelanggan akan muncul di bagian ini.</span>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
     </section>
+
 </div>

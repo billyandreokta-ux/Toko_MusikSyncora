@@ -525,7 +525,7 @@
 
     @@media (max-width: 900px) {
         .syncora-hero-content {
-            grid-template-columns: 1fr  .85fr;
+            grid-template-columns: 1fr .85fr;
             gap: 25px;
         }
 
@@ -876,6 +876,7 @@
             }).format(number);
         }
 
+        // Memperbaiki lokasi foto produk Syncora.
         function getImageUrl(photo) {
             if (!photo) {
                 return "https://placehold.co/500x400/f1f3ed/45634d?text=Syncora";
@@ -883,15 +884,23 @@
 
             const value = String(photo).trim();
 
+            // Foto yang sudah berupa URL lengkap.
             if (value.startsWith("http://") || value.startsWith("https://")) {
                 return value;
             }
 
+            // Foto yang sudah memiliki path dari root website.
             if (value.startsWith("/")) {
                 return value;
             }
 
-            return "/images/" + value;
+            // Jika API sudah mengirim path uploads/produk/...
+            if (value.toLowerCase().startsWith("uploads/")) {
+                return "/" + value;
+            }
+
+            // Jika API hanya mengirim nama file, misalnya GTR-001.png.
+            return "/uploads/produk/" + value;
         }
 
         function renderProducts(products) {

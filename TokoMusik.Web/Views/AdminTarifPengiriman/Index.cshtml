@@ -1,0 +1,263 @@
+﻿
+@model IEnumerable<TokoMusik.Web.Models.TarifPengirimanViewModel>
+
+@{
+    ViewData["Title"] = "Tarif Pengiriman";
+    var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+}
+
+<style>
+    .tarif-page {
+        background: #f5f7f3;
+        min-height: 100vh;
+        padding: 35px 0 60px;
+        color: #293b30;
+    }
+
+    .tarif-container {
+        width: min(1150px, calc(100% - 35px));
+        margin: auto;
+    }
+
+    .tarif-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+
+    .tarif-heading small {
+        color: #789078;
+        letter-spacing: 2px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .tarif-heading h1 {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 8px 0;
+    }
+
+    .tarif-heading p {
+        color: #89918a;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .tarif-card {
+        background: white;
+        border: 1px solid #e7ece5;
+        border-radius: 7px;
+        padding: 24px;
+        overflow-x: auto;
+    }
+
+    .tarif-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 750px;
+        font-size: 12px;
+    }
+
+    .tarif-table th {
+        text-align: left;
+        padding: 14px 12px;
+        background: #f5f7f3;
+        color: #667468;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .tarif-table td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #edf0eb;
+        vertical-align: middle;
+    }
+
+    .tarif-button {
+        display: inline-block;
+        border: 0;
+        border-radius: 4px;
+        padding: 9px 13px;
+        background: #174c35;
+        color: white;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .tarif-button:hover {
+        background: #245f43;
+        color: white;
+    }
+
+    .tarif-button.secondary {
+        background: #edf1eb;
+        color: #536056;
+    }
+
+    .tarif-button.danger {
+        background: #fcebea;
+        color: #a64e48;
+    }
+
+    .tarif-status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .tarif-status.aktif {
+        background: #e5f2e8;
+        color: #287044;
+    }
+
+    .tarif-status.nonaktif {
+        background: #fcebea;
+        color: #a64e48;
+    }
+
+    .tarif-actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+    }
+
+    .tarif-actions form {
+        margin: 0;
+    }
+
+    .tarif-alert {
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        font-size: 12px;
+    }
+</style>
+
+<div class="tarif-page">
+    <div class="tarif-container">
+
+        <div class="tarif-heading">
+            <div>
+                <small>SYNCORA MANAGEMENT / PENGIRIMAN</small>
+                <h1>Tarif Pengiriman</h1>
+                <p>Atur biaya dan estimasi pengiriman berdasarkan kota tujuan.</p>
+            </div>
+
+            <a asp-action="Tambah" class="tarif-button">
+                + Tambah Tarif
+            </a>
+        </div>
+
+        @if (TempData["Sukses"] != null)
+        {
+            <div class="alert alert-success tarif-alert">
+                @TempData["Sukses"]
+            </div>
+        }
+
+        @if (TempData["Gagal"] != null)
+        {
+            <div class="alert alert-danger tarif-alert">
+                @TempData["Gagal"]
+            </div>
+        }
+
+        <div class="tarif-card">
+            <table class="tarif-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Kota</th>
+                        <th>Provinsi</th>
+                        <th>Biaya Pengiriman</th>
+                        <th>Estimasi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:30px;">
+                                Belum ada tarif pengiriman.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        var nomor = 1;
+
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@nomor</td>
+                                <td>
+                                    @(item.Kota == "*" ? "Semua Kota (Default)" : item.Kota)
+                                </td>
+                                <td>
+                                    @(item.Provinsi == "*" ? "Semua Provinsi" : item.Provinsi)
+                                </td>
+                                <td>
+                                    @item.Biaya.ToString("C0", rupiah)
+                                </td>
+                                <td>@(item.EstimasiHari ?? "-")</td>
+                                <td>
+                                    <span class="tarif-status @item.Status">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="tarif-actions">
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.IdTarif"
+                                           class="tarif-button secondary">
+                                            Edit
+                                        </a>
+
+                                        @if (item.Status == "aktif")
+                                        {
+                                            <form asp-action="Nonaktifkan"
+                                                  asp-route-id="@item.IdTarif"
+                                                  method="post"
+                                                  onsubmit="return confirm('Nonaktifkan tarif ini?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="tarif-button danger">
+                                                    Nonaktifkan
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="Aktifkan"
+                                                  asp-route-id="@item.IdTarif"
+                                                  method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="tarif-button">
+                                                    Aktifkan
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+
+                            nomor++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

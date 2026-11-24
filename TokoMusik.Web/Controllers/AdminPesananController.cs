@@ -2,7 +2,6 @@
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using TokoMusik.Web.Data;
 using TokoMusik.Web.Models;
 
@@ -33,20 +32,41 @@ namespace TokoMusik.Web.Controllers
                     p.tgl_pesan AS TglPesan,
                     p.total_bayar AS TotalBayar,
                     p.status AS Status,
-                    COALESCE(pay.status, 'belum_bayar') AS StatusPembayaran
+                    COALESCE(pay.status, 'belum_bayar') AS StatusPembayaran,
+                    pay.id_payment AS IdPayment,
+                    mp.nama_metode AS NamaMetode,
+                    pay.tgl_bayar AS TglBayar,
+                    pay.jumlah_bayar AS JumlahBayar,
+                    pay.bukti_bayar AS BuktiBayar
                 FROM pemesanan p
                 INNER JOIN customer c
                     ON c.id_customer = p.id_customer
                 INNER JOIN users u
                     ON u.id_user = c.id_user
                 LEFT JOIN payments pay
-                    ON pay.id_pemesanan = p.id_pemesanan
+                    ON pay.id_payment = (
+                        SELECT MAX(px.id_payment)
+                        FROM payments px
+                        WHERE px.id_pemesanan = p.id_pemesanan
+                    )
+                LEFT JOIN metode_pembayaran mp
+                    ON mp.id_metode = pay.id_metode
                 WHERE (@Status IS NULL OR p.status = @Status)
-                ORDER BY p.tgl_pesan DESC";
+                ORDER BY
+                    CASE
+                        WHEN p.status = 'menunggu_bayar' THEN 0
+                        WHEN p.status = 'diproses' THEN 1
+                        WHEN p.status = 'dikirim' THEN 2
+                        ELSE 3
+                    END,
+                    p.tgl_pesan DESC";
 
-            var data = await connection.QueryAsync<AdminPesananViewModel>(
+            var data = await connection.QueryAsync<AdminPesananGabunganViewModel>(
                 sql,
-                new { Status = string.IsNullOrWhiteSpace(status) ? null : status });
+                new
+                {
+                    Status = string.IsNullOrWhiteSpace(status) ? null : status
+                });
 
             ViewBag.StatusFilter = status;
 
@@ -71,33 +91,54 @@ namespace TokoMusik.Web.Controllers
                     p.ongkir AS Ongkir,
                     p.total_bayar AS TotalBayar,
                     p.status AS Status,
+
+                    pay.id_payment AS IdPayment,
                     COALESCE(pay.status, 'belum_bayar') AS StatusPembayaran,
+                    mp.nama_metode AS NamaMetode,
+                    pay.tgl_bayar AS TglBayar,
+                    pay.jumlah_bayar AS JumlahBayar,
+                    pay.bukti_bayar AS BuktiBayar,
+
                     COALESCE(ac.penerima, '-') AS NamaPenerima,
                     COALESCE(ac.telepon, '-') AS TeleponPenerima,
                     COALESCE(ac.alamat_lengkap, '-') AS AlamatLengkap,
                     COALESCE(ac.kota, '-') AS Kota,
                     COALESCE(ac.provinsi, '-') AS Provinsi,
                     COALESCE(ac.kode_pos, '-') AS KodePos,
+
                     pg.kurir AS Kurir,
                     pg.no_resi AS NoResi,
                     pg.status AS StatusPengiriman
+
                 FROM pemesanan p
                 INNER JOIN customer c
                     ON c.id_customer = p.id_customer
                 INNER JOIN users u
                     ON u.id_user = c.id_user
+
                 LEFT JOIN payments pay
-                    ON pay.id_pemesanan = p.id_pemesanan
+                    ON pay.id_payment = (
+                        SELECT MAX(px.id_payment)
+                        FROM payments px
+                        WHERE px.id_pemesanan = p.id_pemesanan
+                    )
+
+                LEFT JOIN metode_pembayaran mp
+                    ON mp.id_metode = pay.id_metode
+
                 LEFT JOIN alamat_customer ac
                     ON ac.id_alamat = p.id_alamat
+
                 LEFT JOIN pengiriman pg
                     ON pg.id_pemesanan = p.id_pemesanan
+
                 WHERE p.id_pemesanan = @Id
                 LIMIT 1";
 
-            var pesanan = await connection.QueryFirstOrDefaultAsync<AdminPesananDetailViewModel>(
-                sqlPesanan,
-                new { Id = id });
+            var pesanan = await connection
+                .QueryFirstOrDefaultAsync<AdminPesananGabunganDetailViewModel>(
+                    sqlPesanan,
+                    new { Id = id });
 
             if (pesanan == null)
                 return NotFound();
@@ -114,11 +155,144 @@ namespace TokoMusik.Web.Controllers
                     ON pr.id_produk = dp.id_produk
                 WHERE dp.id_pemesanan = @Id";
 
-            pesanan.Items = (await connection.QueryAsync<AdminPesananItemViewModel>(
-                sqlItems,
-                new { Id = id })).ToList();
+            pesanan.Items = (
+                await connection.QueryAsync<AdminPesananGabunganItemViewModel>(
+                    sqlItems,
+                    new { Id = id }
+                )
+            ).ToList();
 
             return View(pesanan);
+        }
+
+        [HttpPost("VerifikasiPembayaran/{idPayment:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifikasiPembayaran(
+            int idPayment,
+            string keputusan)
+        {
+            if (keputusan != "berhasil" && keputusan != "gagal")
+            {
+                TempData["Error"] = "Keputusan verifikasi tidak valid.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await using var connection = _koneksi.GetConnection();
+            await connection.OpenAsync();
+
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
+            try
+            {
+                const string sqlCek = @"
+                    SELECT
+                        pay.id_pemesanan AS IdPemesanan,
+                        pay.status AS StatusPembayaran,
+                        pay.bukti_bayar AS BuktiBayar,
+                        p.status AS StatusPesanan
+                    FROM payments pay
+                    INNER JOIN pemesanan p
+                        ON p.id_pemesanan = pay.id_pemesanan
+                    WHERE pay.id_payment = @IdPayment
+                    LIMIT 1
+                    FOR UPDATE";
+
+                var data = await connection.QueryFirstOrDefaultAsync<VerifikasiData>(
+                    sqlCek,
+                    new { IdPayment = idPayment },
+                    transaction);
+
+                if (data == null)
+                {
+                    await transaction.RollbackAsync();
+                    return NotFound();
+                }
+
+                if (data.StatusPesanan != "menunggu_bayar" ||
+                    data.StatusPembayaran != "pending" ||
+                    string.IsNullOrWhiteSpace(data.BuktiBayar))
+                {
+                    await transaction.RollbackAsync();
+
+                    TempData["Error"] =
+                        "Pembayaran tidak dapat diverifikasi. Pastikan pesanan masih menunggu pembayaran dan bukti sudah diunggah.";
+
+                    return RedirectToAction(nameof(Detail), new
+                    {
+                        id = data.IdPemesanan
+                    });
+                }
+
+                const string sqlUpdatePayment = @"
+                    UPDATE payments
+                    SET status = @Status
+                    WHERE id_payment = @IdPayment
+                      AND status = 'pending'";
+
+                int paymentUpdated = await connection.ExecuteAsync(
+                    sqlUpdatePayment,
+                    new
+                    {
+                        Status = keputusan,
+                        IdPayment = idPayment
+                    },
+                    transaction);
+
+                if (paymentUpdated != 1)
+                {
+                    await transaction.RollbackAsync();
+
+                    TempData["Error"] =
+                        "Pembayaran sudah berubah atau sedang diproses oleh admin lain.";
+
+                    return RedirectToAction(nameof(Detail), new
+                    {
+                        id = data.IdPemesanan
+                    });
+                }
+
+                if (keputusan == "berhasil")
+                {
+                    const string sqlUpdatePesanan = @"
+                        UPDATE pemesanan
+                        SET status = 'diproses'
+                        WHERE id_pemesanan = @IdPemesanan
+                          AND status = 'menunggu_bayar'";
+
+                    int pesananUpdated = await connection.ExecuteAsync(
+                        sqlUpdatePesanan,
+                        new { data.IdPemesanan },
+                        transaction);
+
+                    if (pesananUpdated != 1)
+                    {
+                        throw new InvalidOperationException(
+                            "Status pesanan tidak dapat diperbarui menjadi diproses."
+                        );
+                    }
+                }
+
+                await transaction.CommitAsync();
+
+                TempData["Success"] = keputusan == "berhasil"
+                    ? "Pembayaran berhasil diverifikasi. Status pesanan otomatis berubah menjadi diproses."
+                    : "Pembayaran ditolak. Pelanggan dapat mengunggah bukti pembayaran kembali.";
+
+                return RedirectToAction(nameof(Detail), new
+                {
+                    id = data.IdPemesanan
+                });
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+
+                TempData["Error"] =
+                    "Terjadi kesalahan saat memproses verifikasi pembayaran.";
+
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost("UbahStatus/{id:int}")]
@@ -131,7 +305,6 @@ namespace TokoMusik.Web.Controllers
         {
             var statusDiizinkan = new[]
             {
-                "diproses",
                 "dikirim",
                 "selesai"
             };
@@ -179,7 +352,6 @@ namespace TokoMusik.Web.Controllers
                 }
 
                 bool transisiValid =
-                    (statusLama == "dibayar" && statusBaru == "diproses") ||
                     (statusLama == "diproses" && statusBaru == "dikirim") ||
                     (statusLama == "dikirim" && statusBaru == "selesai");
 
@@ -271,6 +443,14 @@ namespace TokoMusik.Web.Controllers
 
                 return RedirectToAction(nameof(Detail), new { id });
             }
+        }
+
+        private class VerifikasiData
+        {
+            public int IdPemesanan { get; set; }
+            public string StatusPembayaran { get; set; } = "";
+            public string StatusPesanan { get; set; } = "";
+            public string? BuktiBayar { get; set; }
         }
     }
 }

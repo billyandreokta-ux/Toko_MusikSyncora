@@ -1,0 +1,192 @@
+﻿
+@model TokoMusik.Web.Models.TarifPengirimanViewModel
+
+@{
+    bool sedangEdit = Model.IdTarif > 0;
+    ViewData["Title"] = sedangEdit ? "Edit Tarif Pengiriman" : "Tambah Tarif Pengiriman";
+}
+
+<style>
+    .tarif-form-page {
+        background: #f5f7f3;
+        min-height: 100vh;
+        padding: 40px 0 60px;
+        color: #293b30;
+    }
+
+    .tarif-form-container {
+        width: min(750px, calc(100% - 35px));
+        margin: auto;
+    }
+
+    .tarif-form-heading {
+        margin-bottom: 25px;
+    }
+
+    .tarif-form-heading small {
+        color: #789078;
+        letter-spacing: 2px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .tarif-form-heading h1 {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 9px 0;
+    }
+
+    .tarif-form-heading p {
+        color: #89918a;
+        font-size: 13px;
+    }
+
+    .tarif-form-card {
+        background: white;
+        border: 1px solid #e7ece5;
+        border-radius: 7px;
+        padding: 28px;
+    }
+
+    .tarif-field {
+        margin-bottom: 20px;
+    }
+
+    .tarif-field label {
+        display: block;
+        color: #536056;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .tarif-field input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e0e7de;
+        border-radius: 4px;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .tarif-field input:focus {
+        border-color: #739578;
+    }
+
+    .tarif-hint {
+        color: #929b92;
+        font-size: 11px;
+        margin-top: 7px;
+    }
+
+    .tarif-validation {
+        color: #b34d43;
+        font-size: 11px;
+        display: block;
+        margin-top: 6px;
+    }
+
+    .tarif-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #edf0eb;
+    }
+
+    .tarif-button {
+        border: 0;
+        border-radius: 4px;
+        padding: 12px 18px;
+        background: #174c35;
+        color: white;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .tarif-button:hover {
+        background: #245f43;
+        color: white;
+    }
+
+    .tarif-button.secondary {
+        background: #edf1eb;
+        color: #536056;
+    }
+</style>
+
+<div class="tarif-form-page">
+    <div class="tarif-form-container">
+
+        <div class="tarif-form-heading">
+            <small>SYNCORA MANAGEMENT / PENGIRIMAN</small>
+            <h1>@(sedangEdit ? "Edit Tarif Pengiriman" : "Tambah Tarif Pengiriman")</h1>
+            <p>Masukkan informasi biaya dan estimasi pengiriman.</p>
+        </div>
+
+        <div class="tarif-form-card">
+
+            <form asp-action="@(sedangEdit ? "Edit" : "Tambah")" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="IdTarif" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger"></div>
+
+                <div class="tarif-field">
+                    <label asp-for="Kota">Kota Tujuan</label>
+                    <input asp-for="Kota"
+                           placeholder="Contoh: Bandung"
+                           required />
+                    <span asp-validation-for="Kota" class="tarif-validation"></span>
+                    <div class="tarif-hint">
+                        Isi tanda * untuk tarif default semua kota.
+                    </div>
+                </div>
+
+                <div class="tarif-field">
+                    <label asp-for="Provinsi">Provinsi</label>
+                    <input asp-for="Provinsi"
+                           placeholder="Contoh: Jawa Barat"
+                           required />
+                    <span asp-validation-for="Provinsi" class="tarif-validation"></span>
+                    <div class="tarif-hint">
+                        Gunakan * jika tarif berlaku untuk semua provinsi.
+                    </div>
+                </div>
+
+                <div class="tarif-field">
+                    <label asp-for="Biaya">Biaya Pengiriman (Rupiah)</label>
+                    <input asp-for="Biaya"
+                           type="number"
+                           min="0"
+                           step="1000"
+                           required />
+                    <span asp-validation-for="Biaya" class="tarif-validation"></span>
+                </div>
+
+                <div class="tarif-field">
+                    <label asp-for="EstimasiHari">Estimasi Pengiriman</label>
+                    <input asp-for="EstimasiHari"
+                           placeholder="Contoh: 2-4 hari" />
+                    <span asp-validation-for="EstimasiHari" class="tarif-validation"></span>
+                </div>
+
+                <div class="tarif-actions">
+                    <a asp-action="Index" class="tarif-button secondary">
+                        Kembali
+                    </a>
+
+                    <button type="submit" class="tarif-button">
+                        @(sedangEdit ? "Simpan Perubahan" : "Simpan Tarif")
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

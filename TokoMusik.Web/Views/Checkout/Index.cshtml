@@ -5,248 +5,1064 @@
     ViewData["Title"] = "Checkout";
 
     var rupiah = System.Globalization.CultureInfo.GetCultureInfo("id-ID");
+
+    var daftarItem = Model.Items ?? new List<TokoMusik.Web.Models.CheckoutItemViewModel>();
+    var daftarAlamat = Model.Alamat ?? new List<TokoMusik.Web.Models.AlamatCustomer>();
+    var daftarMetode = Model.MetodePembayaran ?? new List<TokoMusik.Web.Models.MetodePembayaranViewModel>();
+
+    int totalItem = daftarItem.Sum(x => x.Jumlah);
+
+    string GetFotoUrl(string? foto)
+    {
+        if (string.IsNullOrWhiteSpace(foto))
+            return Url.Content("~/images/no-image.png");
+
+        foto = foto.Trim();
+
+        if (foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return foto;
+
+        if (foto.StartsWith("/"))
+            return foto;
+
+        if (foto.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return "/" + foto;
+
+        return Url.Content("~/uploads/produk/" + foto);
+    }
 }
 
-<div class="dashboard-container">
-
-    <div class="dashboard-heading">
-        <div>
-            <span class="eyebrow">ORDER CHECKOUT</span>
-            <h1>Checkout</h1>
-            <p>Periksa pesanan dan tentukan tujuan pengiriman.</p>
-        </div>
-
-        <a asp-controller="Keranjang"
-           asp-action="Index"
-           class="btn-outline-custom">
-            Kembali ke Keranjang
-        </a>
-    </div>
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
-        </div>
+<style>
+    .syncora-checkout {
+        --checkout-green: #244b35;
+        --checkout-dark: #193b29;
+        --checkout-soft: #eaf1e9;
+        --checkout-cream: #f6f7f2;
+        --checkout-text: #26372c;
+        --checkout-muted: #839087;
+        --checkout-border: #e8ece6;
+        background: var(--checkout-cream);
+        min-height: 100vh;
+        padding: 38px 0 75px;
+        color: var(--checkout-text);
     }
 
-    <form asp-controller="Checkout"
-          asp-action="Proses"
-          method="post">
+    .syncora-checkout *,
+    .syncora-checkout *::before,
+    .syncora-checkout *::after {
+        box-sizing: border-box;
+    }
 
-        @Html.AntiForgeryToken()
+    .checkout-container {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+    }
 
-        <div class="checkout-layout">
+    .checkout-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--checkout-muted);
+        font-size: 12px;
+        margin-bottom: 25px;
+    }
 
-            <div class="checkout-main">
+    .checkout-breadcrumb a {
+        color: var(--checkout-green);
+        text-decoration: none;
+        font-weight: 700;
+    }
 
-                <!-- ALAMAT PENGIRIMAN -->
-                <section class="dashboard-section">
+    .checkout-breadcrumb a:hover {
+        text-decoration: underline;
+    }
 
-                    <h2>Alamat Pengiriman</h2>
+    .checkout-hero {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 25px;
+        padding: 34px 38px;
+        margin-bottom: 25px;
+        border-radius: 22px;
+        background: linear-gradient(115deg, #193b29 0%, #315b40 65%, #52765a 100%);
+        color: white;
+        box-shadow: 0 14px 35px rgba(30, 65, 43, .12);
+    }
 
-                    <p class="text-secondary">
-                        Pilih alamat tujuan pengiriman pesananmu.
-                    </p>
+    .checkout-hero::before,
+    .checkout-hero::after {
+        content: "";
+        position: absolute;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        pointer-events: none;
+    }
 
-                    <div class="checkout-address-list">
+    .checkout-hero::before {
+        width: 260px;
+        height: 260px;
+        right: 90px;
+        top: -170px;
+    }
 
-                        @foreach (var alamat in Model.Alamat)
-                        {
-                            <label class="checkout-option">
+    .checkout-hero::after {
+        width: 190px;
+        height: 190px;
+        right: -40px;
+        bottom: -130px;
+    }
 
-                                <input type="radio"
-                                       name="idAlamat"
-                                       value="@alamat.IdAlamat"
-                                       checked="@(Model.IdAlamat == alamat.IdAlamat)"
-                                       required />
+    .checkout-hero-content {
+        position: relative;
+        z-index: 1;
+    }
 
-                                <div>
-                                    <strong>
-                                        @alamat.LabelAlamat
+    .checkout-eyebrow {
+        display: inline-block;
+        color: #c5d8c6;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2.8px;
+        margin-bottom: 10px;
+    }
 
-                                        @if (alamat.IsUtama)
+    .checkout-hero h1 {
+        color: white;
+        font-size: clamp(27px, 4vw, 36px);
+        font-weight: 800;
+        letter-spacing: -.8px;
+        margin: 0 0 9px;
+    }
+
+    .checkout-hero p {
+        color: rgba(255,255,255,.78);
+        font-size: 13px;
+        margin: 0;
+        line-height: 1.7;
+    }
+
+    .checkout-hero-icon {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 88px;
+        height: 88px;
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 25px;
+        background: rgba(255,255,255,.1);
+        color: white;
+        font-size: 37px;
+    }
+
+    .checkout-alert {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 14px 17px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .checkout-alert-error {
+        color: #a33d36;
+        background: #fff0ee;
+        border: 1px solid #f3d3ce;
+    }
+
+    .checkout-alert-success {
+        color: #245c37;
+        background: #e9f5eb;
+        border: 1px solid #cfe7d3;
+    }
+
+    .checkout-progress {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    .checkout-progress-step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 15px;
+        border: 1px solid var(--checkout-border);
+        border-radius: 11px;
+        background: white;
+        color: #879187;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .checkout-progress-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 27px;
+        height: 27px;
+        border-radius: 50%;
+        background: #edf1eb;
+        color: #728273;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .checkout-progress-step.active {
+        border-color: #b8cdb8;
+        background: #f1f6ef;
+        color: var(--checkout-green);
+    }
+
+    .checkout-progress-step.active .checkout-progress-number {
+        background: var(--checkout-green);
+        color: white;
+    }
+
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 345px;
+        align-items: start;
+        gap: 23px;
+    }
+
+    .checkout-main {
+        display: flex;
+        flex-direction: column;
+        gap: 19px;
+        min-width: 0;
+    }
+
+    .checkout-card,
+    .checkout-summary {
+        background: white;
+        border: 1px solid var(--checkout-border);
+        border-radius: 17px;
+        box-shadow: 0 5px 20px rgba(35, 59, 40, .035);
+    }
+
+    .checkout-card {
+        padding: 23px;
+    }
+
+    .checkout-section-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+        margin-bottom: 19px;
+    }
+
+    .checkout-section-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 39px;
+        height: 39px;
+        border-radius: 11px;
+        background: var(--checkout-soft);
+        color: var(--checkout-green);
+        font-size: 17px;
+    }
+
+    .checkout-section-heading h2 {
+        color: var(--checkout-text);
+        font-size: 16px;
+        font-weight: 800;
+        margin: 1px 0 5px;
+    }
+
+    .checkout-section-heading p {
+        color: var(--checkout-muted);
+        font-size: 11px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .checkout-address-list,
+    .checkout-payment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+    }
+
+    .checkout-option {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+        padding: 16px;
+        border: 1px solid #e5ebe3;
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .checkout-option:hover {
+        border-color: #a8c2a9;
+        background: #fbfdf9;
+    }
+
+    .checkout-option:has(input:checked) {
+        border-color: #6c9872;
+        background: #f5f9f3;
+        box-shadow: 0 0 0 2px rgba(79, 126, 83, .07);
+    }
+
+    .checkout-option input[type="radio"] {
+        width: 17px;
+        height: 17px;
+        margin: 3px 0 0;
+        flex-shrink: 0;
+        accent-color: var(--checkout-green);
+        cursor: pointer;
+    }
+
+    .checkout-option-content {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .checkout-option-title {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        color: var(--checkout-text);
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 7px;
+    }
+
+    .checkout-primary-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 30px;
+        background: #e7f2e5;
+        color: #3b7144;
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .checkout-option-content p {
+        color: #748176;
+        font-size: 11px;
+        line-height: 1.65;
+        margin: 3px 0 0;
+        overflow-wrap: anywhere;
+    }
+
+    .checkout-option-content .checkout-recipient {
+        color: #46574a;
+        font-weight: 700;
+    }
+
+    .checkout-add-address {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 15px;
+        padding: 10px 14px;
+        border: 1px solid #dce6da;
+        border-radius: 9px;
+        color: var(--checkout-green);
+        background: white;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 800;
+        transition: .2s ease;
+    }
+
+    .checkout-add-address:hover {
+        background: var(--checkout-green);
+        color: white;
+        border-color: var(--checkout-green);
+    }
+
+    .checkout-payment-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .checkout-payment-list .checkout-option {
+        min-height: 86px;
+    }
+
+    .checkout-payment-symbol {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 35px;
+        height: 35px;
+        border-radius: 9px;
+        background: #edf3eb;
+        color: var(--checkout-green);
+        font-size: 15px;
+    }
+
+    .checkout-product-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .checkout-product {
+        display: grid;
+        grid-template-columns: 66px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 13px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--checkout-border);
+    }
+
+    .checkout-product:first-child {
+        padding-top: 0;
+    }
+
+    .checkout-product:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+    }
+
+    .checkout-product-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 66px;
+        height: 66px;
+        overflow: hidden;
+        border: 1px solid #edf0e9;
+        border-radius: 11px;
+        background: #f3f5f0;
+    }
+
+    .checkout-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 5px;
+    }
+
+    .checkout-product-info {
+        min-width: 0;
+    }
+
+    .checkout-product-name {
+        display: block;
+        color: var(--checkout-text);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.5;
+        margin-bottom: 5px;
+        overflow-wrap: anywhere;
+    }
+
+    .checkout-product-code {
+        color: #89958a;
+        font-size: 10px;
+        margin-bottom: 5px;
+    }
+
+    .checkout-product-quantity {
+        color: #78857a;
+        font-size: 10px;
+    }
+
+    .checkout-product-price {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .checkout-product-price strong {
+        display: block;
+        color: var(--checkout-green);
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .checkout-product-price span {
+        display: block;
+        color: #879187;
+        font-size: 10px;
+        margin-top: 5px;
+    }
+
+    .checkout-summary {
+        position: sticky;
+        top: 20px;
+        padding: 23px;
+    }
+
+    .checkout-summary-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .checkout-summary-heading h2 {
+        color: var(--checkout-text);
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .checkout-summary-count {
+        padding: 6px 9px;
+        border-radius: 30px;
+        background: var(--checkout-soft);
+        color: var(--checkout-green);
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .checkout-summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+        color: #78847a;
+        font-size: 12px;
+    }
+
+    .checkout-summary-row strong {
+        color: var(--checkout-text);
+        font-size: 12px;
+        text-align: right;
+    }
+
+    .checkout-summary-divider {
+        border: 0;
+        border-top: 1px dashed #dfe6dd;
+        margin: 19px 0;
+    }
+
+    .checkout-total-label {
+        color: var(--checkout-text);
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .checkout-total-price {
+        display: block;
+        color: var(--checkout-green);
+        font-size: 25px;
+        font-weight: 900;
+        letter-spacing: -.6px;
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+    }
+
+    .checkout-discount {
+        color: #3d824c !important;
+    }
+
+    .checkout-submit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 21px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--checkout-green);
+        color: white;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .checkout-submit:hover {
+        background: var(--checkout-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 7px 15px rgba(36, 75, 53, .16);
+    }
+
+    .checkout-back-link {
+        display: block;
+        text-align: center;
+        margin-top: 14px;
+        color: var(--checkout-green);
+        font-size: 11px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .checkout-back-link:hover {
+        text-decoration: underline;
+    }
+
+    .checkout-summary-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 12px;
+        margin-top: 17px;
+        border-radius: 9px;
+        background: #fafbf8;
+        color: #7b887c;
+        font-size: 10px;
+        line-height: 1.6;
+    }
+
+    .checkout-security {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 14px;
+        color: #879287;
+        font-size: 10px;
+    }
+
+    @@media (max-width: 950px) {
+        .checkout-layout {
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 15px;
+        }
+
+        .checkout-card,
+        .checkout-summary {
+            padding: 19px;
+        }
+    }
+
+    @@media (max-width: 800px) {
+        .checkout-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .checkout-summary {
+            position: static;
+        }
+
+        .checkout-progress {
+            gap: 8px;
+        }
+
+        .checkout-progress-step {
+            padding: 11px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .syncora-checkout {
+            padding-top: 25px;
+        }
+
+        .checkout-container {
+            width: min(100% - 24px, 1180px);
+        }
+
+        .checkout-hero {
+            padding: 25px 21px;
+            border-radius: 16px;
+        }
+
+        .checkout-hero-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 17px;
+            font-size: 28px;
+        }
+
+        .checkout-hero p {
+            font-size: 11px;
+        }
+
+        .checkout-progress {
+            grid-template-columns: 1fr;
+            gap: 7px;
+        }
+
+        .checkout-progress-step {
+            padding: 9px 12px;
+        }
+
+        .checkout-card {
+            padding: 17px 14px;
+            border-radius: 14px;
+        }
+
+        .checkout-section-heading {
+            gap: 10px;
+        }
+
+        .checkout-payment-list {
+            grid-template-columns: 1fr;
+        }
+
+        .checkout-product {
+            grid-template-columns: 56px minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .checkout-product-image {
+            width: 56px;
+            height: 56px;
+        }
+
+        .checkout-product-price {
+            grid-column: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .checkout-product-price span {
+            margin-top: 0;
+        }
+
+        .checkout-summary {
+            padding: 19px;
+        }
+    }
+</style>
+
+<div class="syncora-checkout">
+    <div class="checkout-container">
+
+        <div class="checkout-breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Beranda</a>
+            <span>/</span>
+            <a asp-controller="Keranjang" asp-action="Index">Keranjang</a>
+            <span>/</span>
+            <span>Checkout</span>
+        </div>
+
+        <section class="checkout-hero">
+            <div class="checkout-hero-content">
+                <span class="checkout-eyebrow">COMPLETE YOUR ORDER</span>
+                <h1>Checkout Pesanan</h1>
+                <p>
+                    Satu langkah lagi untuk mendapatkan instrumen musik pilihanmu.
+                    Pastikan informasi pesanan sudah benar.
+                </p>
+            </div>
+
+            <div class="checkout-hero-icon" aria-hidden="true">
+                ♫
+            </div>
+        </section>
+
+        <div class="checkout-progress">
+            <div class="checkout-progress-step">
+                <span class="checkout-progress-number">✓</span>
+                <span>Keranjang</span>
+            </div>
+
+            <div class="checkout-progress-step active">
+                <span class="checkout-progress-number">2</span>
+                <span>Pengiriman & Pembayaran</span>
+            </div>
+
+            <div class="checkout-progress-step">
+                <span class="checkout-progress-number">3</span>
+                <span>Pesanan Selesai</span>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="checkout-alert checkout-alert-success">
+                <span>✓</span>
+                <span>@TempData["Success"]</span>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="checkout-alert checkout-alert-error">
+                <span>!</span>
+                <span>@TempData["Error"]</span>
+            </div>
+        }
+
+        <form asp-controller="Checkout"
+              asp-action="Proses"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="checkout-layout">
+
+                <div class="checkout-main">
+
+                    <!-- ALAMAT PENGIRIMAN -->
+                    <section class="checkout-card">
+
+                        <div class="checkout-section-heading">
+                            <div class="checkout-section-icon">⌖</div>
+
+                            <div>
+                                <h2>Alamat Pengiriman</h2>
+                                <p>
+                                    Tentukan alamat tujuan untuk menerima pesananmu.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="checkout-address-list">
+
+                            @foreach (var alamat in daftarAlamat)
+                            {
+                                <label class="checkout-option">
+
+                                    <input type="radio"
+                                           name="idAlamat"
+                                           value="@alamat.IdAlamat"
+                                           checked="@(Model.IdAlamat == alamat.IdAlamat)"
+                                           required />
+
+                                    <div class="checkout-option-content">
+
+                                        <div class="checkout-option-title">
+                                            @alamat.LabelAlamat
+
+                                            @if (alamat.IsUtama)
+                                            {
+                                                <span class="checkout-primary-badge">
+                                                    Alamat Utama
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <p class="checkout-recipient">
+                                            @alamat.Penerima
+                                        </p>
+
+                                        <p>@alamat.Telepon</p>
+
+                                        <p>
+                                            @alamat.AlamatLengkap,
+                                            @alamat.Kota,
+                                            @alamat.Provinsi,
+                                            @alamat.KodePos
+                                        </p>
+
+                                    </div>
+
+                                </label>
+                            }
+
+                        </div>
+
+                        <a asp-controller="Alamat"
+                           asp-action="Tambah"
+                           class="checkout-add-address">
+                            <span>＋</span>
+                            Tambah Alamat Baru
+                        </a>
+
+                    </section>
+
+                    <!-- METODE PEMBAYARAN -->
+                    <section class="checkout-card">
+
+                        <div class="checkout-section-heading">
+                            <div class="checkout-section-icon">▣</div>
+
+                            <div>
+                                <h2>Metode Pembayaran</h2>
+                                <p>
+                                    Pilih metode pembayaran yang tersedia untuk pesanan ini.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="checkout-payment-list">
+
+                            @foreach (var metode in daftarMetode)
+                            {
+                                <label class="checkout-option">
+
+                                    <input type="radio"
+                                           name="idMetode"
+                                           value="@metode.IdMetode"
+                                           checked="@(Model.IdMetode == metode.IdMetode)"
+                                           required />
+
+                                    <div class="checkout-payment-symbol">
+                                        ◈
+                                    </div>
+
+                                    <div class="checkout-option-content">
+
+                                        <div class="checkout-option-title">
+                                            @metode.NamaMetode
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(metode.Keterangan))
                                         {
-                                            <span class="status-badge">
-                                                Utama
-                                            </span>
+                                            <p>@metode.Keterangan</p>
                                         }
-                                    </strong>
 
-                                    <p>@alamat.Penerima</p>
+                                    </div>
 
-                                    <p>@alamat.Telepon</p>
+                                </label>
+                            }
 
-                                    <p>
-                                        @alamat.AlamatLengkap,
-                                        @alamat.Kota,
-                                        @alamat.Provinsi,
-                                        @alamat.KodePos
-                                    </p>
-                                </div>
+                        </div>
 
-                            </label>
-                        }
+                    </section>
 
+                    <!-- RINCIAN PRODUK -->
+                    <section class="checkout-card">
+
+                        <div class="checkout-section-heading">
+                            <div class="checkout-section-icon">♫</div>
+
+                            <div>
+                                <h2>Rincian Produk</h2>
+                                <p>
+                                    Periksa kembali produk dan jumlah yang akan dipesan.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="checkout-product-list">
+
+                            @foreach (var item in daftarItem)
+                            {
+                                <article class="checkout-product">
+
+                                    <div class="checkout-product-image">
+                                        <img src="@GetFotoUrl(item.Foto)"
+                                             alt="@item.NamaProduk"
+                                             loading="lazy"
+                                             onerror="this.onerror=null;this.src='@Url.Content("~/images/no-image.png")';" />
+                                    </div>
+
+                                    <div class="checkout-product-info">
+
+                                        <span class="checkout-product-name">
+                                            @item.NamaProduk
+                                        </span>
+
+                                        <div class="checkout-product-code">
+                                            KODE PRODUK · @item.KodeProduk
+                                        </div>
+
+                                        <div class="checkout-product-quantity">
+                                            @item.HargaJual.ToString("C0", rupiah)
+                                            × @item.Jumlah unit
+                                        </div>
+
+                                    </div>
+
+                                    <div class="checkout-product-price">
+                                        <strong>
+                                            @item.Subtotal.ToString("C0", rupiah)
+                                        </strong>
+
+                                        <span>
+                                            @item.Jumlah unit
+                                        </span>
+                                    </div>
+
+                                </article>
+                            }
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+                <!-- RINGKASAN PESANAN -->
+                <aside class="checkout-summary">
+
+                    <div class="checkout-summary-heading">
+                        <h2>Ringkasan Pesanan</h2>
+
+                        <span class="checkout-summary-count">
+                            @totalItem item
+                        </span>
                     </div>
 
-                    <a asp-controller="Alamat"
-                       asp-action="Tambah"
-                       class="btn-outline-custom"
-                       style="margin-top:15px;">
-                        + Tambah Alamat Baru
+                    <div class="checkout-summary-row">
+                        <span>Total Produk</span>
+
+                        <strong>
+                            @Model.Subtotal.ToString("C0", rupiah)
+                        </strong>
+                    </div>
+
+                    <div class="checkout-summary-row">
+                        <span>Ongkos Kirim</span>
+
+                        <strong>
+                            @Model.Ongkir.ToString("C0", rupiah)
+                        </strong>
+                    </div>
+
+                    <div class="checkout-summary-row">
+                        <span>Diskon</span>
+
+                        <strong class="checkout-discount">
+                            − @Model.Diskon.ToString("C0", rupiah)
+                        </strong>
+                    </div>
+
+                    <hr class="checkout-summary-divider" />
+
+                    <div>
+                        <span class="checkout-total-label">
+                            Total Pembayaran
+                        </span>
+
+                        <strong class="checkout-total-price">
+                            @Model.TotalBayar.ToString("C0", rupiah)
+                        </strong>
+                    </div>
+
+                    <button type="submit" class="checkout-submit">
+                        Buat Pesanan Sekarang →
+                    </button>
+
+                    <a asp-controller="Keranjang"
+                       asp-action="Index"
+                       class="checkout-back-link">
+                        ← Kembali ke Keranjang
                     </a>
 
-                </section>
+                    <div class="checkout-summary-note">
+                        <span>ⓘ</span>
 
-
-                <!-- METODE PEMBAYARAN -->
-                <section class="dashboard-section">
-
-                    <h2>Metode Pembayaran</h2>
-
-                    <p class="text-secondary">
-                        Pilih metode pembayaran yang tersedia.
-                    </p>
-
-                    <div class="checkout-payment-list">
-
-                        @foreach (var metode in Model.MetodePembayaran)
-                        {
-                            <label class="checkout-option">
-
-                                <input type="radio"
-                                       name="idMetode"
-                                       value="@metode.IdMetode"
-                                       checked="@(Model.IdMetode == metode.IdMetode)"
-                                       required />
-
-                                <div>
-                                    <strong>@metode.NamaMetode</strong>
-
-                                    @if (!string.IsNullOrWhiteSpace(metode.Keterangan))
-                                    {
-                                        <p>@metode.Keterangan</p>
-                                    }
-                                </div>
-
-                            </label>
-                        }
-
+                        <span>
+                            Pastikan alamat pengiriman dan metode pembayaran
+                            sudah sesuai sebelum membuat pesanan.
+                        </span>
                     </div>
 
-                </section>
-
-
-                <!-- RINCIAN PRODUK -->
-                <section class="dashboard-section">
-
-                    <h2>Rincian Produk</h2>
-
-                    <div class="table-responsive">
-
-                        <table class="table-custom">
-
-                            <thead>
-                                <tr>
-                                    <th>Produk</th>
-                                    <th>Harga</th>
-                                    <th>Jumlah</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-
-                                @foreach (var item in Model.Items)
-                                {
-                                    <tr>
-                                        <td>
-                                            <strong>@item.NamaProduk</strong>
-                                            <br />
-                                            <small>@item.KodeProduk</small>
-                                        </td>
-
-                                        <td>
-                                            @item.HargaJual.ToString("C0", rupiah)
-                                        </td>
-
-                                        <td>
-                                            @item.Jumlah
-                                        </td>
-
-                                        <td>
-                                            <strong>
-                                                @item.Subtotal.ToString("C0", rupiah)
-                                            </strong>
-                                        </td>
-                                    </tr>
-                                }
-
-                            </tbody>
-
-                        </table>
-
+                    <div class="checkout-security">
+                        <span>✓</span>
+                        <span>Pesanan diproses melalui sistem Syncora</span>
                     </div>
 
-                </section>
+                </aside>
 
             </div>
 
+        </form>
 
-            <!-- RINGKASAN PEMBAYARAN -->
-            <aside class="checkout-summary">
-
-                <h2>Ringkasan Pesanan</h2>
-
-                <div class="checkout-summary-row">
-                    <span>Total Produk</span>
-
-                    <strong>
-                        @Model.Subtotal.ToString("C0", rupiah)
-                    </strong>
-                </div>
-
-                <div class="checkout-summary-row">
-                    <span>Ongkos Kirim</span>
-
-                    <strong>
-                        @Model.Ongkir.ToString("C0", rupiah)
-                    </strong>
-                </div>
-
-                <div class="checkout-summary-row">
-                    <span>Diskon</span>
-
-                    <strong>
-                        @Model.Diskon.ToString("C0", rupiah)
-                    </strong>
-                </div>
-
-                <hr />
-
-                <div class="checkout-total">
-                    <span>Total Pembayaran</span>
-
-                    <h2>
-                        @Model.TotalBayar.ToString("C0", rupiah)
-                    </h2>
-                </div>
-
-                <p class="text-secondary">
-                    Pastikan alamat dan metode pembayaran sudah benar
-                    sebelum membuat pesanan.
-                </p>
-
-                <button type="submit"
-                        class="btn-primary-custom">
-                    Buat Pesanan
-                </button>
-
-            </aside>
-
-        </div>
-
-    </form>
-
+    </div>
 </div>

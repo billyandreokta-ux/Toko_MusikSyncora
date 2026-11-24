@@ -1,0 +1,127 @@
+﻿
+@model List<TokoMusik.Web.Models.GaransiItemViewModel>
+
+@{
+    ViewData["Title"] = "Manajemen Garansi";
+    var totalAktif = Model.Count(x => x.Status == "aktif");
+    var totalHabis = Model.Count(x => x.Status == "habis");
+    var totalDiklaim = Model.Count(x => x.Status == "diklaim");
+}
+
+<style>
+    .admin-warranty-page { max-width:1400px; margin:30px auto 60px; padding:0 18px; color:#263a30; }
+    .admin-warranty-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px; }
+    .admin-warranty-heading h2 { font-weight:800; margin:0; }
+    .warranty-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; margin-bottom:22px; }
+    .warranty-stat { background:white; border:1px solid #e7ece8; border-radius:14px; padding:19px; }
+    .warranty-stat small { color:#78847c; }
+    .warranty-stat strong { display:block; font-size:27px; margin-top:5px; }
+    .admin-warranty-panel { background:white; border:1px solid #e7ece8; border-radius:15px; padding:20px; }
+    .admin-warranty-table-wrap { overflow-x:auto; }
+    .admin-warranty-table { width:100%; min-width:1100px; border-collapse:collapse; }
+    .admin-warranty-table th { background:#f4f7f4; color:#718077; font-size:12px; text-transform:uppercase; }
+    .admin-warranty-table th,.admin-warranty-table td { padding:13px 12px; border-bottom:1px solid #edf0ed; text-align:left; vertical-align:middle; }
+    .admin-warranty-table td { font-size:13px; }
+    .warranty-status-badge { display:inline-block; padding:5px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+    .warranty-aktif { background:#e5f3e9; color:#28613d; }
+    .warranty-habis { background:#eeeeee; color:#626262; }
+    .warranty-diklaim { background:#fff2d6; color:#93630a; }
+    .warranty-status-select { border:1px solid #dfe6df; border-radius:8px; padding:8px; font-size:12px; }
+    @@media(max-width:700px) { .warranty-stats { grid-template-columns:1fr; } }
+</style>
+
+<div class="admin-warranty-page">
+    <div class="admin-warranty-heading">
+        <div>
+            <h2>Manajemen Garansi</h2>
+            <p class="text-muted mb-0">Kelola masa berlaku dan status garansi produk pelanggan.</p>
+        </div>
+        <a asp-action="Tambah" class="btn btn-success">+ Tambah Garansi</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="warranty-stats">
+        <div class="warranty-stat"><small>Garansi Aktif</small><strong>@totalAktif</strong></div>
+        <div class="warranty-stat"><small>Garansi Habis</small><strong>@totalHabis</strong></div>
+        <div class="warranty-stat"><small>Garansi Diklaim</small><strong>@totalDiklaim</strong></div>
+    </div>
+
+    <div class="admin-warranty-panel">
+        <form method="get" class="row g-2 mb-4">
+            <div class="col-md-5">
+                <input type="text" name="cari" value="@ViewBag.KataKunci" class="form-control"
+                       placeholder="Cari produk, kode, pelanggan, atau nomor pesanan..." />
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="semua" selected="@(ViewBag.StatusFilter == "semua")">Semua Status</option>
+                    <option value="aktif" selected="@(ViewBag.StatusFilter == "aktif")">Aktif</option>
+                    <option value="habis" selected="@(ViewBag.StatusFilter == "habis")">Habis</option>
+                    <option value="diklaim" selected="@(ViewBag.StatusFilter == "diklaim")">Diklaim</option>
+                </select>
+            </div>
+            <div class="col-md-2"><button type="submit" class="btn btn-success w-100">Filter</button></div>
+            <div class="col-md-2"><a asp-action="Index" class="btn btn-light w-100">Reset</a></div>
+        </form>
+
+        <div class="admin-warranty-table-wrap">
+            <table class="admin-warranty-table">
+                <thead>
+                    <tr>
+                        <th>Pelanggan</th>
+                        <th>Pesanan</th>
+                        <th>Produk</th>
+                        <th>Jumlah</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Berakhir</th>
+                        <th>Keterangan</th>
+                        <th>Status</th>
+                        <th>Ubah Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.NamaCustomer</td>
+                            <td>#@item.IdPemesanan</td>
+                            <td><strong>@item.NamaProduk</strong><br /><small class="text-muted">@item.KodeProduk</small></td>
+                            <td>@item.Jumlah</td>
+                            <td>@item.TanggalMulai.ToString("dd/MM/yyyy")</td>
+                            <td>@item.TanggalBerakhir.ToString("dd/MM/yyyy")</td>
+                            <td style="max-width:220px;white-space:normal;">@(string.IsNullOrWhiteSpace(item.Keterangan) ? "-" : item.Keterangan)</td>
+                            <td><span class="warranty-status-badge warranty-@item.Status">@item.Status</span></td>
+                            <td>
+                                <form asp-action="UbahStatus" method="post" class="d-flex gap-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="idGaransi" value="@item.IdGaransi" />
+                                    <select name="status" class="warranty-status-select">
+                                        <option value="aktif" selected="@(item.Status == "aktif")">Aktif</option>
+                                        <option value="habis" selected="@(item.Status == "habis")">Habis</option>
+                                        <option value="diklaim" selected="@(item.Status == "diklaim")">Diklaim</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-success">Simpan</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">Belum ada data garansi.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,586 @@
+﻿
+@model TokoMusik.Web.Models.ProfilViewModel
+
+@{
+    ViewData["Title"] = "Edit Profil";
+
+    var fotoProfil = string.IsNullOrWhiteSpace(Model.Foto)
+        ? null
+        : Url.Content("~/uploads/profil/" + System.IO.Path.GetFileName(Model.Foto));
+
+    var nama = string.IsNullOrWhiteSpace(Model.NamaCustomer)
+        ? "S"
+        : Model.NamaCustomer.Substring(0, 1).ToUpperInvariant();
+}
+
+<style>
+    .sync-edit-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 34px 18px 65px;
+        color: #20382b;
+    }
+
+    .sync-edit-heading {
+        margin-bottom: 25px;
+    }
+
+    .sync-edit-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #187347;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+
+    .sync-edit-eyebrow::before {
+        content: "";
+        width: 24px;
+        height: 2px;
+        background: #249461;
+        border-radius: 10px;
+    }
+
+    .sync-edit-heading h1 {
+        font-size: clamp(27px, 4vw, 35px);
+        font-weight: 850;
+        letter-spacing: -1px;
+        margin: 0 0 7px;
+        color: #173d2b;
+    }
+
+    .sync-edit-heading p {
+        color: #7b8b80;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .sync-edit-card {
+        background: white;
+        border: 1px solid #e6eee8;
+        border-radius: 21px;
+        overflow: hidden;
+        box-shadow: 0 15px 45px rgba(24, 66, 42, .07);
+    }
+
+    .sync-edit-banner {
+        padding: 23px 30px;
+        background: linear-gradient(110deg, #104a32, #176b45 65%, #27865a);
+        color: white;
+    }
+
+    .sync-edit-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .sync-edit-banner-icon {
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.2);
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .sync-edit-banner h2 {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0 0 4px;
+    }
+
+    .sync-edit-banner p {
+        color: rgba(255,255,255,.76);
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .sync-edit-content {
+        padding: 30px;
+    }
+
+    .sync-edit-validation {
+        border-radius: 12px;
+        font-size: 13px;
+        margin-bottom: 22px;
+    }
+
+    .sync-edit-section {
+        margin-bottom: 28px;
+    }
+
+    .sync-edit-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 20px;
+    }
+
+    .sync-edit-section-icon {
+        width: 39px;
+        height: 39px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #176b45;
+        background: #eaf5ed;
+        border-radius: 11px;
+        font-size: 17px;
+    }
+
+    .sync-edit-section-heading h3 {
+        color: #20382b;
+        font-size: 16px;
+        font-weight: 850;
+        margin: 0 0 3px;
+    }
+
+    .sync-edit-section-heading p {
+        color: #89968c;
+        font-size: 11px;
+        margin: 0;
+    }
+
+    .sync-edit-photo-box {
+        display: flex;
+        align-items: center;
+        gap: 23px;
+        padding: 21px;
+        background: #f8fbf8;
+        border: 1px solid #e7efe8;
+        border-radius: 15px;
+    }
+
+    .sync-edit-photo-preview {
+        width: 112px;
+        height: 112px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid white;
+        border-radius: 50%;
+        background: #e5f3e9;
+        color: #176b45;
+        box-shadow: 0 4px 15px rgba(20, 60, 38, .1);
+        object-fit: cover;
+        font-size: 38px;
+        font-weight: 850;
+    }
+
+    .sync-edit-photo-info {
+        min-width: 0;
+    }
+
+    .sync-edit-photo-info strong {
+        display: block;
+        font-size: 14px;
+        color: #263c2f;
+        margin-bottom: 6px;
+    }
+
+    .sync-edit-photo-info p {
+        font-size: 12px;
+        color: #849287;
+        line-height: 1.6;
+        margin-bottom: 12px;
+    }
+
+    .sync-photo-picker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 15px;
+        border-radius: 9px;
+        background: white;
+        color: #176b45;
+        border: 1px solid #b9d8c3;
+        font-size: 12px;
+        font-weight: 750;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .sync-photo-picker:hover {
+        background: #eaf5ed;
+    }
+
+    .sync-photo-file {
+        display: none !important;
+    }
+
+    .sync-edit-divider {
+        border: 0;
+        border-top: 1px solid #edf1ed;
+        margin: 27px 0;
+    }
+
+    .sync-edit-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .sync-edit-field {
+        min-width: 0;
+    }
+
+    .sync-edit-field label {
+        display: block;
+        color: #405447;
+        font-size: 12px;
+        font-weight: 750;
+        margin-bottom: 8px;
+    }
+
+    .sync-edit-field .form-control {
+        min-height: 47px;
+        width: 100%;
+        border: 1px solid #dfe9e1;
+        border-radius: 10px;
+        background: #fcfdfc;
+        color: #263c2f;
+        font-size: 13px;
+        padding: 11px 13px;
+        box-shadow: none;
+        transition: .2s ease;
+    }
+
+    .sync-edit-field .form-control:focus {
+        border-color: #23905a;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(35, 144, 90, .1);
+    }
+
+    .sync-edit-field .form-control::placeholder {
+        color: #a4afa7;
+    }
+
+    .sync-edit-field .text-danger {
+        display: block;
+        font-size: 11px;
+        margin-top: 6px;
+    }
+
+    .sync-edit-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 11px;
+        padding-top: 24px;
+        border-top: 1px solid #edf1ed;
+        margin-top: 28px;
+    }
+
+    .sync-edit-btn {
+        min-height: 45px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 21px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .sync-edit-btn:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .sync-edit-btn-save {
+        color: white;
+        background: #176b45;
+        border: 1px solid #176b45;
+    }
+
+    .sync-edit-btn-save:hover {
+        color: white;
+        background: #105536;
+    }
+
+    .sync-edit-btn-cancel {
+        color: #596b5e;
+        background: white;
+        border: 1px solid #dfe8e1;
+    }
+
+    .sync-edit-btn-cancel:hover {
+        color: #263b30;
+        background: #f4f7f4;
+    }
+
+    @@media (max-width: 650px) {
+        .sync-edit-page {
+            padding: 25px 13px 45px;
+        }
+
+        .sync-edit-content {
+            padding: 21px;
+        }
+
+        .sync-edit-banner {
+            padding: 20px;
+        }
+
+        .sync-edit-form-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .sync-edit-photo-box {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sync-edit-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .sync-edit-btn {
+            padding: 10px;
+            font-size: 12px;
+        }
+    }
+
+    @@media (max-width: 390px) {
+        .sync-edit-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="sync-edit-page">
+
+    <div class="sync-edit-heading">
+        <div class="sync-edit-eyebrow">ACCOUNT SETTINGS</div>
+        <h1>Edit Profil</h1>
+        <p>Perbarui informasi pribadi dan foto profil akun Syncora kamu.</p>
+    </div>
+
+    <div class="sync-edit-card">
+
+        <div class="sync-edit-banner">
+            <div class="sync-edit-banner-content">
+                <div class="sync-edit-banner-icon">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+                <div>
+                    <h2>Pengaturan Profil</h2>
+                    <p>Pastikan informasi akun kamu selalu terbaru.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sync-edit-content">
+
+            <form asp-controller="Profil"
+                  asp-action="Edit"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="edit-profile-form">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="IdCustomer" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger sync-edit-validation"></div>
+
+                <div class="sync-edit-section">
+
+                    <div class="sync-edit-section-heading">
+                        <div class="sync-edit-section-icon">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <div>
+                            <h3>Foto Profil</h3>
+                            <p>Atur foto yang digunakan pada akun kamu.</p>
+                        </div>
+                    </div>
+
+                    <div class="sync-edit-photo-box">
+
+                        @if (fotoProfil != null)
+                        {
+                            <img id="previewFoto"
+                                 src="@fotoProfil"
+                                 alt="Foto profil"
+                                 class="sync-edit-photo-preview" />
+                        }
+                        else
+                        {
+                            <div id="inisialFoto"
+                                 class="sync-edit-photo-preview">
+                                @nama
+                            </div>
+
+                            <img id="previewFoto"
+                                 src=""
+                                 alt="Preview foto profil"
+                                 class="sync-edit-photo-preview"
+                                 style="display:none;" />
+                        }
+
+                        <div class="sync-edit-photo-info">
+                            <strong>Foto profil akun</strong>
+                            <p>
+                                Gunakan foto yang jelas agar akun kamu lebih mudah dikenali.
+                                Format JPG, JPEG, PNG, atau WEBP. Maksimal 5 MB.
+                            </p>
+
+                            <label for="FotoFile" class="sync-photo-picker">
+                                <i class="bi bi-image"></i>
+                                Pilih Foto
+                            </label>
+
+                            <input asp-for="FotoFile"
+                                   type="file"
+                                   accept=".jpg,.jpeg,.png,.webp"
+                                   id="FotoFile"
+                                   class="sync-photo-file" />
+
+                            <span asp-validation-for="FotoFile"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <hr class="sync-edit-divider" />
+
+                <div class="sync-edit-section">
+
+                    <div class="sync-edit-section-heading">
+                        <div class="sync-edit-section-icon">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
+                        <div>
+                            <h3>Informasi Pribadi</h3>
+                            <p>Periksa dan perbarui data akun kamu.</p>
+                        </div>
+                    </div>
+
+                    <div class="sync-edit-form-grid">
+
+                        <div class="sync-edit-field">
+                            <label asp-for="NamaCustomer"></label>
+                            <input asp-for="NamaCustomer"
+                                   class="form-control"
+                                   placeholder="Masukkan nama lengkap"
+                                   autocomplete="name" />
+
+                            <span asp-validation-for="NamaCustomer"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="sync-edit-field">
+                            <label asp-for="Username"></label>
+                            <input asp-for="Username"
+                                   class="form-control"
+                                   placeholder="Masukkan username"
+                                   autocomplete="username" />
+
+                            <span asp-validation-for="Username"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="sync-edit-field">
+                            <label asp-for="Email"></label>
+                            <input asp-for="Email"
+                                   type="email"
+                                   class="form-control"
+                                   placeholder="nama@email.com"
+                                   autocomplete="email" />
+
+                            <span asp-validation-for="Email"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="sync-edit-field">
+                            <label asp-for="Telepon"></label>
+                            <input asp-for="Telepon"
+                                   type="tel"
+                                   class="form-control"
+                                   placeholder="08xxxxxxxxxx"
+                                   autocomplete="tel" />
+
+                            <span asp-validation-for="Telepon"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="sync-edit-actions">
+
+                    <button type="submit" class="sync-edit-btn sync-edit-btn-save">
+                        <i class="bi bi-check2-circle"></i>
+                        Simpan Perubahan
+                    </button>
+
+                    <a asp-controller="Profil"
+                       asp-action="Index"
+                       class="sync-edit-btn sync-edit-btn-cancel">
+                        <i class="bi bi-x-circle"></i>
+                        Batal
+                    </a>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputFoto = document.getElementById("FotoFile");
+
+            if (!inputFoto) {
+                return;
+            }
+
+            inputFoto.addEventListener("change", function () {
+                const file = this.files && this.files[0];
+
+                if (!file) {
+                    return;
+                }
+
+                const preview = document.getElementById("previewFoto");
+                const inisial = document.getElementById("inisialFoto");
+
+                if (!preview) {
+                    return;
+                }
+
+                const urlFoto = URL.createObjectURL(file);
+
+                preview.src = urlFoto;
+                preview.style.display = "flex";
+
+                if (inisial) {
+                    inisial.style.display = "none";
+                }
+            });
+        });
+    </script>
+}

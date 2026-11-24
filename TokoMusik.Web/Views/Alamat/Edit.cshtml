@@ -1,0 +1,90 @@
+@model TokoMusik.Web.Models.AlamatCustomer
+
+@{
+    ViewData["Title"] = "Edit Alamat";
+}
+
+<div class="container py-4" style="max-width: 900px;">
+    <div class="mb-4">
+        <div class="text-success small fw-bold" style="letter-spacing: 2px;">EDIT DELIVERY ADDRESS</div>
+        <h1 class="h3 fw-bold mt-2">Edit Alamat</h1>
+        <p class="text-muted">Perbarui informasi alamat pengiriman kamu.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+            <form asp-controller="Alamat" asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="IdAlamat" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="LabelAlamat" class="form-label">Label Alamat</label>
+                        <select asp-for="LabelAlamat" class="form-select">
+                            <option value="Rumah">Rumah</option>
+                            <option value="Kantor">Kantor</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                        <span asp-validation-for="LabelAlamat" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Penerima" class="form-label">Nama Penerima</label>
+                        <input asp-for="Penerima" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="Penerima" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Telepon" class="form-label">Nomor Telepon</label>
+                        <input asp-for="Telepon" type="tel" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="Telepon" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="AlamatLengkap" class="form-label">Alamat Lengkap</label>
+                        <textarea asp-for="AlamatLengkap" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="AlamatLengkap" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label asp-for="Kota" class="form-label">Kota/Kabupaten</label>
+                        <input asp-for="Kota" class="form-control" autocomplete="address-level2" />
+                        <span asp-validation-for="Kota" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label asp-for="Provinsi" class="form-label">Provinsi</label>
+                        <input asp-for="Provinsi" class="form-control" autocomplete="address-level1" />
+                        <span asp-validation-for="Provinsi" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label asp-for="KodePos" class="form-label">Kode Pos</label>
+                        <input asp-for="KodePos" class="form-control" autocomplete="postal-code" />
+                        <span asp-validation-for="KodePos" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-check mt-4">
+                    <input asp-for="IsUtama" class="form-check-input" />
+                    <label asp-for="IsUtama" class="form-check-label">Jadikan sebagai alamat utama</label>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check2-circle me-1"></i> Simpan Perubahan
+                    </button>
+                    <a asp-controller="Alamat" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Kembali
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

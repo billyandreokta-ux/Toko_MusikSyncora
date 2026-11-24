@@ -1,0 +1,75 @@
+﻿
+@model TokoMusik.Web.Models.TambahGaransiViewModel
+
+@{
+    ViewData["Title"] = "Tambah Garansi";
+}
+
+<style>
+    .add-warranty-page { max-width:750px; margin:40px auto 70px; padding:0 18px; color:#263a30; }
+    .add-warranty-card { background:white; border:1px solid #e6ece7; border-radius:17px; padding:28px; box-shadow:0 8px 28px rgba(20,50,30,.05); }
+    .add-warranty-card h2 { font-weight:800; }
+    .add-warranty-card label { font-weight:650; margin-bottom:8px; }
+    .add-warranty-card .form-control,.add-warranty-card .form-select { border-radius:9px; padding:11px 13px; }
+</style>
+
+<div class="add-warranty-page">
+    <a asp-action="Index" class="text-decoration-none" style="color:#24583d;font-weight:650;">← Kembali ke Manajemen Garansi</a>
+
+    <div class="add-warranty-card mt-3">
+        <h2>Tambah Garansi Produk</h2>
+        <p class="text-muted">Terbitkan garansi untuk produk dari pesanan yang sudah selesai.</p>
+
+        <form asp-action="Tambah" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="IdDetailPesanan">Pilih Produk dari Pesanan</label>
+                <select asp-for="IdDetailPesanan" class="form-select">
+                    <option value="">-- Pilih detail pesanan --</option>
+                    @foreach (var item in Model.DaftarDetailPesanan)
+                    {
+                        <option value="@item.IdDetailPesanan">
+                            Pesanan #@item.IdPemesanan - @item.NamaCustomer - @item.NamaProduk (@item.KodeProduk)
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="IdDetailPesanan" class="text-danger"></span>
+                @if (!Model.DaftarDetailPesanan.Any())
+                {
+                    <small class="text-muted">Tidak ada detail pesanan selesai yang belum memiliki garansi.</small>
+                }
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TanggalMulai">Tanggal Mulai</label>
+                    <input asp-for="TanggalMulai" type="date" class="form-control" />
+                    <span asp-validation-for="TanggalMulai" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TanggalBerakhir">Tanggal Berakhir</label>
+                    <input asp-for="TanggalBerakhir" type="date" class="form-control" />
+                    <span asp-validation-for="TanggalBerakhir" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Keterangan">Keterangan</label>
+                <textarea asp-for="Keterangan" rows="3" maxlength="255" class="form-control"
+                          placeholder="Contoh: Garansi resmi 1 tahun sesuai ketentuan produk."></textarea>
+                <span asp-validation-for="Keterangan" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-success" disabled="@(!Model.DaftarDetailPesanan.Any())">
+                Simpan Garansi
+            </button>
+            <a asp-action="Index" class="btn btn-light">Batal</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
